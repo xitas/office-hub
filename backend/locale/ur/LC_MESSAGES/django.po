@@ -1,0 +1,324 @@
+# Urdu translations for backend-generated text.
+# Edit this file, then run: python manage.py compile_translations
+msgid ""
+msgstr ""
+"Project-Id-Version: office-crm\n"
+"Language: ur\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Invalid email or password."
+msgstr "ای میل یا پاس ورڈ غلط ہے۔"
+
+msgid "Your sign-in session expired. Please sign in again."
+msgstr "آپ کا سائن اِن سیشن ختم ہو گیا۔ براہ کرم دوبارہ سائن اِن کریں۔"
+
+msgid "Invalid verification code."
+msgstr "تصدیقی کوڈ غلط ہے۔"
+
+msgid "Session expired. Please sign in again."
+msgstr "سیشن ختم ہو گیا۔ براہ کرم دوبارہ سائن اِن کریں۔"
+
+msgid "This reset link is invalid or has expired."
+msgstr "یہ ری سیٹ لنک غلط ہے یا اس کی میعاد ختم ہو چکی ہے۔"
+
+msgid "Two-factor authentication is already enabled."
+msgstr "دو مرحلہ تصدیق پہلے سے فعال ہے۔"
+
+msgid "Invalid code. Check your authenticator app and try again."
+msgstr "کوڈ غلط ہے۔ اپنی آتھنٹیکیٹر ایپ چیک کریں اور دوبارہ کوشش کریں۔"
+
+msgid "Password is incorrect."
+msgstr "پاس ورڈ غلط ہے۔"
+
+msgid "Two-factor authentication is not enabled."
+msgstr "دو مرحلہ تصدیق فعال نہیں ہے۔"
+
+msgid "Reset your Office CRM password"
+msgstr "اپنا آفس سی آر ایم پاس ورڈ ری سیٹ کریں"
+
+msgid ""
+"Hello %(name)s,\n"
+"\n"
+"Use this link to set a new password:\n"
+"%(link)s\n"
+"\n"
+"If you did not request this, you can ignore this email."
+msgstr ""
+"السلام علیکم %(name)s،\n"
+"\n"
+"نیا پاس ورڈ مقرر کرنے کے لیے یہ لنک استعمال کریں:\n"
+"%(link)s\n"
+"\n"
+"اگر آپ نے یہ درخواست نہیں کی تو اس ای میل کو نظر انداز کر دیں۔"
+
+msgid "A user with this email already exists."
+msgstr "اس ای میل کے ساتھ صارف پہلے سے موجود ہے۔"
+
+msgid "Password is required for new users."
+msgstr "نئے صارفین کے لیے پاس ورڈ درکار ہے۔"
+
+msgid "You cannot change your own role."
+msgstr "آپ اپنا کردار تبدیل نہیں کر سکتے۔"
+
+msgid "You cannot deactivate your own account."
+msgstr "آپ اپنا اکاؤنٹ غیر فعال نہیں کر سکتے۔"
+
+msgid "Current password is incorrect."
+msgstr "موجودہ پاس ورڈ غلط ہے۔"
+
+msgid "You cannot delete your own account."
+msgstr "آپ اپنا اکاؤنٹ حذف نہیں کر سکتے۔"
+
+msgid "Please correct the errors below."
+msgstr "براہ کرم نیچے دی گئی غلطیاں درست کریں۔"
+
+msgid "Use a 3-letter ISO currency code, e.g. PKR."
+msgstr "3 حرفی ISO کرنسی کوڈ استعمال کریں، مثلاً PKR۔"
+
+msgid "Unknown timezone."
+msgstr "نامعلوم ٹائم زون۔"
+
+msgid "Created"
+msgstr "بنایا گیا"
+
+msgid "Updated"
+msgstr "ترمیم کی گئی"
+
+msgid "Deleted"
+msgstr "حذف کیا گیا"
+
+msgid "Signed in"
+msgstr "سائن اِن"
+
+msgid "Failed sign-in"
+msgstr "ناکام سائن اِن"
+
+msgid "Signed out"
+msgstr "سائن آؤٹ"
+
+msgid "Security change"
+msgstr "سیکیورٹی تبدیلی"
+
+msgid "Other"
+msgstr "دیگر"
+
+msgid "Failed sign-in attempt"
+msgstr "سائن اِن کی ناکام کوشش"
+
+msgid "Invalid 2FA code"
+msgstr "غلط 2FA کوڈ"
+
+msgid "Updated own profile"
+msgstr "اپنا پروفائل اپ ڈیٹ کیا"
+
+msgid "Changed password"
+msgstr "پاس ورڈ تبدیل کیا"
+
+msgid "Reset password via email"
+msgstr "ای میل کے ذریعے پاس ورڈ ری سیٹ کیا"
+
+msgid "Enabled two-factor authentication"
+msgstr "دو مرحلہ تصدیق فعال کی"
+
+msgid "Disabled two-factor authentication"
+msgstr "دو مرحلہ تصدیق غیر فعال کی"
+
+msgid "Regenerated 2FA backup codes"
+msgstr "نئے 2FA بیک اپ کوڈ بنائے"
+
+msgid "user"
+msgstr "صارف"
+
+msgid "users"
+msgstr "صارفین"
+
+msgid "department"
+msgstr "شعبہ"
+
+msgid "departments"
+msgstr "شعبہ جات"
+
+msgid "organization settings"
+msgstr "ادارے کی ترتیبات"
+
+msgid "audit entry"
+msgstr "آڈٹ اندراج"
+
+msgid "audit entries"
+msgstr "آڈٹ اندراجات"
+
+msgid "notification"
+msgstr "اطلاع"
+
+msgid "notifications"
+msgstr "اطلاعات"
+
+msgid "notification preference"
+msgstr "اطلاع کی ترجیح"
+
+msgid "notification preferences"
+msgstr "اطلاع کی ترجیحات"
+
+msgid "Admin"
+msgstr "ایڈمن"
+
+msgid "Manager"
+msgstr "مینیجر"
+
+msgid "Staff"
+msgstr "عملہ"
+
+msgid "Light"
+msgstr "روشن"
+
+msgid "Dark"
+msgstr "تاریک"
+
+msgid "System"
+msgstr "سسٹم"
+
+msgid "Task assigned to me"
+msgstr "مجھے کام تفویض ہوا"
+
+msgid "Task status changed"
+msgstr "کام کی حیثیت تبدیل ہوئی"
+
+msgid "New comment on my task"
+msgstr "میرے کام پر نیا تبصرہ"
+
+msgid "Task deadline approaching"
+msgstr "کام کی آخری تاریخ قریب"
+
+msgid "Mentioned in chat"
+msgstr "چیٹ میں ذکر"
+
+msgid "New direct message"
+msgstr "نیا براہ راست پیغام"
+
+msgid "Client follow-up due"
+msgstr "کلائنٹ فالو اپ کا وقت"
+
+msgid "Approval requested"
+msgstr "منظوری کی درخواست"
+
+msgid "My request approved/rejected"
+msgstr "میری درخواست منظور/مسترد"
+
+msgid "New announcement"
+msgstr "نیا اعلان"
+
+msgid "Booking updates"
+msgstr "بکنگ کی اپ ڈیٹس"
+
+msgid "Field visit updates"
+msgstr "فیلڈ دورے کی اپ ڈیٹس"
+
+msgid "System and security"
+msgstr "سسٹم اور سیکیورٹی"
+
+msgid "Your account was updated"
+msgstr "آپ کا اکاؤنٹ اپ ڈیٹ ہو گیا"
+
+msgid "role is now %(role)s"
+msgstr "کردار اب %(role)s ہے"
+
+msgid "department is now %(department)s"
+msgstr "شعبہ اب %(department)s ہے"
+
+msgid "none"
+msgstr "کوئی نہیں"
+
+msgid "%(actor)s changed your account: %(changes)s."
+msgstr "%(actor)s نے آپ کے اکاؤنٹ میں تبدیلی کی: %(changes)s۔"
+
+msgid "; "
+msgstr "؛ "
+
+msgid "Authentication credentials were not provided."
+msgstr "تصدیقی معلومات فراہم نہیں کی گئیں۔"
+
+msgid "Incorrect authentication credentials."
+msgstr "تصدیقی معلومات غلط ہیں۔"
+
+msgid "You do not have permission to perform this action."
+msgstr "آپ کو یہ عمل کرنے کی اجازت نہیں ہے۔"
+
+msgid "Not found."
+msgstr "نہیں ملا۔"
+
+msgid "A server error occurred."
+msgstr "سرور میں خرابی پیش آئی۔"
+
+msgid "Invalid input."
+msgstr "غلط اندراج۔"
+
+msgid "Malformed request."
+msgstr "درخواست درست نہیں۔"
+
+msgid "Method \"{method}\" not allowed."
+msgstr "طریقہ \"{method}\" کی اجازت نہیں۔"
+
+msgid "Request was throttled."
+msgstr "بہت زیادہ کوششیں کی گئیں۔"
+
+msgid "This field is required."
+msgstr "یہ خانہ درکار ہے۔"
+
+msgid "This field may not be blank."
+msgstr "یہ خانہ خالی نہیں چھوڑا جا سکتا۔"
+
+msgid "This field may not be null."
+msgstr "یہ خانہ خالی نہیں چھوڑا جا سکتا۔"
+
+msgid "Ensure this field has no more than {max_length} characters."
+msgstr "اس خانے میں {max_length} سے زیادہ حروف نہیں ہو سکتے۔"
+
+msgid "Enter a valid email address."
+msgstr "درست ای میل ایڈریس درج کریں۔"
+
+msgid "A valid integer is required."
+msgstr "درست عدد درکار ہے۔"
+
+msgid "\"{input}\" is not a valid choice."
+msgstr "\"{input}\" درست انتخاب نہیں ہے۔"
+
+msgid "Invalid pk \"{pk_value}\" - object does not exist."
+msgstr "شناخت \"{pk_value}\" کا کوئی ریکارڈ موجود نہیں۔"
+
+msgid ""
+"Upload a valid image. The file you uploaded was either not an image or a "
+"corrupted image."
+msgstr ""
+"درست تصویر اپ لوڈ کریں۔ اپ لوڈ کی گئی فائل تصویر نہیں تھی یا خراب تھی۔"
+
+msgid "This password is too common."
+msgstr "یہ پاس ورڈ بہت عام ہے۔"
+
+msgid "This password is entirely numeric."
+msgstr "یہ پاس ورڈ صرف ہندسوں پر مشتمل ہے۔"
+
+msgid "The password is too similar to the %(verbose_name)s."
+msgstr "پاس ورڈ %(verbose_name)s سے بہت ملتا جلتا ہے۔"
+
+msgid "email address"
+msgstr "ای میل ایڈریس"
+
+msgid "email"
+msgstr "ای میل"
+
+msgid "full name"
+msgstr "پورا نام"
+
+msgid "Expected available in {wait} second."
+msgid_plural "Expected available in {wait} seconds."
+msgstr[0] "{wait} سیکنڈ بعد دوبارہ کوشش کریں۔"
+msgstr[1] "{wait} سیکنڈ بعد دوبارہ کوشش کریں۔"
+
+msgid "This password is too short. It must contain at least %d character."
+msgid_plural ""
+"This password is too short. It must contain at least %d characters."
+msgstr[0] "یہ پاس ورڈ بہت چھوٹا ہے۔ اس میں کم از کم %d حروف ہونے چاہئیں۔"
+msgstr[1] "یہ پاس ورڈ بہت چھوٹا ہے۔ اس میں کم از کم %d حروف ہونے چاہئیں۔"
