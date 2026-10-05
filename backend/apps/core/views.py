@@ -1,13 +1,15 @@
 import django_filters
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import generics, viewsets
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from . import health
 from . import search as search_registry
 from .audit import diff, log_action, snapshot
 from .models import AuditLog, OrganizationSettings
-from .permissions import METHOD_ACTIONS, ModulePermission, has_perm
+from .permissions import METHOD_ACTIONS, ModulePermission, has_perm, module_permission
 from .serializers import AuditLogSerializer, OrganizationSettingsSerializer
 
 
@@ -65,3 +67,26 @@ class GlobalSearchView(APIView):
         query = request.query_params.get("q", "")
         types = [t for t in request.query_params.get("types", "").split(",") if t] or None
         return Response({"query": query, "results": search_registry.search(request.user, query, types=types)})
+
+
+class LivenessView(APIView):
+    """Public probe for load balancers/uptime monitors: database reachable or 503. No details."""
+
+    authentication_classes: list = []
+    permission_classes = [AllowAny]
+    throttle_classes: list = []
+
+    @extend_schema(responses={200: dict, 503: dict})
+    def get(self, request):
+        ok = health.check_database()["ok"]
+        return Response({"status": "ok" if ok else "unavailable"}, status=200 if ok else 503)
+
+
+class SystemHealthView(APIView):
+    """Detailed status of database, Redis, Celery workers/beat and Channels (admins)."""
+
+    permission_classes = [module_permission("settings", "edit")]
+
+    @extend_schema(responses={200: dict})
+    def get(self, request):
+        return Response(health.full_report())

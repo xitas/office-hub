@@ -1,6 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils.translation import gettext
+from rest_framework.settings import api_settings
 
 from .models import AuditLog
 
@@ -9,11 +10,15 @@ SENSITIVE_FIELDS = {"password", "totp_secret", "backup_codes"}
 
 
 def get_client_ip(request):
+    """Client address, trusting X-Forwarded-For only for the configured number of proxies
+    (same rule as DRF's throttling, so audit IPs and rate limits agree)."""
     if request is None:
         return None
+    num_proxies = api_settings.NUM_PROXIES or 0
     forwarded = request.META.get("HTTP_X_FORWARDED_FOR")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
+    if num_proxies and forwarded:
+        addrs = [a.strip() for a in forwarded.split(",")]
+        return addrs[-min(num_proxies, len(addrs))]
     return request.META.get("REMOTE_ADDR")
 
 

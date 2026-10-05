@@ -9,18 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400..700&display=swap" rel="stylesheet" />
     <title>Office CRM</title>
-    <script>
-      // Apply theme and direction before first paint (same keys as the React providers).
-      try {
-        var t = localStorage.getItem('crm.theme') || 'system'
-        var dark = t === 'dark' || (t === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
-        if (dark) document.documentElement.classList.add('dark')
-        if (localStorage.getItem('crm.language') === 'ur') {
-          document.documentElement.lang = 'ur'
-          document.documentElement.dir = 'rtl'
-        }
-      } catch (e) {}
-    </script>
+    <script src="/theme-init.js"></script>
   </head>
   <body>
     <div id="root"></div>

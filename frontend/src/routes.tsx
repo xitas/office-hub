@@ -48,6 +48,9 @@ export const router = createBrowserRouter([
           guarded('settings.edit', 'admin/organization', () =>
             import('@/features/admin/OrganizationPage').then((m) => ({ Component: m.OrganizationPage })),
           ),
+          guarded('settings.edit', 'admin/system', () =>
+            import('@/features/admin/SystemHealthPage').then((m) => ({ Component: m.SystemHealthPage })),
+          ),
           guarded('audit.view', 'admin/audit-log', () =>
             import('@/features/admin/AuditLogPage').then((m) => ({ Component: m.AuditLogPage })),
           ),

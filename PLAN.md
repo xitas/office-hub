@@ -85,6 +85,28 @@ An office CRM for small-to-mid-sized offices (10–100 staff). It works on deskt
 
 ---
 
+## Phase 1 hardening (before Phase 2)
+
+**Status: complete** on branch `phase-1-hardening`, awaiting review.
+
+### Security
+- [x] 2FA secrets encrypted at rest (Fernet, `FIELD_ENCRYPTION_KEYS`), data migration for existing secrets, key rotation command
+- [x] Profile photos: 2 MB, JPEG/PNG/WebP only, decoded to verify, resized to 512px, metadata (EXIF/GPS) stripped, random file names
+- [x] Login rate limits in a shared cache (Redis), with an in-memory fallback; `NUM_PROXIES` so a forged X-Forwarded-For can't bypass them
+- [x] WebSocket auth with single-use 30-second tickets (no tokens in URLs)
+- [x] CSRF defence for the refresh-cookie endpoints (custom header + Origin check)
+- [x] Production headers (HSTS, CSP, Referrer-Policy, Permissions-Policy, nosniff, X-Frame-Options); strict ALLOWED_HOSTS; DEBUG forced off; API docs off by default
+- [x] pip-audit clean; npm audit clean for production dependencies (dev-only `shadcn` CLI chain remains, see Open questions)
+
+### Background jobs
+- [x] Redis via Docker Compose (health check, persistent volume)
+- [x] Celery worker + Celery Beat with database-stored schedules (django-celery-beat)
+- [x] Channels on Redis whenever `REDIS_URL` is set (background jobs can push live notifications)
+- [x] Notification and password-reset emails sent by a Celery task (after commit, with retries)
+- [x] Health checks: public `/api/v1/health/`, admin `/api/v1/system/health/` and an **Administration → System status** page
+- [x] `scripts/dev.ps1` (start everything), `scripts/test-postgres.ps1` (full suite on Postgres + Redis)
+- [x] GitHub Actions CI: backend on PostgreSQL 17 + Redis, frontend type-check/lint/build, dependency audits
+
 ## Phase 2 — Contacts & task management
 
 ### Module 2 — Contacts & clients
@@ -107,7 +129,8 @@ An office CRM for small-to-mid-sized offices (10–100 staff). It works on deskt
 - [ ] Recurring tasks (daily, weekly, monthly)
 - [ ] Notifications: assignment, status change, comment, approaching deadline
 - [ ] Filters: My Tasks, Team Tasks, Overdue, By Project
-- [ ] Scheduled-job runner (deadline reminders, recurring task generation)
+- [x] Scheduled-job runner: Celery + Celery Beat (done in Phase 1 hardening)
+- [ ] Deadline reminder and recurring-task jobs
 
 ### Integration
 - [ ] Dashboard task widgets show live data
@@ -197,13 +220,15 @@ Tables added beyond the spec: OrganizationSettings, Notification and Notificatio
 ## Open questions / deferred
 - ~~PostgreSQL not installed~~ **Resolved 2026-10-04:** PostgreSQL 17 (port 5432), database `office_crm` owned by a dedicated `crm` user; all 42 tests pass on Postgres and global search uses full-text search. Tests still default to in-memory SQLite for speed; set `TEST_DATABASE_URL` to run them on Postgres.
 - **Dev channel layer is in-memory**, so `notify()` reaches open sockets only when called inside the server process. Calling it from `manage.py shell` or a separate worker needs `REDIS_URL` (Redis, or Memurai on Windows).
-- Which scheduled-job runner for Phase 2: Celery beat (needs Redis) or django-q2 (database-backed).
+- ~~Which scheduled-job runner~~ **Decided:** Celery + Redis, with schedules in the database (django-celery-beat).
+- `npm audit` reports 7 high-severity issues in the dev-only `shadcn` CLI (`braces` → `micromatch` → `fast-glob`). They don't ship with the app; the only offered fix is a breaking downgrade to shadcn 1.0. Re-check when shadcn updates its dependencies.
 - Production file storage: local `MEDIA_ROOT` for now, with S3-compatible storage possible later via `STORAGES`.
 - Live staff location: currently based on check-ins only (no continuous tracking), as the spec requires.
 
 ---
 
 ## Changelog
+- **2026-10-05:** Phase 1 hardening (branch `phase-1-hardening`): encrypted 2FA secrets, avatar sanitising, shared rate limits (and a fix for X-Forwarded-For spoofing), WebSocket tickets, refresh-cookie CSRF check, production headers, Redis in Docker, Celery worker + Beat, emails via Celery, health checks + System status page, dev/test scripts, GitHub Actions CI. 83 backend tests pass on PostgreSQL 17 + Redis.
 - **2026-10-04:** Switched development to PostgreSQL 17: migrations applied, demo data seeded, 42/42 tests pass on Postgres, full-text search verified.
 - **2026-10-04:** Phase 1 polish (branch `phase-1-polish`). Light-mode contrast (grey page, white cards with border and soft shadow); backend text translated to Urdu (Django gettext catalog, notifications stored as message keys and rendered in the reader's language, translated audit labels and record types, translated server errors); department search links to the Team page for non-admins; greeting uses the org time zone; Team `?user=` works across pages and filters; themed confirmation dialogs; Urdu typography fixes (no clipped Nastaliq, Nastaliq headings, Geist for Latin); compact "Coming soon" dashboard card; quick-add no longer duplicated on desktop; `next-themes` replaced (removed React 19 console warnings); readable FK values in audit diffs; refresh returns 204 when signed out; vendor chunk splitting. Added `npm run review` visual check. 42 backend tests pass.
 - **2026-10-03:** Phase 1 foundations built. Backend: accounts (custom User, Department, JWT and refresh cookie, TOTP 2FA with backup codes, password reset), core (permission matrix for all modules, scoped querysets, audit mixin and API, org settings, search registry, WebSocket JWT auth), notifications (preferences, in-app plus email, Channels consumer), dashboard (widget registry). 33 pytest tests pass. Frontend: React 19 + Vite 8 + Tailwind v4 + shadcn (Base UI, RTL-enabled), auth/OTP/reset pages, app shell (sidebar, bottom nav, Ctrl+K search, quick-add, live bell, user menu), dashboard, team directory, notifications, settings (profile, appearance, 2FA, notification prefs), admin (users, departments, organization, audit log), full English and Urdu translations. Added beyond the plan: team directory page with call/WhatsApp/email buttons, and users are notified when an admin changes their role or department.

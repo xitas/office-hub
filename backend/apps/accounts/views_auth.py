@@ -3,15 +3,14 @@ from django.contrib.auth import authenticate, password_validation
 from django.contrib.auth.models import update_last_login
 from django.contrib.auth.tokens import default_token_generator
 from django.core import signing
-from django.core.mail import send_mail
-from django.utils.encoding import force_bytes, force_str
 from django.utils import translation
+from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_noop as N_
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
-from rest_framework.exceptions import AuthenticationFailed, ValidationError
+from rest_framework.exceptions import AuthenticationFailed, PermissionDenied, ValidationError
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -23,7 +22,9 @@ from rest_framework_simplejwt.settings import api_settings as jwt_settings
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.core.audit import diff, log_action, snapshot
+from apps.core.email import queue_email
 from apps.core.models import AuditLog
+from apps.core.ws_auth import TICKET_TTL, issue_ticket
 
 from . import twofactor
 from .models import User
@@ -116,12 +117,36 @@ class VerifyOTPView(LoginThrottleMixin, PublicAuthView):
         return _token_response(request, user, ser.validated_data["client"])
 
 
-class RefreshView(PublicAuthView):
+def _check_cookie_request(request):
+    """CSRF defence for endpoints authenticated by the refresh *cookie* (an ambient credential).
 
+    SameSite=Lax already stops other sites, but not sibling subdomains or old browsers. A custom
+    header can't be sent by a plain form and, cross-origin, needs a CORS preflight that only our
+    own origins pass; a present Origin header must also be one of ours. Body-token (mobile) calls
+    carry no ambient credential and skip this.
+    """
+    if request.headers.get("X-Requested-With") != "XMLHttpRequest":
+        raise PermissionDenied(_("Missing X-Requested-With header."))
+    origin = request.headers.get("Origin")
+    if origin and origin not in _trusted_origins(request):
+        raise PermissionDenied(_("Request origin is not allowed."))
+
+
+def _trusted_origins(request) -> set[str]:
+    return {
+        *settings.CORS_ALLOWED_ORIGINS,
+        *getattr(settings, "CSRF_TRUSTED_ORIGINS", []),
+        f"{request.scheme}://{request.get_host()}",
+    }
+
+
+class RefreshView(PublicAuthView):
     @extend_schema(request=None, responses={200: dict})
     def post(self, request):
         from_cookie = "refresh" not in request.data
         raw = request.data.get("refresh") or request.COOKIES.get(settings.REFRESH_COOKIE_NAME)
+        if from_cookie and raw:
+            _check_cookie_request(request)
         if not raw:
             # No session at all is a normal state (e.g. first visit), not an error.
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -141,10 +166,11 @@ class RefreshView(PublicAuthView):
 
 
 class LogoutView(PublicAuthView):
-
     @extend_schema(request=None, responses={204: None})
     def post(self, request):
         raw = request.data.get("refresh") or request.COOKIES.get(settings.REFRESH_COOKIE_NAME)
+        if raw and "refresh" not in request.data:
+            _check_cookie_request(request)
         if raw:
             try:
                 token = RefreshToken(raw)
@@ -157,6 +183,16 @@ class LogoutView(PublicAuthView):
         response = Response(status=status.HTTP_204_NO_CONTENT)
         response.delete_cookie(settings.REFRESH_COOKIE_NAME, path=settings.REFRESH_COOKIE_PATH)
         return response
+
+
+class WebSocketTicketView(APIView):
+    """Single-use, 30-second ticket for opening the notifications WebSocket (see apps.core.ws_auth)."""
+
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(request=None, responses={200: dict})
+    def post(self, request):
+        return Response({"ticket": issue_ticket(request.user), "expires_in": TICKET_TTL})
 
 
 class MeView(APIView):
@@ -206,16 +242,14 @@ class PasswordResetRequestView(PublicAuthView):
             token = default_token_generator.make_token(user)
             link = f"{settings.FRONTEND_URL}/reset-password?uid={uid}&token={token}"
             with translation.override(user.language):
-                send_mail(
+                queue_email(
                     _("Reset your Office CRM password"),
                     _(
                         "Hello %(name)s,\n\nUse this link to set a new password:\n%(link)s\n\n"
                         "If you did not request this, you can ignore this email."
                     )
                     % {"name": user.full_name, "link": link},
-                    None,
                     [user.email],
-                    fail_silently=True,
                 )
         # Same response either way so the endpoint cannot be used to discover accounts.
         return Response(status=status.HTTP_204_NO_CONTENT)

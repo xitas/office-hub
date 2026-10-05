@@ -5,7 +5,9 @@ import i18n from '@/i18n'
  * API client. The access token lives in memory only; the refresh token is an
  * httpOnly cookie scoped to /api/v1/auth/, so a page reload re-bootstraps via /auth/refresh/.
  */
-export const api = axios.create({ baseURL: '/api/v1', withCredentials: true })
+// X-Requested-With marks requests as coming from our app (required for refresh-cookie endpoints: CSRF defence).
+const APP_HEADERS = { 'X-Requested-With': 'XMLHttpRequest' }
+export const api = axios.create({ baseURL: '/api/v1', withCredentials: true, headers: APP_HEADERS })
 
 let accessToken: string | null = null
 let refreshing: Promise<string | null> | null = null
@@ -23,7 +25,7 @@ export const setSessionExpiredHandler = (fn: () => void) => {
 export function refreshAccessToken(): Promise<string | null> {
   if (!refreshing) {
     refreshing = axios
-      .post<{ access: string } | ''>('/api/v1/auth/refresh/', {}, { withCredentials: true })
+      .post<{ access: string } | ''>('/api/v1/auth/refresh/', {}, { withCredentials: true, headers: APP_HEADERS })
       .then((res) => {
         // 204 = no session cookie (signed out); not an error.
         accessToken = res.status === 200 && res.data ? res.data.access : null

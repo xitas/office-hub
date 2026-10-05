@@ -3,6 +3,8 @@ from pathlib import Path
 
 import environ
 
+from .services import cache_config, celery_config, channel_layers_config
+
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 env = environ.Env(
@@ -14,6 +16,9 @@ env = environ.Env(
 environ.Env.read_env(BASE_DIR / ".env")
 
 SECRET_KEY = env("DJANGO_SECRET_KEY", default="insecure-dev-key-change-me-in-env-file-0123456789")
+# Fernet keys for encrypted model fields (2FA secrets). Separate from SECRET_KEY; first key encrypts,
+# all keys decrypt (rotation). Generate: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+FIELD_ENCRYPTION_KEYS = env.list("FIELD_ENCRYPTION_KEYS", default=[])
 DEBUG = env("DJANGO_DEBUG")
 ALLOWED_HOSTS = env("DJANGO_ALLOWED_HOSTS")
 
@@ -33,6 +38,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "corsheaders",
     "channels",
+    "django_celery_beat",
     # Local
     "apps.core",
     "apps.accounts",
@@ -43,6 +49,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "apps.core.middleware.SecurityHeadersMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -53,6 +60,11 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "config.urls"
+
+# Security headers (production sets these; see prod.py). Empty = not sent.
+CONTENT_SECURITY_POLICY = ""
+PERMISSIONS_POLICY = ""
+API_DOCS_ENABLED = env.bool("API_DOCS_ENABLED", default=True)
 
 TEMPLATES = [
     {
@@ -98,13 +110,19 @@ MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 # Channels
+# Redis: cache (rate limits, WS tickets), Channels and Celery. See config/settings/services.py.
 REDIS_URL = env("REDIS_URL")
-if REDIS_URL:
-    CHANNEL_LAYERS = {
-        "default": {"BACKEND": "channels_redis.core.RedisChannelLayer", "CONFIG": {"hosts": [REDIS_URL]}}
-    }
-else:
-    CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
+CACHES = cache_config(REDIS_URL)
+CHANNEL_LAYERS = channel_layers_config(REDIS_URL)
+
+# Celery (+ django-celery-beat: schedules live in the database, editable in Django admin)
+vars().update(celery_config(REDIS_URL))
+CELERY_TASK_IGNORE_RESULT = True
+CELERY_TASK_ACKS_LATE = True
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
 # REST framework
 REST_FRAMEWORK = {
@@ -119,6 +137,9 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 25,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "EXCEPTION_HANDLER": "apps.core.exceptions.api_exception_handler",
+    # Number of trusted reverse proxies in front of the app. 0 = use the TCP peer address and ignore
+    # X-Forwarded-For (a client-controlled header). Set to 1 behind a single nginx/load balancer.
+    "NUM_PROXIES": env.int("NUM_PROXIES", default=0),
     "DEFAULT_THROTTLE_RATES": {
         "login": env("LOGIN_THROTTLE_RATE", default="10/min"),
         "password_reset": env("PASSWORD_RESET_THROTTLE_RATE", default="5/hour"),

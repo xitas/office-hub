@@ -1,4 +1,5 @@
 import {
+  Activity,
   BarChart3,
   Bell,
   Building2,
@@ -44,6 +45,7 @@ export const NAV_ITEMS: NavItem[] = [
   { key: 'users', path: '/admin/users', icon: Users, label: 'nav.users', permission: 'users.create', enabled: true, section: 'admin' },
   { key: 'departments', path: '/admin/departments', icon: Building2, label: 'nav.departments', permission: 'departments.create', enabled: true, section: 'admin' },
   { key: 'organization', path: '/admin/organization', icon: ShieldCheck, label: 'nav.organization', permission: 'settings.edit', enabled: true, section: 'admin' },
+  { key: 'system', path: '/admin/system', icon: Activity, label: 'nav.system', permission: 'settings.edit', enabled: true, section: 'admin' },
   { key: 'audit', path: '/admin/audit-log', icon: ClipboardList, label: 'nav.auditLog', permission: 'audit.view', enabled: true, section: 'admin' },
 ]
 

@@ -2,18 +2,19 @@ import pytest
 from channels.db import database_sync_to_async
 from channels.testing import WebsocketCommunicator
 from django.core import mail
-from rest_framework_simplejwt.tokens import AccessToken
 
+from apps.core.ws_auth import issue_ticket
 from apps.notifications.models import Notification, NotificationPreference
 from apps.notifications.services import notify
 from config.asgi import application
 
 
 @pytest.mark.django_db
-def test_notify_respects_preferences(manager, staff):
+def test_notify_respects_preferences(manager, staff, django_capture_on_commit_callbacks):
     # Defaults: task_assigned -> in-app + email; mention -> in-app only.
-    notify(staff, "task_assigned", "New task", body="Call the client", link="/tasks/1", actor=manager)
-    notify(staff, "mention", "You were mentioned", actor=manager)
+    with django_capture_on_commit_callbacks(execute=True):  # emails are queued after commit (Celery)
+        notify(staff, "task_assigned", "New task", body="Call the client", link="/tasks/1", actor=manager)
+        notify(staff, "mention", "You were mentioned", actor=manager)
     assert Notification.objects.filter(recipient=staff).count() == 2
     assert len(mail.outbox) == 1 and mail.outbox[0].subject == "New task"
 
@@ -65,9 +66,8 @@ async def test_websocket_requires_token_and_receives_push(staff, manager):
     connected, code = await anon.connect()
     assert not connected
 
-    token = str(AccessToken.for_user(staff))
     ws = WebsocketCommunicator(
-        application, f"/ws/notifications/?token={token}", headers=[(b"origin", b"http://localhost")]
+        application, f"/ws/notifications/?ticket={issue_ticket(staff)}", headers=[(b"origin", b"http://localhost")]
     )
     connected, _ = await ws.connect()
     assert connected

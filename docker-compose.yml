@@ -1,0 +1,25 @@
+# Local development services. Redis does not run natively on Windows, so it runs here.
+#   docker compose up -d redis      start (data persists in the "redis-data" volume)
+#   docker compose ps               health status
+#   docker compose down             stop (add -v to also delete the data volume)
+name: office-crm
+
+services:
+  redis:
+    image: redis:7.4-alpine
+    # Append-only file so queued Celery jobs and schedules survive a restart.
+    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1000"]
+    ports:
+      - "127.0.0.1:6379:6379" # localhost only; not reachable from the network
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    restart: unless-stopped
+
+volumes:
+  redis-data:

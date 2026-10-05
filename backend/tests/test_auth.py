@@ -50,16 +50,19 @@ def test_inactive_user_cannot_login(api, staff):
     assert res.status_code == 401
 
 
+APP = {"HTTP_X_REQUESTED_WITH": "XMLHttpRequest"}  # sent by the web app on every API call
+
+
 def test_refresh_with_cookie_and_logout_blacklists(api, staff):
     api.post(LOGIN, {"email": staff.email, "password": PASSWORD}, format="json")
-    res = api.post(REFRESH, {}, format="json")
+    res = api.post(REFRESH, {}, format="json", **APP)
     assert res.status_code == 200 and res.data["access"]
 
     old_cookie = api.cookies[settings.REFRESH_COOKIE_NAME].value
-    assert api.post(LOGOUT, {}, format="json").status_code == 204
+    assert api.post(LOGOUT, {}, format="json", **APP).status_code == 204
 
     api.cookies[settings.REFRESH_COOKIE_NAME] = old_cookie
-    assert api.post(REFRESH, {}, format="json").status_code == 401
+    assert api.post(REFRESH, {}, format="json", **APP).status_code == 401
 
 
 def test_refresh_without_session_is_not_an_error(api):
@@ -127,8 +130,9 @@ def test_2fa_disable_requires_password(client_for, staff):
     assert not staff.two_factor_enabled and staff.totp_secret == ""
 
 
-def test_password_reset_flow(api, staff):
-    assert api.post("/api/v1/auth/password/reset/", {"email": staff.email}, format="json").status_code == 204
+def test_password_reset_flow(api, staff, django_capture_on_commit_callbacks):
+    with django_capture_on_commit_callbacks(execute=True):  # email is queued after commit (Celery)
+        assert api.post("/api/v1/auth/password/reset/", {"email": staff.email}, format="json").status_code == 204
     assert len(mail.outbox) == 1 and "reset-password?uid=" in mail.outbox[0].body
     # Unknown email: same response, no email.
     assert api.post("/api/v1/auth/password/reset/", {"email": "nobody@test.com"}, format="json").status_code == 204

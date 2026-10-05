@@ -2,8 +2,8 @@
 import pytest
 from channels.db import database_sync_to_async
 from channels.testing import WebsocketCommunicator
-from rest_framework_simplejwt.tokens import AccessToken
 
+from apps.core.ws_auth import issue_ticket
 from apps.notifications.models import Notification
 from config.asgi import application
 
@@ -46,7 +46,7 @@ async def test_live_push_uses_recipient_language(admin, staff):
     await database_sync_to_async(staff.save)()
     ws = WebsocketCommunicator(
         application,
-        f"/ws/notifications/?token={AccessToken.for_user(staff)}",
+        f"/ws/notifications/?ticket={issue_ticket(staff)}",
         headers=[(b"origin", b"http://localhost")],
     )
     assert (await ws.connect())[0]

@@ -322,3 +322,18 @@ msgid_plural ""
 "This password is too short. It must contain at least %d characters."
 msgstr[0] "یہ پاس ورڈ بہت چھوٹا ہے۔ اس میں کم از کم %d حروف ہونے چاہئیں۔"
 msgstr[1] "یہ پاس ورڈ بہت چھوٹا ہے۔ اس میں کم از کم %d حروف ہونے چاہئیں۔"
+
+msgid "The photo must be 2 MB or smaller."
+msgstr "تصویر 2 MB یا اس سے چھوٹی ہونی چاہیے۔"
+
+msgid "Upload a valid image. Allowed formats: JPEG, PNG or WebP."
+msgstr "درست تصویر اپ لوڈ کریں۔ اجازت شدہ فارمیٹ: JPEG، PNG یا WebP۔"
+
+msgid "The photo's dimensions are too large."
+msgstr "تصویر کی پیمائش بہت بڑی ہے۔"
+
+msgid "Missing X-Requested-With header."
+msgstr "درخواست میں X-Requested-With ہیڈر موجود نہیں۔"
+
+msgid "Request origin is not allowed."
+msgstr "اس ماخذ سے درخواست کی اجازت نہیں۔"

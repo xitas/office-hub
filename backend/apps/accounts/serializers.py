@@ -4,7 +4,19 @@ from rest_framework import serializers
 
 from apps.core.permissions import permissions_for
 
+from .images import process_avatar
 from .models import Department, User
+
+
+class AvatarMixin:
+    """Sanitises uploaded avatars and deletes the replaced file."""
+
+    def validate_avatar(self, value):
+        return process_avatar(value) if value else value
+
+    def _drop_replaced_avatar(self, instance, old_name):
+        if old_name and old_name != instance.avatar.name:
+            instance.avatar.storage.delete(old_name)
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
@@ -25,7 +37,7 @@ class UserSummarySerializer(serializers.ModelSerializer):
         fields = ["id", "full_name", "email", "avatar", "role"]
 
 
-class MeSerializer(serializers.ModelSerializer):
+class MeSerializer(AvatarMixin, serializers.ModelSerializer):
     department_name = serializers.CharField(source="department.name", default=None, read_only=True)
     permissions = serializers.SerializerMethodField()
 
@@ -42,8 +54,14 @@ class MeSerializer(serializers.ModelSerializer):
     def get_permissions(self, obj) -> list[str]:
         return permissions_for(obj)
 
+    def update(self, instance, validated_data):
+        old_avatar = instance.avatar.name
+        instance = super().update(instance, validated_data)
+        self._drop_replaced_avatar(instance, old_avatar)
+        return instance
 
-class UserSerializer(serializers.ModelSerializer):
+
+class UserSerializer(AvatarMixin, serializers.ModelSerializer):
     """Admin user management. Password is write-only and optional on update."""
 
     department_name = serializers.CharField(source="department.name", default=None, read_only=True)
@@ -87,12 +105,14 @@ class UserSerializer(serializers.ModelSerializer):
         return User.objects.create_user(password=password, **validated_data)
 
     def update(self, instance, validated_data):
+        old_avatar = instance.avatar.name
         password = validated_data.pop("password", None)
         for key, value in validated_data.items():
             setattr(instance, key, value)
         if password:
             instance.set_password(password)
         instance.save()
+        self._drop_replaced_avatar(instance, old_avatar)
         return instance
 
 

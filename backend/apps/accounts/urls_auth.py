@@ -8,6 +8,7 @@ urlpatterns = [
     path("refresh/", v.RefreshView.as_view(), name="auth-refresh"),
     path("logout/", v.LogoutView.as_view(), name="auth-logout"),
     path("me/", v.MeView.as_view(), name="auth-me"),
+    path("ws-ticket/", v.WebSocketTicketView.as_view(), name="auth-ws-ticket"),
     path("password/change/", v.ChangePasswordView.as_view(), name="auth-password-change"),
     path("password/reset/", v.PasswordResetRequestView.as_view(), name="auth-password-reset"),
     path("password/reset/confirm/", v.PasswordResetConfirmView.as_view(), name="auth-password-reset-confirm"),

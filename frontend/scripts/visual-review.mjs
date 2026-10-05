@@ -308,6 +308,9 @@ async function rolePages(browser, role, vpName, vp, data) {
         await s('admin-organization')
         await go('/admin/audit-log')
         await s('admin-audit-log')
+        await go('/admin/system')
+        await page.waitForSelector('main [data-slot=card]')
+        await s('admin-system')
       } else {
         await go('/admin/users')
         await s('admin-users-denied')

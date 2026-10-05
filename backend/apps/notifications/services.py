@@ -3,8 +3,9 @@ import logging
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.conf import settings
-from django.core.mail import send_mail
 from django.utils import translation
+
+from apps.core.email import queue_email
 
 from . import messages
 from .models import DEFAULT_PREFERENCES, Notification, NotificationPreference
@@ -87,5 +88,5 @@ def notify(recipients, type, title="", body="", link="", actor=None, *, message=
                 push(user.pk, {"type": "notification.new", "notification": serialize(notification)})
             if prefs["email"] and user.email:
                 url = f"{settings.FRONTEND_URL}{link}" if link else settings.FRONTEND_URL
-                send_mail(user_title, f"{user_body}\n\n{url}".strip(), None, [user.email], fail_silently=True)
+                queue_email(user_title, f"{user_body}\n\n{url}".strip(), [user.email])
     return created

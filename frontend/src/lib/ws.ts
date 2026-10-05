@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { toast } from 'sonner'
-import { getAccessToken, refreshAccessToken } from './api'
+import { api } from './api'
 import { useAuth } from './auth'
 import type { AppNotification } from './types'
 
@@ -13,8 +13,9 @@ type ServerEvent =
   | { type: 'pong' }
 
 /**
- * Keeps one WebSocket open per signed-in tab. Reconnects with backoff and
- * refreshes the access token when the handshake is rejected.
+ * Keeps one WebSocket open per signed-in tab and reconnects with backoff.
+ * Each connection uses a fresh single-use ticket from /auth/ws-ticket/ (the api
+ * client refreshes the access token for that call if needed).
  */
 export function useRealtime() {
   const { status } = useAuth()
@@ -29,11 +30,17 @@ export function useRealtime() {
     let pingTimer: number | undefined
 
     const connect = async () => {
-      let token = getAccessToken()
-      if (!token) token = await refreshAccessToken()
-      if (!token || stopped) return
+      // A fresh single-use ticket per connection; the access token never goes in the URL.
+      let ticket: string
+      try {
+        ticket = (await api.post<{ ticket: string }>('/auth/ws-ticket/')).data.ticket
+      } catch {
+        if (!stopped) retryTimer = window.setTimeout(connect, Math.min(30_000, 1000 * 2 ** attempts++))
+        return
+      }
+      if (stopped) return
       const proto = window.location.protocol === 'https:' ? 'wss' : 'ws'
-      socket = new WebSocket(`${proto}://${window.location.host}/ws/notifications/?token=${encodeURIComponent(token)}`)
+      socket = new WebSocket(`${proto}://${window.location.host}/ws/notifications/?ticket=${encodeURIComponent(ticket)}`)
 
       socket.onopen = () => {
         attempts = 0
@@ -50,13 +57,9 @@ export function useRealtime() {
           toast(event.notification.title, { description: event.notification.body || undefined })
         }
       }
-      let opened = false
-      socket.addEventListener('open', () => (opened = true))
-      socket.onclose = async () => {
+      socket.onclose = () => {
         window.clearInterval(pingTimer)
         if (stopped) return
-        // A rejected handshake (e.g. expired access token) never opens; get a fresh token first.
-        if (!opened) await refreshAccessToken()
         const delay = Math.min(30_000, 1000 * 2 ** attempts++)
         retryTimer = window.setTimeout(connect, delay)
       }

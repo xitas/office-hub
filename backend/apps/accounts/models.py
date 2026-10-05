@@ -5,6 +5,7 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+from apps.core.fields import EncryptedTextField
 from apps.core.models import TimeStampedModel
 
 
@@ -68,7 +69,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
 
     # Two-factor auth (TOTP). The secret is set during setup and only trusted once enabled.
-    totp_secret = models.CharField(max_length=64, blank=True)
+    totp_secret = EncryptedTextField(blank=True)  # encrypted at rest (FIELD_ENCRYPTION_KEYS)
     two_factor_enabled = models.BooleanField(default=False)
     backup_codes = models.JSONField(default=list, blank=True)  # hashed codes
 

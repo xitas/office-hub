@@ -21,7 +21,8 @@
     "reports": "Reports",
     "more": "More",
     "collapse": "Collapse sidebar",
-    "expand": "Expand sidebar"
+    "expand": "Expand sidebar",
+    "system": "System status"
   },
   "common": {
     "save": "Save",
@@ -271,6 +272,30 @@
         "logout": "Signed out",
         "security": "Security change"
       }
+    },
+    "system": {
+      "title": "System status",
+      "subtitle": "Database, background jobs and real-time services.",
+      "refresh": "Refresh",
+      "overall": "Overall",
+      "status": {
+        "ok": "All systems working",
+        "degraded": "Needs attention"
+      },
+      "checks": {
+        "database": "Database",
+        "redis": "Redis",
+        "celery_workers": "Background workers (Celery)",
+        "celery_beat": "Scheduler (Celery Beat)",
+        "channels": "Live updates (Channels)"
+      },
+      "error": "Error: {{error}}",
+      "redisOff": "Not configured (single-process fallbacks in use)",
+      "latency": "Responding in {{ms}} ms",
+      "eager": "No broker: jobs run inside the web server",
+      "noWorkers": "No worker is running",
+      "noHeartbeat": "No heartbeat yet",
+      "heartbeat": "Last heartbeat {{seconds}} s ago"
     }
   },
   "languages": {
