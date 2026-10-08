@@ -22,7 +22,8 @@
     "more": "More",
     "collapse": "Collapse sidebar",
     "expand": "Expand sidebar",
-    "system": "System status"
+    "system": "System status",
+    "companies": "Companies"
   },
   "common": {
     "save": "Save",
@@ -145,7 +146,7 @@
     "markRead": "Mark as read"
   },
   "search": {
-    "placeholder": "Search people, departments…",
+    "placeholder": "Search people, companies, departments…",
     "button": "Search…",
     "typeMore": "Type at least 2 characters",
     "groups": {
@@ -154,7 +155,8 @@
       "contacts": "Contacts",
       "tasks": "Tasks",
       "messages": "Messages",
-      "files": "Files"
+      "files": "Files",
+      "companies": "Companies"
     }
   },
   "team": {
@@ -316,5 +318,52 @@
     "booking": "Booking updates",
     "visit": "Field visit updates",
     "system": "System and security"
+  },
+  "companies": {
+    "title": "Companies",
+    "subtitle": "Client and partner organisations.",
+    "add": "Add company",
+    "edit": "Edit company",
+    "name": "Company name",
+    "industry": "Industry",
+    "city": "City",
+    "website": "Website",
+    "address": "Address",
+    "notes": "Notes",
+    "assignedTo": "Assigned to",
+    "unassigned": "Unassigned",
+    "updated": "Last updated",
+    "details": "Details",
+    "searchPlaceholder": "Search by name, email, phone or city",
+    "allCities": "All cities",
+    "allIndustries": "All industries",
+    "anyone": "Anyone",
+    "noIndustry": "Not specified",
+    "empty": "No companies yet",
+    "emptyHint": "Add your first client or partner company.",
+    "back": "All companies",
+    "notFound": "Company not found",
+    "notFoundHint": "It may have been deleted, or it's assigned to someone outside your team.",
+    "visitWebsite": "Website",
+    "noNotes": "No notes yet.",
+    "createdBy": "Added by {{name}} on {{when}}",
+    "updatedBy": "last updated by {{name}} {{when}}",
+    "deleteTitle": "Delete {{name}}?",
+    "deleteHint": "This permanently removes the company. This cannot be undone.",
+    "industries": {
+      "retail": "Retail",
+      "manufacturing": "Manufacturing",
+      "services": "Professional services",
+      "construction": "Construction",
+      "healthcare": "Healthcare",
+      "education": "Education",
+      "technology": "Technology",
+      "finance": "Finance",
+      "real_estate": "Real estate",
+      "logistics": "Logistics",
+      "hospitality": "Hospitality",
+      "government": "Government",
+      "other": "Other"
+    }
   }
 }

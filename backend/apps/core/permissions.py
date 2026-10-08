@@ -22,7 +22,9 @@ PERMISSIONS: dict[str, dict[str, set[str]]] = {
     "settings": {"view": ALL, "edit": ADMIN_ONLY},
     "audit": {"view": ADMIN_ONLY},
     # Phase 2
-    "contacts": {"view": ALL, "create": ALL, "edit": ALL, "delete": MGMT, "import": MGMT, "export": MGMT},
+    "contacts": {
+        "view": ALL, "create": ALL, "edit": ALL, "delete": MGMT, "import": MGMT, "export": MGMT, "assign_others": MGMT,
+    },
     "tasks": {"view": ALL, "create": ALL, "edit": ALL, "delete": MGMT, "assign_others": MGMT},
     # Phase 3
     "chat": {"view": ALL, "create": ALL, "edit": ALL, "delete": ALL, "manage_channels": MGMT},

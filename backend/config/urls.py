@@ -10,6 +10,7 @@ api_v1 = [
     path("", include("apps.core.urls")),
     path("notifications/", include("apps.notifications.urls")),
     path("dashboard/", include("apps.dashboard.urls")),
+    path("", include("apps.contacts.urls")),
 ]
 
 urlpatterns = [

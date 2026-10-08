@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Building2, FileText, MessageSquare, Search, SquareCheck, User, UsersRound, type LucideIcon } from 'lucide-react'
+import { Building, Building2, FileText, MessageSquare, Search, SquareCheck, User, UsersRound, type LucideIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
@@ -12,6 +12,7 @@ import { useDebouncedValue } from '@/lib/utils'
 const GROUP_ICONS: Record<string, LucideIcon> = {
   users: User,
   departments: Building2,
+  companies: Building,
   contacts: UsersRound,
   tasks: SquareCheck,
   messages: MessageSquare,

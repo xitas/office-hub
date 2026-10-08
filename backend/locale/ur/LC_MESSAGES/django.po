@@ -337,3 +337,54 @@ msgstr "درخواست میں X-Requested-With ہیڈر موجود نہیں۔"
 
 msgid "Request origin is not allowed."
 msgstr "اس ماخذ سے درخواست کی اجازت نہیں۔"
+
+msgid "company"
+msgstr "کمپنی"
+
+msgid "companies"
+msgstr "کمپنیاں"
+
+msgid "Retail"
+msgstr "ریٹیل"
+
+msgid "Manufacturing"
+msgstr "مینوفیکچرنگ"
+
+msgid "Professional services"
+msgstr "پیشہ ورانہ خدمات"
+
+msgid "Construction"
+msgstr "تعمیرات"
+
+msgid "Healthcare"
+msgstr "صحت"
+
+msgid "Education"
+msgstr "تعلیم"
+
+msgid "Technology"
+msgstr "ٹیکنالوجی"
+
+msgid "Finance"
+msgstr "مالیات"
+
+msgid "Real estate"
+msgstr "رئیل اسٹیٹ"
+
+msgid "Logistics"
+msgstr "لاجسٹکس"
+
+msgid "Hospitality"
+msgstr "مہمان نوازی"
+
+msgid "Government"
+msgstr "سرکاری"
+
+msgid "You can only assign companies to yourself."
+msgstr "آپ کمپنیاں صرف اپنے آپ کو تفویض کر سکتے ہیں۔"
+
+msgid "You can only assign companies to people in your department."
+msgstr "آپ کمپنیاں صرف اپنے شعبے کے افراد کو تفویض کر سکتے ہیں۔"
+
+msgid "Enter a valid URL."
+msgstr "درست URL درج کریں۔"

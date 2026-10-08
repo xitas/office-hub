@@ -22,7 +22,8 @@
     "more": "مزید",
     "collapse": "سائیڈ بار چھوٹا کریں",
     "expand": "سائیڈ بار بڑا کریں",
-    "system": "سسٹم کی حالت"
+    "system": "سسٹم کی حالت",
+    "companies": "کمپنیاں"
   },
   "common": {
     "save": "محفوظ کریں",
@@ -145,7 +146,7 @@
     "markRead": "پڑھا ہوا نشان زد کریں"
   },
   "search": {
-    "placeholder": "افراد، شعبہ جات تلاش کریں…",
+    "placeholder": "افراد، کمپنیاں، شعبہ جات تلاش کریں…",
     "button": "تلاش…",
     "typeMore": "کم از کم 2 حروف لکھیں",
     "groups": {
@@ -154,7 +155,8 @@
       "contacts": "رابطے",
       "tasks": "کام",
       "messages": "پیغامات",
-      "files": "فائلیں"
+      "files": "فائلیں",
+      "companies": "کمپنیاں"
     }
   },
   "team": {
@@ -316,5 +318,52 @@
     "booking": "بکنگ کی اپ ڈیٹس",
     "visit": "فیلڈ دورے کی اپ ڈیٹس",
     "system": "سسٹم اور سیکیورٹی"
+  },
+  "companies": {
+    "title": "کمپنیاں",
+    "subtitle": "کلائنٹ اور شراکت دار ادارے۔",
+    "add": "کمپنی شامل کریں",
+    "edit": "کمپنی میں ترمیم",
+    "name": "کمپنی کا نام",
+    "industry": "صنعت",
+    "city": "شہر",
+    "website": "ویب سائٹ",
+    "address": "پتہ",
+    "notes": "نوٹس",
+    "assignedTo": "ذمہ دار",
+    "unassigned": "کسی کو تفویض نہیں",
+    "updated": "آخری تبدیلی",
+    "details": "تفصیلات",
+    "searchPlaceholder": "نام، ای میل، فون یا شہر سے تلاش کریں",
+    "allCities": "تمام شہر",
+    "allIndustries": "تمام صنعتیں",
+    "anyone": "کوئی بھی",
+    "noIndustry": "متعین نہیں",
+    "empty": "ابھی کوئی کمپنی نہیں",
+    "emptyHint": "اپنی پہلی کلائنٹ یا شراکت دار کمپنی شامل کریں۔",
+    "back": "تمام کمپنیاں",
+    "notFound": "کمپنی نہیں ملی",
+    "notFoundHint": "ہو سکتا ہے یہ حذف ہو گئی ہو، یا آپ کی ٹیم سے باہر کسی کو تفویض ہو۔",
+    "visitWebsite": "ویب سائٹ",
+    "noNotes": "ابھی کوئی نوٹ نہیں۔",
+    "createdBy": "{{name}} نے {{when}} کو شامل کی",
+    "updatedBy": "آخری تبدیلی {{name}} نے {{when}} کی",
+    "deleteTitle": "{{name}} کو حذف کریں؟",
+    "deleteHint": "یہ کمپنی مستقل طور پر حذف ہو جائے گی۔ یہ عمل واپس نہیں ہو سکتا۔",
+    "industries": {
+      "retail": "ریٹیل",
+      "manufacturing": "مینوفیکچرنگ",
+      "services": "پیشہ ورانہ خدمات",
+      "construction": "تعمیرات",
+      "healthcare": "صحت",
+      "education": "تعلیم",
+      "technology": "ٹیکنالوجی",
+      "finance": "مالیات",
+      "real_estate": "رئیل اسٹیٹ",
+      "logistics": "لاجسٹکس",
+      "hospitality": "مہمان نوازی",
+      "government": "سرکاری",
+      "other": "دیگر"
+    }
   }
 }

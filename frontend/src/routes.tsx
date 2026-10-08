@@ -33,6 +33,14 @@ export const router = createBrowserRouter([
         element: <AppShell />,
         children: [
           { index: true, element: <DashboardPage /> },
+          {
+            path: 'companies',
+            lazy: () => import('@/features/companies/CompaniesPage').then((m) => ({ Component: m.CompaniesPage })),
+          },
+          {
+            path: 'companies/:id',
+            lazy: () => import('@/features/companies/CompanyDetailPage').then((m) => ({ Component: m.CompanyDetailPage })),
+          },
           { path: 'team', lazy: () => import('@/features/team/TeamPage').then((m) => ({ Component: m.TeamPage })) },
           {
             path: 'notifications',

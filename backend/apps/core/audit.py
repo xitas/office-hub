@@ -47,7 +47,7 @@ def snapshot(instance) -> dict:
 
 def diff(before: dict, after: dict) -> dict:
     """{field: [old, new]} for fields whose value changed (snapshots already exclude sensitive fields)."""
-    return {k: [before.get(k), v] for k, v in after.items() if before.get(k) != v and k != "updated_at"}
+    return {k: [before.get(k), v] for k, v in after.items() if before.get(k) != v and k not in ("updated_at", "updated_by")}
 
 
 def model_label(content_type) -> str | None:
@@ -79,20 +79,20 @@ def log_action(actor, action, obj=None, *, changes=None, description="", request
 
 
 class AuditedViewSetMixin:
-    """Writes an AuditLog row on create, update and delete; sets `created_by` when the model has it."""
+    """Writes an AuditLog row on create, update and delete; sets `created_by` / `updated_by` when the model has them."""
+
+    def _user_fields(self, serializer, *names):
+        fields = {f.name for f in serializer.Meta.model._meta.concrete_fields}
+        return {name: self.request.user for name in names if name in fields}
 
     def perform_create(self, serializer):
-        extra = {}
-        model = serializer.Meta.model
-        if any(f.name == "created_by" for f in model._meta.concrete_fields):
-            extra["created_by"] = self.request.user
-        instance = serializer.save(**extra)
+        instance = serializer.save(**self._user_fields(serializer, "created_by", "updated_by"))
         log_action(self.request.user, AuditLog.Action.CREATE, instance, changes=snapshot(instance), request=self.request)
 
     def perform_update(self, serializer):
         before = snapshot(serializer.instance)
         sensitive_before = {f: getattr(serializer.instance, f, None) for f in SENSITIVE_FIELDS}
-        instance = serializer.save()
+        instance = serializer.save(**self._user_fields(serializer, "updated_by"))
         changes = diff(before, snapshot(instance))
         for field, old in sensitive_before.items():
             if old != getattr(instance, field, None):

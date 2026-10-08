@@ -138,3 +138,22 @@ export interface SearchHit {
   subtitle: string
   url: string
 }
+
+export interface Company {
+  id: number
+  name: string
+  industry: string
+  industry_label: string
+  phone: string
+  email: string
+  website: string
+  address: string
+  city: string
+  notes: string
+  assigned_to: number | null
+  assigned_to_name: string | null
+  created_by_name: string | null
+  updated_by_name: string | null
+  created_at: string
+  updated_at: string
+}
