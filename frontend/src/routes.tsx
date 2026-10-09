@@ -1,7 +1,7 @@
 import type { ComponentType } from 'react'
 import { createBrowserRouter, Outlet } from 'react-router-dom'
 import { AppShell } from '@/components/layout/AppShell'
-import { NotFound, PublicOnly, RequireAuth, RequirePermission } from '@/components/routing'
+import { FullPageFallback, NotFound, PublicOnly, RequireAuth, RequirePermission } from '@/components/routing'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { ForgotPasswordPage, ResetPasswordPage } from '@/features/auth/PasswordResetPages'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
@@ -20,6 +20,7 @@ const guarded = (perm: string, path: string, load: () => Promise<{ Component: Co
 export const router = createBrowserRouter([
   {
     element: <PublicOnly />,
+    hydrateFallbackElement: <FullPageFallback />,
     children: [
       { path: '/login', element: <LoginPage /> },
       { path: '/forgot-password', element: <ForgotPasswordPage /> },
@@ -28,6 +29,7 @@ export const router = createBrowserRouter([
   },
   {
     element: <RequireAuth />,
+    hydrateFallbackElement: <FullPageFallback />,
     children: [
       {
         element: <AppShell />,
@@ -40,6 +42,10 @@ export const router = createBrowserRouter([
           {
             path: 'contacts/:id',
             lazy: () => import('@/features/contacts/ContactDetailPage').then((m) => ({ Component: m.ContactDetailPage })),
+          },
+          {
+            path: 'pipeline',
+            lazy: () => import('@/features/pipeline/PipelinePage').then((m) => ({ Component: m.PipelinePage })),
           },
           {
             path: 'companies',

@@ -109,13 +109,14 @@ An office CRM for small-to-mid-sized offices (10–100 staff). It works on deskt
 
 ## Phase 2 — Contacts & task management
 
-**Status: in progress** (branch `phase-2-contacts`). Slices: 1 Companies ✓, 2 Contacts ✓, then 3–6.
+**Status: in progress** (branch `phase-2-contacts`). Slices: 1 Companies ✓, 2 Contacts ✓, 3 Lead pipeline ✓, then 4–6.
 
 ### Module 2 — Contacts & clients
 - [x] Contact records: name, company, job title, phone, WhatsApp, email, address, city, tags (created on the fly), assigned staff, lead status
 - [x] Company records linked to multiple contacts (company page lists its contacts, "Add contact" pre-fills the company)
 - [ ] Interaction timeline per contact (calls, meetings, emails, notes, tasks)
-- [ ] Lead pipeline Kanban: New → Contacted → In Discussion → Won / Lost
+- [x] Lead pipeline Kanban: New → Contacted → In Discussion → Won / Lost (drag and drop, "Move to…" menu for keyboard/touch, column counts, filters, Board/List views)
+- [x] Status history (old/new status, who, when, optional Won/Lost reason) and days-in-status on cards
 - [x] Search (name, phone, email) and filter by company, tag, city, status, assigned person
 - [x] Duplicate warning on matching phone/WhatsApp/email (warning only; hides details of contacts the user can't see)
 - [ ] CSV import and export
@@ -216,7 +217,7 @@ An office CRM for small-to-mid-sized offices (10–100 staff). It works on deskt
 | Expenses | 4 | [ ] |
 | Visits | 5 | [ ] |
 
-Tables added beyond the spec: OrganizationSettings, Notification and NotificationPreference (Phase 1, done); Tag (Phase 2).
+Tables added beyond the spec: OrganizationSettings, Notification and NotificationPreference (Phase 1, done); Tag and ContactStatusChange (Phase 2).
 
 ---
 
@@ -231,6 +232,7 @@ Tables added beyond the spec: OrganizationSettings, Notification and Notificatio
 ---
 
 ## Changelog
+- **2026-10-09:** Phase 2 slice 3 — Lead pipeline: Kanban board with drag and drop and an accessible "Move to…" menu, Board/List views, status history with optional Won/Lost reasons, days in status, seeded history for demo contacts.
 - **2026-10-09:** Phase 2 slice 2 — Contacts: model with lead status and tags, scoped API with filters/search, duplicate warnings, list and detail pages, company page contact list, quick-add Contact, global search, 40 seeded contacts.
 - **2026-10-08:** Phase 2 slice 1 — Companies: model, scoped API, list and detail pages, global search, 10 seeded companies.
 - **2026-10-05:** Phase 1 hardening (branch `phase-1-hardening`): encrypted 2FA secrets, avatar sanitising, shared rate limits (and a fix for X-Forwarded-For spoofing), WebSocket tickets, refresh-cookie CSRF check, production headers, Redis in Docker, Celery worker + Beat, emails via Celery, health checks + System status page, dev/test scripts, GitHub Actions CI. 83 backend tests pass on PostgreSQL 17 + Redis.

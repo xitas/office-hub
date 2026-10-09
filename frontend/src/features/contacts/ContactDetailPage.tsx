@@ -18,6 +18,7 @@ import { useFormat } from '@/lib/format'
 import { usePermission } from '@/lib/permissions'
 import type { Contact, ContactStatus } from '@/lib/types'
 import { ContactForm } from './ContactForm'
+import { useStatusChange } from './useStatusChange'
 
 function Detail({ icon: Icon, label, children }: { icon: typeof Phone; label: string; children: ReactNode }) {
   return (
@@ -55,14 +56,13 @@ export function ContactDetailPage() {
     void queryClient.invalidateQueries({ queryKey: ['companies', 'contacts'] })
   }
 
-  const changeStatus = useMutation({
-    mutationFn: async (status: ContactStatus) => (await api.patch<Contact>(`/contacts/${id}/`, { status })).data,
+  // Same flow as the pipeline board (asks for an optional reason when moving to Won/Lost).
+  const statusChange = useStatusChange({
     onSuccess: (updated) => {
       queryClient.setQueryData(key, updated)
       refreshLists()
-      toast.success(t('contacts.statusChanged', { status: t(`contacts.statuses.${updated.status}`) }))
+      void queryClient.invalidateQueries({ queryKey: ['contacts', 'pipeline'] })
     },
-    onError: (err) => toast.error(apiError(err).message),
   })
 
   const remove = useMutation({
@@ -109,6 +109,7 @@ export function ContactDetailPage() {
 
   return (
     <div className="max-w-3xl">
+      {statusChange.dialog}
       {back}
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
@@ -135,8 +136,8 @@ export function ContactDetailPage() {
               <SimpleSelect
                 className="w-auto min-w-40"
                 value={contact.status}
-                disabled={changeStatus.isPending}
-                onChange={(v) => v !== contact.status && changeStatus.mutate(v as ContactStatus)}
+                disabled={statusChange.pending === contact.id}
+                onChange={(v) => statusChange.requestChange(contact, v as ContactStatus)}
                 options={CONTACT_STATUSES.map((s) => ({ value: s, label: t(`contacts.statuses.${s}`) }))}
               />
             )}

@@ -7,6 +7,11 @@ import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/auth'
 import { usePermission } from '@/lib/permissions'
 
+/** Shown while the first lazily loaded page loads (React Router's hydrate fallback). */
+export function FullPageFallback() {
+  return <FullPageSpinner />
+}
+
 function FullPageSpinner() {
   return (
     <div className="flex min-h-dvh items-center justify-center">

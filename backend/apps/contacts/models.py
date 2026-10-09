@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 from django.db.models.functions import Lower
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from apps.core.models import TimeStampedModel
@@ -83,6 +84,8 @@ class Contact(TimeStampedModel):
     city = models.CharField(max_length=100, blank=True, db_index=True)
     tags = models.ManyToManyField(Tag, blank=True, related_name="contacts")
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.NEW, db_index=True)
+    # When the current status was set (for "days in status"); the full trail is ContactStatusChange.
+    status_changed_at = models.DateTimeField(default=timezone.now, db_index=True)
     assigned_to = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="contacts"
     )
@@ -112,3 +115,22 @@ class Contact(TimeStampedModel):
         if kwargs.get("update_fields") is not None:
             kwargs["update_fields"] = {*kwargs["update_fields"], "phone_digits", "whatsapp_digits"}
         super().save(*args, **kwargs)
+
+
+class ContactStatusChange(models.Model):
+    """One row per lead-status change (and one for the initial status), for pipeline age and reports."""
+
+    contact = models.ForeignKey(Contact, on_delete=models.CASCADE, related_name="status_changes")
+    from_status = models.CharField(max_length=20, choices=Contact.Status.choices, blank=True)  # "" = created
+    to_status = models.CharField(max_length=20, choices=Contact.Status.choices, db_index=True)
+    reason = models.CharField(max_length=500, blank=True)  # optional, asked when moving to Won/Lost
+    changed_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    changed_at = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        ordering = ["-changed_at", "-id"]
+        verbose_name = _("status change")
+        verbose_name_plural = _("status changes")
+
+    def __str__(self):
+        return f"{self.contact}: {self.from_status or '-'} -> {self.to_status}"

@@ -23,7 +23,8 @@
     "collapse": "Collapse sidebar",
     "expand": "Expand sidebar",
     "system": "System status",
-    "companies": "Companies"
+    "companies": "Companies",
+    "pipeline": "Pipeline"
   },
   "common": {
     "save": "Save",
@@ -392,7 +393,6 @@
       "won": "Won",
       "lost": "Lost"
     },
-    "statusChanged": "Status changed to {{status}}",
     "searchPlaceholder": "Search by name, phone or email",
     "allStatuses": "All statuses",
     "allCompanies": "All companies",
@@ -416,5 +416,35 @@
       "email": "same email"
     },
     "and": " and "
+  },
+  "pipeline": {
+    "title": "Lead pipeline",
+    "subtitle": "Track every contact from first touch to won or lost.",
+    "view": "View",
+    "board": "Board",
+    "list": "List",
+    "boardLabel": "Lead pipeline board",
+    "columnLabel": "{{status}}, {{count}} contacts",
+    "moveTo": "Move to…",
+    "moveLabel": "Move {{name}} to another status",
+    "moved": "{{name}} moved to {{status}}",
+    "today": "Today",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days",
+    "daysInStatusTitle": "Time in this status",
+    "emptyColumn": "No contacts",
+    "emptyColumnDrop": "Drop contacts here",
+    "showingOf": "Showing {{shown}} of {{count}} — view list",
+    "reason": "Reason (optional)",
+    "reasonHint": "A short note helps later reports. You can skip it.",
+    "reasonTitle": {
+      "won": "Mark {{name}} as won",
+      "lost": "Mark {{name}} as lost"
+    },
+    "reasonPlaceholder": {
+      "won": "e.g. Signed annual contract",
+      "lost": "e.g. Chose a cheaper supplier"
+    },
+    "skip": "Skip"
   }
 }

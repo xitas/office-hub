@@ -164,7 +164,10 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "REST API for the Office CRM web and mobile clients.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
-    "ENUM_NAME_OVERRIDES": {"LanguageEnum": "config.settings.base.LANGUAGES"},
+    "ENUM_NAME_OVERRIDES": {
+        "LanguageEnum": "config.settings.base.LANGUAGES",
+        "ContactStatusEnum": "apps.contacts.models.Contact.Status",
+    },
 }
 
 CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS")

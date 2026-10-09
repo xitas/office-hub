@@ -176,6 +176,8 @@ export interface Contact {
   tags: string[]
   status: ContactStatus
   status_label: string
+  /** When the current status was set */
+  status_changed_at: string
   assigned_to: number | null
   assigned_to_name: string | null
   created_by_name: string | null
@@ -198,4 +200,29 @@ export interface DuplicateMatch {
 export interface Tag {
   id: number
   name: string
+}
+
+export interface PipelineCard {
+  id: number
+  full_name: string
+  company: number | null
+  company_name: string | null
+  assigned_to: number | null
+  assigned_to_name: string | null
+  tags: string[]
+  status: ContactStatus
+  status_changed_at: string
+  city: string
+}
+
+export interface PipelineColumn {
+  status: ContactStatus
+  label: string
+  count: number
+  cards: PipelineCard[]
+}
+
+export interface PipelineData {
+  columns: PipelineColumn[]
+  total: number
 }

@@ -1,8 +1,11 @@
+from datetime import timedelta
+
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from django.utils import timezone
 
 from apps.accounts.models import Department, User
-from apps.contacts.models import Company, Contact, Tag
+from apps.contacts.models import Company, Contact, ContactStatusChange, Tag
 from apps.core.models import OrganizationSettings
 
 DEMO_PASSWORD = "Demo@12345"
@@ -55,6 +58,18 @@ TAG_SETS = [
     ["Trade show"], ["Follow-up"], ["Decision maker", "VIP"],
 ]
 OTHER_CITIES = ["Lahore", "Karachi", "Islamabad", "Rawalpindi", "Faisalabad", "Multan"]
+# Plausible routes to each final status (the first entry is the status at creation).
+STATUS_PATHS = {
+    "new": [["new"]],
+    "contacted": [["new", "contacted"]],
+    "in_discussion": [["new", "contacted", "in_discussion"], ["new", "in_discussion"]],
+    "won": [["new", "contacted", "in_discussion", "won"], ["new", "in_discussion", "won"]],
+    "lost": [["new", "contacted", "lost"], ["new", "contacted", "in_discussion", "lost"]],
+}
+REASONS = {
+    "won": ["Signed annual contract", "Accepted revised quotation", "Referred by existing client", "Pilot order confirmed"],
+    "lost": ["Chose a cheaper supplier", "Budget frozen this year", "No response after follow-ups", "Went with incumbent vendor"],
+}
 
 
 class Command(BaseCommand):
@@ -93,6 +108,7 @@ class Command(BaseCommand):
             )
 
         self._seed_contacts()
+        self._seed_status_history()
 
         self.stdout.write(self.style.SUCCESS("Demo data ready. All demo users share the password: " + DEMO_PASSWORD))
         for email, name, role, dept, _ in USERS:
@@ -128,3 +144,38 @@ class Command(BaseCommand):
             for name in TAG_SETS[i % len(TAG_SETS)]:
                 tags.setdefault(name, Tag.objects.get_or_create(name=name)[0])
                 contact.tags.add(tags[name])
+
+
+    def _seed_status_history(self):
+        """Realistic pipeline history for the 40 demo contacts (deterministic).
+
+        Each demo contact gets a creation date 15–90 days ago and a plausible path to its current
+        status (e.g. new -> contacted -> in_discussion -> won) with dates spread over that time, so
+        "days in status" on the pipeline board looks lived-in. Only demo contacts whose history is
+        just the initial entry are (re)built, so real data and earlier runs are left alone.
+        """
+        demo = Contact.objects.filter(email__endswith=".pk", first_name__in=FIRST_NAMES, last_name__in=LAST_NAMES)
+        now = timezone.now()
+        for contact in demo.order_by("pk"):
+            if contact.status_changes.count() > 1:
+                continue
+            i = contact.pk
+            path = STATUS_PATHS[contact.status][i % len(STATUS_PATHS[contact.status])]
+            age_days = 15 + (i * 17) % 76
+            created = now - timedelta(days=age_days, hours=(i * 5) % 24)
+            # Spread the moves over the contact's life, leaving the current status 1+ days old.
+            span = timedelta(days=age_days - 1)
+            moments = [created + span * (step / len(path)) for step in range(len(path))]
+            contact.status_changes.all().delete()
+            ContactStatusChange.objects.bulk_create([
+                ContactStatusChange(
+                    contact=contact,
+                    from_status="" if step == 0 else path[step - 1],
+                    to_status=status,
+                    reason=REASONS[status][i % len(REASONS[status])] if status in REASONS and i % 3 else "",
+                    changed_by=contact.assigned_to,
+                    changed_at=moments[step],
+                )
+                for step, status in enumerate(path)
+            ])
+            Contact.objects.filter(pk=contact.pk).update(created_at=created, status_changed_at=moments[-1])

@@ -23,7 +23,8 @@
     "collapse": "سائیڈ بار چھوٹا کریں",
     "expand": "سائیڈ بار بڑا کریں",
     "system": "سسٹم کی حالت",
-    "companies": "کمپنیاں"
+    "companies": "کمپنیاں",
+    "pipeline": "پائپ لائن"
   },
   "common": {
     "save": "محفوظ کریں",
@@ -392,7 +393,6 @@
       "won": "کامیاب",
       "lost": "ناکام"
     },
-    "statusChanged": "حیثیت تبدیل ہو کر {{status}} ہو گئی",
     "searchPlaceholder": "نام، فون یا ای میل سے تلاش کریں",
     "allStatuses": "تمام حیثیتیں",
     "allCompanies": "تمام کمپنیاں",
@@ -416,5 +416,35 @@
       "email": "ایک ہی ای میل"
     },
     "and": " اور "
+  },
+  "pipeline": {
+    "title": "لیڈ پائپ لائن",
+    "subtitle": "ہر رابطے کو پہلی ملاقات سے کامیابی یا ناکامی تک دیکھیں۔",
+    "view": "منظر",
+    "board": "بورڈ",
+    "list": "فہرست",
+    "boardLabel": "لیڈ پائپ لائن بورڈ",
+    "columnLabel": "{{status}}، {{count}} رابطے",
+    "moveTo": "منتقل کریں…",
+    "moveLabel": "{{name}} کو دوسری حیثیت میں منتقل کریں",
+    "moved": "{{name}} کو {{status}} میں منتقل کر دیا گیا",
+    "today": "آج",
+    "days_one": "{{count}} دن",
+    "days_other": "{{count}} دن",
+    "daysInStatusTitle": "اس حیثیت میں وقت",
+    "emptyColumn": "کوئی رابطہ نہیں",
+    "emptyColumnDrop": "رابطے یہاں چھوڑیں",
+    "showingOf": "{{count}} میں سے {{shown}} دکھائے گئے — فہرست دیکھیں",
+    "reason": "وجہ (اختیاری)",
+    "reasonHint": "مختصر نوٹ بعد کی رپورٹس میں مدد دیتا ہے۔ آپ اسے چھوڑ سکتے ہیں۔",
+    "reasonTitle": {
+      "won": "{{name}} کو کامیاب قرار دیں",
+      "lost": "{{name}} کو ناکام قرار دیں"
+    },
+    "reasonPlaceholder": {
+      "won": "مثلاً سالانہ معاہدہ طے پایا",
+      "lost": "مثلاً سستے سپلائر کا انتخاب کیا"
+    },
+    "skip": "چھوڑ دیں"
   }
 }
