@@ -1,8 +1,11 @@
 from django.conf import settings
 from django.db import models
+from django.db.models.functions import Lower
 from django.utils.translation import gettext_lazy as _
 
 from apps.core.models import TimeStampedModel
+
+from .phones import normalize_phone
 
 
 class Company(TimeStampedModel):
@@ -43,3 +46,69 @@ class Company(TimeStampedModel):
 
     def __str__(self):
         return self.name
+
+
+class Tag(models.Model):
+    """Reusable label for contacts, created on the fly. Names are unique ignoring case."""
+
+    name = models.CharField(max_length=50, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name = _("tag")
+        verbose_name_plural = _("tags")
+        constraints = [models.UniqueConstraint(Lower("name"), name="unique_tag_name_ci")]
+
+    def __str__(self):
+        return self.name
+
+
+class Contact(TimeStampedModel):
+    class Status(models.TextChoices):
+        NEW = "new", _("New")
+        CONTACTED = "contacted", _("Contacted")
+        IN_DISCUSSION = "in_discussion", _("In discussion")
+        WON = "won", _("Won")
+        LOST = "lost", _("Lost")
+
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100, blank=True)
+    company = models.ForeignKey(Company, null=True, blank=True, on_delete=models.SET_NULL, related_name="contacts")
+    job_title = models.CharField(max_length=100, blank=True)
+    phone = models.CharField(max_length=30, blank=True)
+    whatsapp = models.CharField(max_length=30, blank=True)
+    email = models.EmailField(blank=True)
+    address = models.CharField(max_length=255, blank=True)
+    city = models.CharField(max_length=100, blank=True, db_index=True)
+    tags = models.ManyToManyField(Tag, blank=True, related_name="contacts")
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.NEW, db_index=True)
+    assigned_to = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="contacts"
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+", editable=False
+    )
+    # Digits-only international forms, kept in sync on save; used for duplicate detection.
+    phone_digits = models.CharField(max_length=30, blank=True, db_index=True, editable=False)
+    whatsapp_digits = models.CharField(max_length=30, blank=True, db_index=True, editable=False)
+
+    class Meta:
+        ordering = ["first_name", "last_name"]
+        verbose_name = _("contact")
+        verbose_name_plural = _("contacts")
+        indexes = [models.Index(Lower("email"), name="contact_email_ci")]
+
+    def __str__(self):
+        return self.full_name
+
+    @property
+    def full_name(self) -> str:
+        return f"{self.first_name} {self.last_name}".strip()
+
+    def save(self, *args, **kwargs):
+        self.phone_digits = normalize_phone(self.phone)
+        self.whatsapp_digits = normalize_phone(self.whatsapp)
+        if kwargs.get("update_fields") is not None:
+            kwargs["update_fields"] = {*kwargs["update_fields"], "phone_digits", "whatsapp_digits"}
+        super().save(*args, **kwargs)

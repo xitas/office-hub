@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 
 from apps.accounts.models import Department, User
-from apps.contacts.models import Company
+from apps.contacts.models import Company, Contact, Tag
 from apps.core.models import OrganizationSettings
 
 DEMO_PASSWORD = "Demo@12345"
@@ -40,8 +40,25 @@ COMPANIES = [
 ]
 
 
+FIRST_NAMES = [
+    "Ahmed", "Ayesha", "Bilal", "Hira", "Imran", "Javeria", "Kamran", "Mahnoor", "Nadeem", "Omer",
+    "Rabia", "Saad", "Sadia", "Tariq", "Uzma", "Waqas", "Yasir", "Zara", "Faisal", "Noor",
+]
+LAST_NAMES = ["Siddiqui", "Qureshi", "Chaudhry", "Sheikh", "Malik", "Butt", "Mirza", "Abbasi", "Hashmi", "Rana"]
+JOB_TITLES = [
+    "Managing Director", "Procurement Manager", "Finance Director", "Operations Head", "IT Manager",
+    "Purchase Officer", "General Manager", "Admin Manager",
+]
+STATUSES = ["new", "contacted", "in_discussion", "won", "lost"]
+TAG_SETS = [
+    ["Decision maker"], ["Referral", "Follow-up"], [], ["VIP", "Key account"], ["Price sensitive"],
+    ["Trade show"], ["Follow-up"], ["Decision maker", "VIP"],
+]
+OTHER_CITIES = ["Lahore", "Karachi", "Islamabad", "Rawalpindi", "Faisalabad", "Multan"]
+
+
 class Command(BaseCommand):
-    help = "Create demo organization settings, departments, users and companies (idempotent)."
+    help = "Create demo organization settings, departments, users, companies and contacts (idempotent)."
 
     @transaction.atomic
     def handle(self, *args, **options):
@@ -75,6 +92,39 @@ class Command(BaseCommand):
                 },
             )
 
+        self._seed_contacts()
+
         self.stdout.write(self.style.SUCCESS("Demo data ready. All demo users share the password: " + DEMO_PASSWORD))
         for email, name, role, dept, _ in USERS:
             self.stdout.write(f"  {role:<8} {email:<28} {name} ({dept or 'All'})")
+
+    def _seed_contacts(self):
+        """40 contacts, 4 per company, with varied statuses, cities and tags (deterministic)."""
+        if Contact.objects.exists():
+            return
+        tags = {}
+        companies = list(Company.objects.filter(name__in=[c[0] for c in COMPANIES]).select_related("assigned_to"))
+        for i in range(40):
+            company = companies[i % len(companies)]
+            # Offset the surname every 20 so the 40 names are all different.
+            first, last = FIRST_NAMES[i % len(FIRST_NAMES)], LAST_NAMES[(i * 3 + i // 20) % len(LAST_NAMES)]
+            phone = f"0300 {1000000 + i * 7919:07d}"
+            if i == 39:
+                phone = "0300 1000000"  # same number as contact #1: shows the duplicate warning
+            contact = Contact.objects.create(
+                first_name=first,
+                last_name=last,
+                company=company,
+                job_title=JOB_TITLES[i % len(JOB_TITLES)],
+                phone=phone,
+                whatsapp=phone if i % 3 else "",
+                email=f"{first}.{last}{i}@{company.name.split()[0].lower()}.pk".lower(),
+                city=company.city if i % 4 else OTHER_CITIES[i % len(OTHER_CITIES)],
+                status=STATUSES[(i * 7) % len(STATUSES)],
+                assigned_to=company.assigned_to,
+                created_by=company.assigned_to,
+                updated_by=company.assigned_to,
+            )
+            for name in TAG_SETS[i % len(TAG_SETS)]:
+                tags.setdefault(name, Tag.objects.get_or_create(name=name)[0])
+                contact.tags.add(tags[name])

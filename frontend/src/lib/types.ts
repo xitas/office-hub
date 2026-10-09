@@ -157,3 +157,45 @@ export interface Company {
   created_at: string
   updated_at: string
 }
+
+export type ContactStatus = 'new' | 'contacted' | 'in_discussion' | 'won' | 'lost'
+
+export interface Contact {
+  id: number
+  first_name: string
+  last_name: string
+  full_name: string
+  company: number | null
+  company_name: string | null
+  job_title: string
+  phone: string
+  whatsapp: string
+  email: string
+  address: string
+  city: string
+  tags: string[]
+  status: ContactStatus
+  status_label: string
+  assigned_to: number | null
+  assigned_to_name: string | null
+  created_by_name: string | null
+  updated_by_name: string | null
+  created_at: string
+  updated_at: string
+}
+
+/** Another contact sharing a phone/WhatsApp number or email (a warning, never blocking). */
+export interface DuplicateMatch {
+  id: number | null
+  name: string | null
+  company_name: string | null
+  assigned_to_name: string | null
+  matched: ('phone' | 'email')[]
+  /** false: exists but assigned outside this user's view, so details are hidden */
+  visible: boolean
+}
+
+export interface Tag {
+  id: number
+  name: string
+}

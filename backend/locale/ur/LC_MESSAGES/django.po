@@ -388,3 +388,39 @@ msgstr "آپ کمپنیاں صرف اپنے شعبے کے افراد کو تفو
 
 msgid "Enter a valid URL."
 msgstr "درست URL درج کریں۔"
+
+msgid "contact"
+msgstr "رابطہ"
+
+msgid "contacts"
+msgstr "رابطے"
+
+msgid "tag"
+msgstr "ٹیگ"
+
+msgid "tags"
+msgstr "ٹیگز"
+
+msgid "New"
+msgstr "نیا"
+
+msgid "Contacted"
+msgstr "رابطہ کیا گیا"
+
+msgid "In discussion"
+msgstr "بات چیت جاری"
+
+msgid "Won"
+msgstr "کامیاب"
+
+msgid "Lost"
+msgstr "ناکام"
+
+msgid "You can only assign this to yourself."
+msgstr "آپ اسے صرف اپنے آپ کو تفویض کر سکتے ہیں۔"
+
+msgid "You can only assign this to people in your department."
+msgstr "آپ اسے صرف اپنے شعبے کے افراد کو تفویض کر سکتے ہیں۔"
+
+msgid "Company not found."
+msgstr "کمپنی نہیں ملی۔"

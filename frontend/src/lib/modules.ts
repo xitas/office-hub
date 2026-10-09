@@ -34,8 +34,8 @@ export interface NavItem {
 
 export const NAV_ITEMS: NavItem[] = [
   { key: 'dashboard', path: '/', icon: LayoutDashboard, label: 'nav.dashboard', permission: 'dashboard.view', enabled: true, mobilePrimary: true, section: 'main' },
+  { key: 'contacts', path: '/contacts', icon: UsersRound, label: 'nav.contacts', permission: 'contacts.view', enabled: true, mobilePrimary: true, section: 'main' },
   { key: 'companies', path: '/companies', icon: Building, label: 'nav.companies', permission: 'contacts.view', enabled: true, mobilePrimary: true, section: 'main' },
-  { key: 'contacts', path: '/contacts', icon: UsersRound, label: 'nav.contacts', permission: 'contacts.view', enabled: false, mobilePrimary: true, section: 'main' },
   { key: 'tasks', path: '/tasks', icon: CheckSquare, label: 'nav.tasks', permission: 'tasks.view', enabled: false, mobilePrimary: true, section: 'main' },
   { key: 'chat', path: '/chat', icon: MessagesSquare, label: 'nav.chat', permission: 'chat.view', enabled: false, mobilePrimary: true, section: 'main' },
   { key: 'calendar', path: '/calendar', icon: CalendarDays, label: 'nav.calendar', permission: 'calendar.view', enabled: false, section: 'main' },

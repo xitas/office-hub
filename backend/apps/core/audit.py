@@ -85,15 +85,21 @@ class AuditedViewSetMixin:
         fields = {f.name for f in serializer.Meta.model._meta.concrete_fields}
         return {name: self.request.user for name in names if name in fields}
 
+    def audit_snapshot(self, instance) -> dict:
+        """Values compared for the audit diff. Override to add e.g. many-to-many fields."""
+        return snapshot(instance)
+
     def perform_create(self, serializer):
         instance = serializer.save(**self._user_fields(serializer, "created_by", "updated_by"))
-        log_action(self.request.user, AuditLog.Action.CREATE, instance, changes=snapshot(instance), request=self.request)
+        log_action(
+            self.request.user, AuditLog.Action.CREATE, instance, changes=self.audit_snapshot(instance), request=self.request
+        )
 
     def perform_update(self, serializer):
-        before = snapshot(serializer.instance)
+        before = self.audit_snapshot(serializer.instance)
         sensitive_before = {f: getattr(serializer.instance, f, None) for f in SENSITIVE_FIELDS}
         instance = serializer.save(**self._user_fields(serializer, "updated_by"))
-        changes = diff(before, snapshot(instance))
+        changes = diff(before, self.audit_snapshot(instance))
         for field, old in sensitive_before.items():
             if old != getattr(instance, field, None):
                 changes[field] = ["***", "***"]
@@ -101,5 +107,7 @@ class AuditedViewSetMixin:
             log_action(self.request.user, AuditLog.Action.UPDATE, instance, changes=changes, request=self.request)
 
     def perform_destroy(self, instance):
-        log_action(self.request.user, AuditLog.Action.DELETE, instance, changes=snapshot(instance), request=self.request)
+        log_action(
+            self.request.user, AuditLog.Action.DELETE, instance, changes=self.audit_snapshot(instance), request=self.request
+        )
         instance.delete()

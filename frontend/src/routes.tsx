@@ -34,6 +34,14 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <DashboardPage /> },
           {
+            path: 'contacts',
+            lazy: () => import('@/features/contacts/ContactsPage').then((m) => ({ Component: m.ContactsPage })),
+          },
+          {
+            path: 'contacts/:id',
+            lazy: () => import('@/features/contacts/ContactDetailPage').then((m) => ({ Component: m.ContactDetailPage })),
+          },
+          {
             path: 'companies',
             lazy: () => import('@/features/companies/CompaniesPage').then((m) => ({ Component: m.CompaniesPage })),
           },

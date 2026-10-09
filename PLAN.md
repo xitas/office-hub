@@ -109,14 +109,17 @@ An office CRM for small-to-mid-sized offices (10–100 staff). It works on deskt
 
 ## Phase 2 — Contacts & task management
 
+**Status: in progress** (branch `phase-2-contacts`). Slices: 1 Companies ✓, 2 Contacts ✓, then 3–6.
+
 ### Module 2 — Contacts & clients
-- [ ] Contact records: name, company, phone, WhatsApp, email, address, city, tags, assigned staff
-- [ ] Company records linked to multiple contacts
+- [x] Contact records: name, company, job title, phone, WhatsApp, email, address, city, tags (created on the fly), assigned staff, lead status
+- [x] Company records linked to multiple contacts (company page lists its contacts, "Add contact" pre-fills the company)
 - [ ] Interaction timeline per contact (calls, meetings, emails, notes, tasks)
 - [ ] Lead pipeline Kanban: New → Contacted → In Discussion → Won / Lost
-- [ ] Search and filter by tag, city, status, assigned person
+- [x] Search (name, phone, email) and filter by company, tag, city, status, assigned person
+- [x] Duplicate warning on matching phone/WhatsApp/email (warning only; hides details of contacts the user can't see)
 - [ ] CSV import and export
-- [ ] Click-to-call and click-to-WhatsApp buttons on contact records
+- [x] Click-to-call and click-to-WhatsApp buttons on contact records
 
 ### Module 3 — Task management
 - [ ] Tasks: title, description, assignees, due date, priority (Low/Medium/High/Urgent), status, linked contact or project
@@ -134,8 +137,8 @@ An office CRM for small-to-mid-sized offices (10–100 staff). It works on deskt
 
 ### Integration
 - [ ] Dashboard task widgets show live data
-- [ ] Quick-add Task and Contact enabled
-- [ ] Contacts and tasks added to global search
+- [~] Quick-add Contact enabled (Task comes with Module 3)
+- [~] Contacts and companies added to global search (tasks come with Module 3)
 
 ---
 
@@ -196,8 +199,8 @@ An office CRM for small-to-mid-sized offices (10–100 staff). It works on deskt
 | Users | 1 | [x] |
 | Departments | 1 | [x] |
 | AuditLog | 1 | [x] |
-| Contacts | 2 | [ ] |
-| Companies | 2 | [ ] |
+| Contacts | 2 | [x] |
+| Companies | 2 | [x] |
 | Tasks | 2 | [ ] |
 | Subtasks | 2 | [ ] |
 | Comments | 2 | [ ] |
@@ -213,7 +216,7 @@ An office CRM for small-to-mid-sized offices (10–100 staff). It works on deskt
 | Expenses | 4 | [ ] |
 | Visits | 5 | [ ] |
 
-Tables added beyond the spec: OrganizationSettings, Notification and NotificationPreference (Phase 1, done).
+Tables added beyond the spec: OrganizationSettings, Notification and NotificationPreference (Phase 1, done); Tag (Phase 2).
 
 ---
 
@@ -228,6 +231,8 @@ Tables added beyond the spec: OrganizationSettings, Notification and Notificatio
 ---
 
 ## Changelog
+- **2026-10-09:** Phase 2 slice 2 — Contacts: model with lead status and tags, scoped API with filters/search, duplicate warnings, list and detail pages, company page contact list, quick-add Contact, global search, 40 seeded contacts.
+- **2026-10-08:** Phase 2 slice 1 — Companies: model, scoped API, list and detail pages, global search, 10 seeded companies.
 - **2026-10-05:** Phase 1 hardening (branch `phase-1-hardening`): encrypted 2FA secrets, avatar sanitising, shared rate limits (and a fix for X-Forwarded-For spoofing), WebSocket tickets, refresh-cookie CSRF check, production headers, Redis in Docker, Celery worker + Beat, emails via Celery, health checks + System status page, dev/test scripts, GitHub Actions CI. 83 backend tests pass on PostgreSQL 17 + Redis.
 - **2026-10-04:** Switched development to PostgreSQL 17: migrations applied, demo data seeded, 42/42 tests pass on Postgres, full-text search verified.
 - **2026-10-04:** Phase 1 polish (branch `phase-1-polish`). Light-mode contrast (grey page, white cards with border and soft shadow); backend text translated to Urdu (Django gettext catalog, notifications stored as message keys and rendered in the reader's language, translated audit labels and record types, translated server errors); department search links to the Team page for non-admins; greeting uses the org time zone; Team `?user=` works across pages and filters; themed confirmation dialogs; Urdu typography fixes (no clipped Nastaliq, Nastaliq headings, Geist for Latin); compact "Coming soon" dashboard card; quick-add no longer duplicated on desktop; `next-themes` replaced (removed React 19 console warnings); readable FK values in audit diffs; refresh returns 204 when signed out; vendor chunk splitting. Added `npm run review` visual check. 42 backend tests pass.

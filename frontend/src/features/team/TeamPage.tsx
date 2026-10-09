@@ -1,15 +1,15 @@
 import { useQuery } from '@tanstack/react-query'
-import { Mail, MessageCircle, Phone, Search, Users } from 'lucide-react'
+import { Search, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { EmptyState, ErrorState, PageHeader, Pagination, RoleBadge, SimpleSelect, UserAvatar } from '@/components/common'
-import { Button } from '@/components/ui/button'
+import { ContactButtons } from '@/components/common/ContactButtons'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/lib/api'
-import { useDepartments, whatsappNumber } from '@/lib/queries'
+import { useDepartments } from '@/lib/queries'
 import type { Paginated, User } from '@/lib/types'
 import { cn, useDebouncedValue } from '@/lib/utils'
 
@@ -132,29 +132,7 @@ function MemberCard({ user: u, highlighted }: { user: User; highlighted?: boolea
             </div>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {u.phone && (
-            <Button variant="outline" size="sm" nativeButton={false} render={<a href={`tel:${u.phone}`} />}>
-              <Phone className="size-3.5" />
-              {t('team.call')}
-            </Button>
-          )}
-          {u.phone && (
-            <Button
-              variant="outline"
-              size="sm"
-              nativeButton={false}
-              render={<a href={`https://wa.me/${whatsappNumber(u.phone)}`} target="_blank" rel="noreferrer" />}
-            >
-              <MessageCircle className="size-3.5" />
-              {t('team.whatsapp')}
-            </Button>
-          )}
-          <Button variant="outline" size="sm" nativeButton={false} render={<a href={`mailto:${u.email}`} />}>
-            <Mail className="size-3.5" />
-            {t('team.sendEmail')}
-          </Button>
-        </div>
+        <ContactButtons phone={u.phone} email={u.email} />
       </CardContent>
     </Card>
   )

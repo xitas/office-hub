@@ -146,7 +146,7 @@
     "markRead": "Mark as read"
   },
   "search": {
-    "placeholder": "Search people, companies, departments…",
+    "placeholder": "Search people, contacts, companies…",
     "button": "Search…",
     "typeMore": "Type at least 2 characters",
     "groups": {
@@ -346,8 +346,8 @@
     "notFoundHint": "It may have been deleted, or it's assigned to someone outside your team.",
     "visitWebsite": "Website",
     "noNotes": "No notes yet.",
-    "createdBy": "Added by {{name}} on {{when}}",
-    "updatedBy": "last updated by {{name}} {{when}}",
+    "createdBy": "Added by <b>{{name}}</b> on <b>{{when}}</b>",
+    "updatedBy": "last updated by <b>{{name}}</b> <b>{{when}}</b>",
     "deleteTitle": "Delete {{name}}?",
     "deleteHint": "This permanently removes the company. This cannot be undone.",
     "industries": {
@@ -365,5 +365,56 @@
       "government": "Government",
       "other": "Other"
     }
+  },
+  "contacts": {
+    "title": "Contacts",
+    "subtitle": "People at your client and partner companies.",
+    "add": "Add contact",
+    "edit": "Edit contact",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "company": "Company",
+    "noCompany": "No company",
+    "whatsapp": "WhatsApp number",
+    "whatsappHint": "Leave empty if it's the same as the phone number.",
+    "sameAsPhone": "Same as phone",
+    "tags": "Tags",
+    "tagsHint": "Press Enter or comma to add a tag.",
+    "tagPlaceholder": "Add tags…",
+    "createTag": "Create “{{tag}}”",
+    "removeTag": "Remove {{tag}}",
+    "noTags": "No tags",
+    "status": "Status",
+    "statuses": {
+      "new": "New",
+      "contacted": "Contacted",
+      "in_discussion": "In discussion",
+      "won": "Won",
+      "lost": "Lost"
+    },
+    "statusChanged": "Status changed to {{status}}",
+    "searchPlaceholder": "Search by name, phone or email",
+    "allStatuses": "All statuses",
+    "allCompanies": "All companies",
+    "allTags": "All tags",
+    "clearFilters": "Clear filters",
+    "empty": "No contacts yet",
+    "emptyHint": "Add the people you work with at client companies.",
+    "noneForCompany": "No contacts at this company yet.",
+    "viewAll": "View all {{count}} contacts",
+    "back": "All contacts",
+    "notFound": "Contact not found",
+    "notFoundHint": "It may have been deleted, or it's assigned to someone outside your team.",
+    "deleteTitle": "Delete {{name}}?",
+    "deleteHint": "This permanently removes the contact. This cannot be undone.",
+    "duplicateTitle": "Possible duplicate",
+    "duplicateHint": "You can still save; this is only a warning.",
+    "duplicateHidden": "A contact you can't view",
+    "duplicateOwner": "assigned to <name>{{name}}</name>",
+    "matched": {
+      "phone": "same phone",
+      "email": "same email"
+    },
+    "and": " and "
   }
 }

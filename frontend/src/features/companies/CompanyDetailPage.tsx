@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Building2, Globe, Mail, MapPin, MessageCircle, Pencil, Phone, Trash2, UserRound } from 'lucide-react'
+import { ArrowLeft, Building2, Globe, Mail, MapPin, Pencil, Phone, Trash2, UserRound } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
-import { useTranslation } from 'react-i18next'
+import { Trans, useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { EmptyState, ErrorState } from '@/components/common'
+import { ContactButtons } from '@/components/common/ContactButtons'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,8 +14,8 @@ import { api, apiError } from '@/lib/api'
 import { useConfirm } from '@/lib/confirm'
 import { useFormat } from '@/lib/format'
 import { usePermission } from '@/lib/permissions'
-import { whatsappNumber } from '@/lib/queries'
 import type { Company } from '@/lib/types'
+import { CompanyContacts } from '@/features/contacts/CompanyContacts'
 import { CompanyForm } from './CompanyForm'
 
 function Detail({ icon: Icon, label, children }: { icon: typeof Phone; label: string; children: ReactNode }) {
@@ -140,44 +141,20 @@ export function CompanyDetailPage() {
         </Card>
       ) : (
         <div className="grid gap-4">
-          {(company.phone || company.email || company.website) && (
-            <div className="flex flex-wrap gap-2">
-              {company.phone && (
-                <Button variant="outline" size="sm" nativeButton={false} render={<a href={`tel:${company.phone}`} />}>
-                  <Phone className="size-3.5" />
-                  {t('team.call')}
-                </Button>
-              )}
-              {company.phone && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  nativeButton={false}
-                  render={<a href={`https://wa.me/${whatsappNumber(company.phone)}`} target="_blank" rel="noreferrer" />}
-                >
-                  <MessageCircle className="size-3.5" />
-                  {t('team.whatsapp')}
-                </Button>
-              )}
-              {company.email && (
-                <Button variant="outline" size="sm" nativeButton={false} render={<a href={`mailto:${company.email}`} />}>
-                  <Mail className="size-3.5" />
-                  {t('team.sendEmail')}
-                </Button>
-              )}
-              {company.website && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  nativeButton={false}
-                  render={<a href={company.website} target="_blank" rel="noreferrer noopener" />}
-                >
-                  <Globe className="size-3.5" />
-                  {t('companies.visitWebsite')}
-                </Button>
-              )}
-            </div>
-          )}
+          <div className="flex flex-wrap gap-2">
+            <ContactButtons phone={company.phone} email={company.email} className="contents" />
+            {company.website && (
+              <Button
+                variant="outline"
+                size="sm"
+                nativeButton={false}
+                render={<a href={company.website} target="_blank" rel="noreferrer noopener" />}
+              >
+                <Globe className="size-3.5" />
+                {t('companies.visitWebsite')}
+              </Button>
+            )}
+          </div>
 
           <Card>
             <CardHeader>
@@ -206,6 +183,8 @@ export function CompanyDetailPage() {
             </CardContent>
           </Card>
 
+          <CompanyContacts companyId={company.id} />
+
           <Card>
             <CardHeader>
               <CardTitle>{t('companies.notes')}</CardTitle>
@@ -220,9 +199,22 @@ export function CompanyDetailPage() {
           </Card>
 
           <p className="text-xs text-muted-foreground">
-            {t('companies.createdBy', { name: company.created_by_name ?? t('admin.audit.system'), when: fmt.dateTime(company.created_at) })}
+            {/* <bdi> keeps names in place when Latin names sit inside Urdu sentences */}
+            <bdi>
+              <Trans
+                i18nKey="companies.createdBy"
+                values={{ name: company.created_by_name ?? t('admin.audit.system'), when: fmt.dateTime(company.created_at) }}
+                components={{ b: <bdi className="whitespace-nowrap" /> }}
+              />
+            </bdi>
             {' · '}
-            {t('companies.updatedBy', { name: company.updated_by_name ?? t('admin.audit.system'), when: fmt.relative(company.updated_at) })}
+            <bdi>
+              <Trans
+                i18nKey="companies.updatedBy"
+                values={{ name: company.updated_by_name ?? t('admin.audit.system'), when: fmt.relative(company.updated_at) }}
+                components={{ b: <bdi className="whitespace-nowrap" /> }}
+              />
+            </bdi>
           </p>
         </div>
       )}

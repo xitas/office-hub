@@ -28,7 +28,7 @@ interface QuickAction {
 const ACTIONS: QuickAction[] = [
   { key: 'task', label: 'dashboard.task', icon: CheckSquare, module: 'tasks', permission: 'tasks.create', path: '/tasks?new=1' },
   { key: 'contact', label: 'dashboard.contact', icon: UserPlus, module: 'contacts', permission: 'contacts.create', path: '/contacts?new=1' },
-  { key: 'note', label: 'dashboard.note', icon: NotebookPen, module: 'contacts', permission: 'comms.create', path: '/contacts?note=1' },
+  { key: 'note', label: 'dashboard.note', icon: NotebookPen, module: 'comms', permission: 'comms.create', path: '/contacts?note=1' },
   { key: 'meeting', label: 'dashboard.meeting', icon: CalendarPlus, module: 'calendar', permission: 'calendar.create', path: '/calendar?new=1' },
 ]
 

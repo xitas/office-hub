@@ -146,7 +146,7 @@
     "markRead": "پڑھا ہوا نشان زد کریں"
   },
   "search": {
-    "placeholder": "افراد، کمپنیاں، شعبہ جات تلاش کریں…",
+    "placeholder": "افراد، رابطے، کمپنیاں تلاش کریں…",
     "button": "تلاش…",
     "typeMore": "کم از کم 2 حروف لکھیں",
     "groups": {
@@ -346,8 +346,8 @@
     "notFoundHint": "ہو سکتا ہے یہ حذف ہو گئی ہو، یا آپ کی ٹیم سے باہر کسی کو تفویض ہو۔",
     "visitWebsite": "ویب سائٹ",
     "noNotes": "ابھی کوئی نوٹ نہیں۔",
-    "createdBy": "{{name}} نے {{when}} کو شامل کی",
-    "updatedBy": "آخری تبدیلی {{name}} نے {{when}} کی",
+    "createdBy": "<b>{{name}}</b> نے <b>{{when}}</b> کو شامل کی",
+    "updatedBy": "آخری تبدیلی <b>{{name}}</b> نے <b>{{when}}</b> کی",
     "deleteTitle": "{{name}} کو حذف کریں؟",
     "deleteHint": "یہ کمپنی مستقل طور پر حذف ہو جائے گی۔ یہ عمل واپس نہیں ہو سکتا۔",
     "industries": {
@@ -365,5 +365,56 @@
       "government": "سرکاری",
       "other": "دیگر"
     }
+  },
+  "contacts": {
+    "title": "رابطے",
+    "subtitle": "آپ کی کلائنٹ اور شراکت دار کمپنیوں کے افراد۔",
+    "add": "رابطہ شامل کریں",
+    "edit": "رابطے میں ترمیم",
+    "firstName": "پہلا نام",
+    "lastName": "آخری نام",
+    "company": "کمپنی",
+    "noCompany": "کوئی کمپنی نہیں",
+    "whatsapp": "واٹس ایپ نمبر",
+    "whatsappHint": "اگر فون نمبر ہی ہے تو خالی چھوڑ دیں۔",
+    "sameAsPhone": "فون نمبر ہی",
+    "tags": "ٹیگز",
+    "tagsHint": "ٹیگ شامل کرنے کے لیے Enter یا کوما دبائیں۔",
+    "tagPlaceholder": "ٹیگ شامل کریں…",
+    "createTag": "“{{tag}}” بنائیں",
+    "removeTag": "{{tag}} ہٹائیں",
+    "noTags": "کوئی ٹیگ نہیں",
+    "status": "حیثیت",
+    "statuses": {
+      "new": "نیا",
+      "contacted": "رابطہ کیا گیا",
+      "in_discussion": "بات چیت جاری",
+      "won": "کامیاب",
+      "lost": "ناکام"
+    },
+    "statusChanged": "حیثیت تبدیل ہو کر {{status}} ہو گئی",
+    "searchPlaceholder": "نام، فون یا ای میل سے تلاش کریں",
+    "allStatuses": "تمام حیثیتیں",
+    "allCompanies": "تمام کمپنیاں",
+    "allTags": "تمام ٹیگز",
+    "clearFilters": "فلٹر صاف کریں",
+    "empty": "ابھی کوئی رابطہ نہیں",
+    "emptyHint": "کلائنٹ کمپنیوں میں اپنے رابطے کے افراد شامل کریں۔",
+    "noneForCompany": "اس کمپنی میں ابھی کوئی رابطہ نہیں۔",
+    "viewAll": "تمام {{count}} رابطے دیکھیں",
+    "back": "تمام رابطے",
+    "notFound": "رابطہ نہیں ملا",
+    "notFoundHint": "ہو سکتا ہے یہ حذف ہو گیا ہو، یا آپ کی ٹیم سے باہر کسی کو تفویض ہو۔",
+    "deleteTitle": "{{name}} کو حذف کریں؟",
+    "deleteHint": "یہ رابطہ مستقل طور پر حذف ہو جائے گا۔ یہ عمل واپس نہیں ہو سکتا۔",
+    "duplicateTitle": "ممکنہ دہرا اندراج",
+    "duplicateHint": "آپ پھر بھی محفوظ کر سکتے ہیں؛ یہ صرف انتباہ ہے۔",
+    "duplicateHidden": "ایک رابطہ جو آپ نہیں دیکھ سکتے",
+    "duplicateOwner": "<name>{{name}}</name> کو تفویض",
+    "matched": {
+      "phone": "ایک ہی فون",
+      "email": "ایک ہی ای میل"
+    },
+    "and": " اور "
   }
 }
