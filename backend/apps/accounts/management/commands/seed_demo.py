@@ -7,6 +7,7 @@ from django.utils import timezone
 from apps.accounts.models import Department, User
 from apps.contacts.models import Company, Contact, ContactStatusChange, Tag
 from apps.core.models import OrganizationSettings
+from apps.timeline.models import TimelineEntry
 
 DEMO_PASSWORD = "Demo@12345"
 
@@ -71,6 +72,28 @@ REASONS = {
     "lost": ["Chose a cheaper supplier", "Budget frozen this year", "No response after follow-ups", "Went with incumbent vendor"],
 }
 
+# Timeline demo entries: (kind, summary, details, follow-up in days or None).
+CONTACT_ACTIVITY = [
+    ("call", "Introduced our services; asked us to send the company profile.",
+     {"direction": "out", "outcome": "connected", "duration_minutes": 8}, None),
+    ("note", "Prefers WhatsApp over email. Best time to reach is after 3 pm.", {}, None),
+    ("call", "", {"direction": "out", "outcome": "no_answer"}, 2),
+    ("meeting", "Walked through the proposal. They want a revised quote with a 12-month payment plan.",
+     {"location": "Their office", "attendees": "Procurement head, finance officer"}, 5),
+    ("call", "Called back about the quotation; comparing with one other vendor.",
+     {"direction": "in", "outcome": "connected", "duration_minutes": 12}, 7),
+    ("note", "Sent the revised quotation by email and shared a copy on WhatsApp.", {}, None),
+    ("call", "Line busy twice; will try again tomorrow morning.", {"direction": "out", "outcome": "busy"}, 1),
+    ("meeting", "Demo at our office went well. Decision expected after their board meeting.",
+     {"location": "Our office, meeting room 2", "attendees": "Owner, operations manager"}, 10),
+]
+COMPANY_ACTIVITY = [
+    ("note", "Annual budget is finalised in June; good time to pitch is April–May.", {}, None),
+    ("meeting", "Quarterly review with management. Happy with delivery times, asked about bulk discounts.",
+     {"location": "Head office", "attendees": "CEO, admin manager"}, 14),
+    ("note", "Payments are processed on the 10th of each month through their accounts team.", {}, None),
+]
+
 
 class Command(BaseCommand):
     help = "Create demo organization settings, departments, users, companies and contacts (idempotent)."
@@ -109,6 +132,7 @@ class Command(BaseCommand):
 
         self._seed_contacts()
         self._seed_status_history()
+        self._seed_timeline()
 
         self.stdout.write(self.style.SUCCESS("Demo data ready. All demo users share the password: " + DEMO_PASSWORD))
         for email, name, role, dept, _ in USERS:
@@ -179,3 +203,47 @@ class Command(BaseCommand):
                 for step, status in enumerate(path)
             ])
             Contact.objects.filter(pk=contact.pk).update(created_at=created, status_changed_at=moments[-1])
+
+    def _seed_timeline(self):
+        """A few logged calls, notes and meetings on demo contacts and companies (deterministic).
+
+        Skipped once any demo record has timeline entries, so re-running never duplicates them.
+        """
+        demo = Contact.objects.filter(email__endswith=".pk", first_name__in=FIRST_NAMES, last_name__in=LAST_NAMES)
+        companies = Company.objects.filter(name__in=[c[0] for c in COMPANIES])
+        if TimelineEntry.objects.filter(contact__in=demo).exists() or TimelineEntry.objects.filter(company__in=companies).exists():
+            return
+        now = timezone.now()
+        entries = []
+
+        def spread(created, step, steps):
+            # Between the record's creation and a day ago, oldest first.
+            span = max(now - timedelta(days=1) - created, timedelta(hours=steps))
+            return created + span * ((step + 1) / (steps + 1))
+
+        for contact in demo.select_related("assigned_to").order_by("pk"):
+            i = contact.pk
+            count = i % 4  # 0-3 entries each
+            for step in range(count):
+                kind, summary, details, follow_up = CONTACT_ACTIVITY[(i + step * 3) % len(CONTACT_ACTIVITY)]
+                at = spread(contact.created_at, step, count)
+                entries.append(TimelineEntry(
+                    kind=kind, contact=contact, summary=summary, details=details, occurred_at=at,
+                    follow_up_on=(at + timedelta(days=follow_up)).date() if follow_up else None,
+                    created_by=contact.assigned_to, updated_by=contact.assigned_to,
+                ))
+        for n, company in enumerate(companies.select_related("assigned_to").order_by("pk")):
+            # Demo companies were created "today"; date them before their first contact so the
+            # history reads in order ("Company added" first).
+            first_contact = company.contacts.order_by("created_at").values_list("created_at", flat=True).first()
+            since = min(company.created_at, (first_contact or now) - timedelta(days=3), now - timedelta(days=30))
+            Company.objects.filter(pk=company.pk).update(created_at=since)
+            for step in range(1 + n % 2):
+                kind, summary, details, follow_up = COMPANY_ACTIVITY[(n + step) % len(COMPANY_ACTIVITY)]
+                at = now - timedelta(days=20 - step * 9 + n % 5, hours=n)
+                entries.append(TimelineEntry(
+                    kind=kind, company=company, summary=summary, details=details, occurred_at=at,
+                    follow_up_on=(at + timedelta(days=follow_up)).date() if follow_up else None,
+                    created_by=company.assigned_to, updated_by=company.assigned_to,
+                ))
+        TimelineEntry.objects.bulk_create(entries)

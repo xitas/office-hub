@@ -11,6 +11,7 @@ api_v1 = [
     path("notifications/", include("apps.notifications.urls")),
     path("dashboard/", include("apps.dashboard.urls")),
     path("", include("apps.contacts.urls")),
+    path("", include("apps.timeline.urls")),
 ]
 
 urlpatterns = [

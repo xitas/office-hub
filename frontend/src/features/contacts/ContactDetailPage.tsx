@@ -17,6 +17,7 @@ import { CONTACT_STATUSES } from '@/lib/contacts'
 import { useFormat } from '@/lib/format'
 import { usePermission } from '@/lib/permissions'
 import type { Contact, ContactStatus } from '@/lib/types'
+import { Timeline } from '@/features/timeline/Timeline'
 import { ContactForm } from './ContactForm'
 import { useStatusChange } from './useStatusChange'
 
@@ -62,6 +63,7 @@ export function ContactDetailPage() {
       queryClient.setQueryData(key, updated)
       refreshLists()
       void queryClient.invalidateQueries({ queryKey: ['contacts', 'pipeline'] })
+      void queryClient.invalidateQueries({ queryKey: ['timeline'] })
     },
   })
 
@@ -228,6 +230,8 @@ export function ContactDetailPage() {
               </div>
             </CardContent>
           </Card>
+
+          <Timeline target={{ contact: contact.id }} />
 
           <p className="text-xs text-muted-foreground">
             {/* <bdi> keeps names in place when Latin names sit inside Urdu sentences */}

@@ -109,12 +109,12 @@ An office CRM for small-to-mid-sized offices (10–100 staff). It works on deskt
 
 ## Phase 2 — Contacts & task management
 
-**Status: in progress** (branch `phase-2-contacts`). Slices: 1 Companies ✓, 2 Contacts ✓, 3 Lead pipeline ✓, then 4–6.
+**Status: in progress** (branch `phase-2-contacts`). Slices: 1 Companies ✓, 2 Contacts ✓, 3 Lead pipeline ✓, 4 Interaction timeline ✓, then 5–6.
 
 ### Module 2 — Contacts & clients
 - [x] Contact records: name, company, job title, phone, WhatsApp, email, address, city, tags (created on the fly), assigned staff, lead status
 - [x] Company records linked to multiple contacts (company page lists its contacts, "Add contact" pre-fills the company)
-- [ ] Interaction timeline per contact (calls, meetings, emails, notes, tasks)
+- [~] Interaction timeline per contact and company: notes, call logs (direction, outcome, duration), meeting logs (location, attendees), automatic status-change and "added" entries; backdating, optional follow-up date, type filter; edit/delete by author, their department manager or admin (audited); company timeline includes its contacts' entries *(emails, tasks and messages plug in via the type/provider registry in `apps/timeline/registry.py` with their modules)*
 - [x] Lead pipeline Kanban: New → Contacted → In Discussion → Won / Lost (drag and drop, "Move to…" menu for keyboard/touch, column counts, filters, Board/List views)
 - [x] Status history (old/new status, who, when, optional Won/Lost reason) and days-in-status on cards
 - [x] Search (name, phone, email) and filter by company, tag, city, status, assigned person
@@ -138,7 +138,7 @@ An office CRM for small-to-mid-sized offices (10–100 staff). It works on deskt
 
 ### Integration
 - [ ] Dashboard task widgets show live data
-- [~] Quick-add Contact enabled (Task comes with Module 3)
+- [~] Quick-add Contact and Note enabled (Note: pick a contact or company, then write) (Task comes with Module 3)
 - [~] Contacts and companies added to global search (tasks come with Module 3)
 
 ---
@@ -147,13 +147,13 @@ An office CRM for small-to-mid-sized offices (10–100 staff). It works on deskt
 - [ ] Internal chat: direct messages (WebSocket)
 - [ ] Channels by department or project
 - [ ] @mentions with notifications
-- [ ] Communication log: calls, meetings, messages with clients (date, type, summary, follow-up date)
+- [~] Communication log: calls, meetings, messages with clients (date, type, summary, follow-up date) *(calls and meetings logged on the Phase 2 timeline; messages to come)*
 - [ ] Follow-up reminders auto-created from logged communications
 - [ ] Message templates (quotations, reminders, thank-you notes)
 - [ ] Announcements board (pinned, read receipts)
 - [ ] Dashboard: unread messages widget live
 - [ ] Messages added to global search
-- [ ] Quick-add Note enabled
+- [x] Quick-add Note enabled *(done in Phase 2 slice 4, on the contact timeline)*
 
 ---
 
@@ -207,7 +207,7 @@ An office CRM for small-to-mid-sized offices (10–100 staff). It works on deskt
 | Comments | 2 | [ ] |
 | Messages | 3 | [ ] |
 | Channels | 3 | [ ] |
-| CommunicationLogs | 3 | [ ] |
+| CommunicationLogs | 3 | [~] *(TimelineEntry, Phase 2: notes, calls, meetings)* |
 | Announcements | 3 | [ ] |
 | Resources | 4 | [ ] |
 | Bookings | 4 | [ ] |
@@ -217,7 +217,7 @@ An office CRM for small-to-mid-sized offices (10–100 staff). It works on deskt
 | Expenses | 4 | [ ] |
 | Visits | 5 | [ ] |
 
-Tables added beyond the spec: OrganizationSettings, Notification and NotificationPreference (Phase 1, done); Tag and ContactStatusChange (Phase 2).
+Tables added beyond the spec: OrganizationSettings, Notification and NotificationPreference (Phase 1, done); Tag, ContactStatusChange and TimelineEntry (Phase 2).
 
 ---
 
@@ -232,6 +232,7 @@ Tables added beyond the spec: OrganizationSettings, Notification and Notificatio
 ---
 
 ## Changelog
+- **2026-10-09:** Phase 2 slice 4 — Interaction timeline: `TimelineEntry` (one table, type key + per-type details) with a registry so later modules add entry types and automatic entries without schema changes; notes, call and meeting logs, automatic status-change and record-created entries; company roll-up of visible contacts' entries; author/department-manager/admin edit and delete with audit; Activity section on contact and company pages; quick-add Note; English and Urdu; seeded demo activity. 39 new tests (192 total).
 - **2026-10-09:** Phase 2 slice 3 — Lead pipeline: Kanban board with drag and drop and an accessible "Move to…" menu, Board/List views, status history with optional Won/Lost reasons, days in status, seeded history for demo contacts.
 - **2026-10-09:** Phase 2 slice 2 — Contacts: model with lead status and tags, scoped API with filters/search, duplicate warnings, list and detail pages, company page contact list, quick-add Contact, global search, 40 seeded contacts.
 - **2026-10-08:** Phase 2 slice 1 — Companies: model, scoped API, list and detail pages, global search, 10 seeded companies.

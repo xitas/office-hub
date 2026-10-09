@@ -16,6 +16,7 @@ import { useFormat } from '@/lib/format'
 import { usePermission } from '@/lib/permissions'
 import type { Company } from '@/lib/types'
 import { CompanyContacts } from '@/features/contacts/CompanyContacts'
+import { Timeline } from '@/features/timeline/Timeline'
 import { CompanyForm } from './CompanyForm'
 
 function Detail({ icon: Icon, label, children }: { icon: typeof Phone; label: string; children: ReactNode }) {
@@ -197,6 +198,8 @@ export function CompanyDetailPage() {
               )}
             </CardContent>
           </Card>
+
+          <Timeline target={{ company: company.id }} />
 
           <p className="text-xs text-muted-foreground">
             {/* <bdi> keeps names in place when Latin names sit inside Urdu sentences */}

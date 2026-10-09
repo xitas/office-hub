@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "apps.notifications",
     "apps.dashboard",
     "apps.contacts",
+    "apps.timeline",
 ]
 
 MIDDLEWARE = [

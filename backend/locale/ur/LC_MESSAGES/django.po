@@ -424,3 +424,69 @@ msgstr "آپ اسے صرف اپنے شعبے کے افراد کو تفویض ک�
 
 msgid "Company not found."
 msgstr "کمپنی نہیں ملی۔"
+
+msgid "timeline entry"
+msgstr "سرگرمی کا اندراج"
+
+msgid "timeline entries"
+msgstr "سرگرمی کے اندراجات"
+
+msgid "Note"
+msgstr "نوٹ"
+
+msgid "Call"
+msgstr "کال"
+
+msgid "Meeting"
+msgstr "میٹنگ"
+
+msgid "Incoming"
+msgstr "آنے والی"
+
+msgid "Outgoing"
+msgstr "باہر جانے والی"
+
+msgid "Connected"
+msgstr "بات ہو گئی"
+
+msgid "No answer"
+msgstr "جواب نہیں ملا"
+
+msgid "Busy"
+msgstr "مصروف"
+
+msgid "Left voicemail"
+msgstr "وائس میل چھوڑا"
+
+msgid "Wrong number"
+msgstr "غلط نمبر"
+
+msgid "The type of an entry cannot be changed."
+msgstr "اندراج کی قسم تبدیل نہیں کی جا سکتی۔"
+
+msgid "Unknown entry type."
+msgstr "نامعلوم قسم کا اندراج۔"
+
+msgid "The date cannot be in the future."
+msgstr "تاریخ مستقبل کی نہیں ہو سکتی۔"
+
+msgid "An entry cannot be moved to another record."
+msgstr "اندراج کو کسی اور ریکارڈ میں منتقل نہیں کیا جا سکتا۔"
+
+msgid "Choose either a contact or a company."
+msgstr "یا تو رابطہ منتخب کریں یا کمپنی۔"
+
+msgid "Please write something."
+msgstr "براہ کرم کچھ لکھیں۔"
+
+msgid "This type of entry has no follow-up date."
+msgstr "اس قسم کے اندراج میں فالو اپ کی تاریخ نہیں ہوتی۔"
+
+msgid "Only the author, their manager or an admin can change this entry."
+msgstr "یہ اندراج صرف لکھنے والا، ان کا مینیجر یا ایڈمن تبدیل کر سکتا ہے۔"
+
+msgid "Pass either contact or company."
+msgstr "یا تو رابطہ دیں یا کمپنی۔"
+
+msgid "Invalid id."
+msgstr "غلط شناخت۔"

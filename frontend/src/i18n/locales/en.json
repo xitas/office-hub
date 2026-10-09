@@ -446,5 +446,72 @@
       "lost": "e.g. Chose a cheaper supplier"
     },
     "skip": "Skip"
+  },
+  "timeline": {
+    "title": "Activity",
+    "allTypes": "All activity",
+    "type": "Type",
+    "kinds": {
+      "note": "Note",
+      "call": "Call",
+      "meeting": "Meeting"
+    },
+    "filters": {
+      "note": "Notes",
+      "call": "Calls",
+      "meeting": "Meetings",
+      "status": "Status changes",
+      "created": "Record created"
+    },
+    "placeholders": {
+      "note": "Write a note…",
+      "call": "What was discussed? (optional)",
+      "meeting": "What was agreed? (optional)"
+    },
+    "note": "Note",
+    "summary": "Summary",
+    "direction": "Direction",
+    "directions": {
+      "out": "Outgoing",
+      "in": "Incoming"
+    },
+    "outcome": "Outcome",
+    "outcomes": {
+      "connected": "Connected",
+      "no_answer": "No answer",
+      "busy": "Busy",
+      "voicemail": "Left voicemail",
+      "wrong_number": "Wrong number"
+    },
+    "durationMinutes": "Duration (minutes)",
+    "minutes_one": "{{count}} min",
+    "minutes_other": "{{count}} min",
+    "callTitle": {
+      "out": "Outgoing call",
+      "in": "Incoming call"
+    },
+    "location": "Location",
+    "attendees": "Attendees",
+    "attendeesHint": "e.g. Ayesha, Bilal (client), Hamza",
+    "when": "When",
+    "whenHint": "Leave blank for now.",
+    "followUp": "Follow up on",
+    "followUpHint": "Optional. Reminders come with Tasks.",
+    "followUpOn": "Follow up {{date}}",
+    "add": "Add",
+    "statusChanged": "Status changed",
+    "contactCreated": "Contact added",
+    "companyCreated": "Company added",
+    "empty": "No activity yet",
+    "emptyHint": "Log a note, call or meeting to start the history.",
+    "loadMore": "Show older activity",
+    "deleteTitle": "Delete this entry?",
+    "deleteHint": "It will be removed from the activity history. This cannot be undone.",
+    "quickNote": "New note",
+    "quickNoteHint": "Pick a contact or company, then write your note.",
+    "pickRecord": "Contact or company",
+    "pickPlaceholder": "Search by name, phone or city…",
+    "change": "Choose another",
+    "noteSaved": "Note added to {{name}}"
   }
 }
