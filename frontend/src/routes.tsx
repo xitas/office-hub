@@ -6,7 +6,7 @@ import { LoginPage } from '@/features/auth/LoginPage'
 import { ForgotPasswordPage, ResetPasswordPage } from '@/features/auth/PasswordResetPages'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 
-/** Admin-only section: the guard renders "not found" for anyone without the permission. */
+/** Permission-gated page: the guard renders "not found" for anyone without the permission. */
 const guarded = (perm: string, path: string, load: () => Promise<{ Component: ComponentType }>) => ({
   element: (
     <RequirePermission perm={perm}>
@@ -43,6 +43,11 @@ export const router = createBrowserRouter([
             path: 'contacts/:id',
             lazy: () => import('@/features/contacts/ContactDetailPage').then((m) => ({ Component: m.ContactDetailPage })),
           },
+          ...['contacts/import', 'contacts/import/:id', 'companies/import', 'companies/import/:id'].map((path) =>
+            guarded('contacts.import', path, () =>
+              import('@/features/transfer/ImportPage').then((m) => ({ Component: m.ImportPage })),
+            ),
+          ),
           {
             path: 'pipeline',
             lazy: () => import('@/features/pipeline/PipelinePage').then((m) => ({ Component: m.PipelinePage })),

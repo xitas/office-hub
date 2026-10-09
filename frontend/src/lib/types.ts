@@ -60,6 +60,8 @@ export interface OrgSettings {
   timezone: string
   week_start: number
   default_language: Language
+  staff_can_import_contacts: boolean
+  staff_can_export_contacts: boolean
   updated_at: string
 }
 

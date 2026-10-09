@@ -8,7 +8,10 @@ from .models import AuditLog, OrganizationSettings
 class OrganizationSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrganizationSettings
-        fields = ["org_name", "currency", "date_format", "timezone", "week_start", "default_language", "updated_at"]
+        fields = [
+            "org_name", "currency", "date_format", "timezone", "week_start", "default_language",
+            "staff_can_import_contacts", "staff_can_export_contacts", "updated_at",
+        ]
         read_only_fields = ["updated_at"]
 
     def validate_currency(self, value):

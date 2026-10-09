@@ -14,7 +14,7 @@ import { useFormat } from '@/lib/format'
 import type { AuditEntry, Paginated } from '@/lib/types'
 import { useDebouncedValue } from '@/lib/utils'
 
-const ACTIONS = ['create', 'update', 'delete', 'login', 'login_failed', 'logout', 'security']
+const ACTIONS = ['create', 'update', 'delete', 'import', 'export', 'login', 'login_failed', 'logout', 'security']
 
 const ACTION_STYLES: Record<string, string> = {
   create: 'border-success/40 text-success',
@@ -22,6 +22,8 @@ const ACTION_STYLES: Record<string, string> = {
   delete: 'border-destructive/40 text-destructive',
   login_failed: 'border-destructive/40 text-destructive',
   security: 'border-warning/50',
+  import: 'border-primary/40 text-primary',
+  export: 'border-primary/40 text-primary',
 }
 
 function formatValue(value: unknown) {

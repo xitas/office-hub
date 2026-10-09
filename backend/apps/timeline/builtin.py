@@ -28,6 +28,8 @@ register_type(EntryType("note", _("Note"), None, allows_follow_up=True))
 # A call or meeting can be logged with just its details ("no answer", "met at their office").
 register_type(EntryType("call", _("Call"), CallDetailsSerializer, allows_follow_up=True, requires_summary=False))
 register_type(EntryType("meeting", _("Meeting"), MeetingDetailsSerializer, allows_follow_up=True, requires_summary=False))
+# Written by CSV imports (summary = file name, details = {"import": id}).
+register_type(EntryType("imported", _("Imported"), None, requires_summary=False, creatable=False))
 
 
 def status_entries(user, contact_ids, company_ids):

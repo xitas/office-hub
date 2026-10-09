@@ -13,6 +13,8 @@ const DEFAULT_SETTINGS: OrgSettings = {
   timezone: 'Asia/Karachi',
   week_start: 1,
   default_language: 'en',
+  staff_can_import_contacts: true,
+  staff_can_export_contacts: false,
   updated_at: '',
 }
 

@@ -57,3 +57,13 @@ def client_for(api):
         return c
 
     return _client
+
+
+@pytest.fixture(autouse=True)
+def _clear_cache():
+    # Cached organization settings (and rate limits) must not leak between tests.
+    from django.core.cache import cache
+
+    cache.clear()
+    yield
+    cache.clear()

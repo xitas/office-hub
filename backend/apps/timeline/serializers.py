@@ -18,6 +18,9 @@ FUTURE_LEEWAY = timedelta(minutes=5)
 def can_modify(user, entry) -> bool:
     """Edit/delete: the author, a manager of the author's department, or an admin.
     (The caller has already checked that the user can see the entry's contact/company.)"""
+    entry_type = registry.get_type(entry.kind)
+    if entry_type is not None and not entry_type.creatable:
+        return False
     if user.role == ADMIN or user.is_superuser:
         return True
     if entry.created_by_id == user.pk:
@@ -53,7 +56,8 @@ class TimelineEntrySerializer(serializers.ModelSerializer):
     def validate_kind(self, value):
         if self.instance is not None and value != self.instance.kind:
             raise serializers.ValidationError(_("The type of an entry cannot be changed."))
-        if registry.get_type(value) is None:
+        entry_type = registry.get_type(value)
+        if entry_type is None or (self.instance is None and not entry_type.creatable):
             raise serializers.ValidationError(_("Unknown entry type."))
         return value
 

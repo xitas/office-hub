@@ -7,6 +7,7 @@ import { ErrorState, FormField, PageHeader, SimpleSelect, TextField } from '@/co
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Switch } from '@/components/ui/switch'
 import { api, apiError } from '@/lib/api'
 import { buildFormatter, ORG_SETTINGS_KEY, useOrgSettings } from '@/lib/format'
 import type { OrgSettings } from '@/lib/types'
@@ -124,6 +125,21 @@ function OrgForm({ initial }: { initial: OrgSettings }) {
               options={['en', 'ur'].map((l) => ({ value: l, label: t(`languages.${l}`) }))}
             />
           </FormField>
+          <fieldset className="grid gap-3 border-t pt-4 sm:col-span-2">
+            <legend className="sr-only">{t('admin.org.staffAccess')}</legend>
+            <p className="text-sm font-medium">{t('admin.org.staffAccess')}</p>
+            {(['staff_can_import_contacts', 'staff_can_export_contacts'] as const).map((key) => (
+              <div key={key} className="flex items-start justify-between gap-4">
+                <div className="grid gap-0.5">
+                  <label htmlFor={`org-${key}`} className="text-sm">
+                    {t(`admin.org.${key}`)}
+                  </label>
+                  <p className="text-xs text-muted-foreground">{t(`admin.org.${key}_hint`)}</p>
+                </div>
+                <Switch id={`org-${key}`} checked={form[key]} onCheckedChange={(v) => set(key, v)} />
+              </div>
+            ))}
+          </fieldset>
           <div className="rounded-lg bg-muted p-3 text-sm sm:col-span-2">
             <span className="text-muted-foreground">{t('admin.org.preview')}: </span>
             <span className="font-medium">{preview}</span>

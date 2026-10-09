@@ -19,6 +19,7 @@ from .serializers import (
     StatusChangeSerializer,
     TagSerializer,
 )
+from .transfer import export_companies, export_contacts
 from .visibility import DEPARTMENT_FIELD, OWNER_FIELDS
 
 
@@ -53,7 +54,13 @@ class CompanyViewSet(AuditedViewSetMixin, ScopedQuerysetMixin, viewsets.ModelVie
     filterset_class = CompanyFilter
     search_fields = ["name", "email", "phone", "city"]
     ordering_fields = ["name", "city", "industry", "created_at", "updated_at"]
-    action_permissions = {"facets": "view"}
+    action_permissions = {"facets": "view", "export": "export"}
+
+    @extend_schema(responses={(200, "text/csv"): str})
+    @action(detail=False, methods=["get"])
+    def export(self, request):
+        """CSV of the companies this user can see, with the same filters, search and ordering as the list."""
+        return export_companies(request, self.filter_queryset(self.get_queryset()))
 
     @extend_schema(responses={200: dict})
     @action(detail=False, methods=["get"])
@@ -92,7 +99,9 @@ class ContactViewSet(AuditedViewSetMixin, ScopedQuerysetMixin, viewsets.ModelVie
     scope_department_field = DEPARTMENT_FIELD
     filterset_class = ContactFilter
     search_fields = ["first_name", "last_name", "phone", "whatsapp", "email", "phone_digits", "whatsapp_digits"]
-    action_permissions = {"facets": "view", "duplicates": "view", "pipeline": "view", "status_history": "view"}
+    action_permissions = {
+        "facets": "view", "duplicates": "view", "pipeline": "view", "status_history": "view", "export": "export",
+    }
 
     def audit_snapshot(self, instance) -> dict:
         data = snapshot(instance)
@@ -180,6 +189,12 @@ class ContactViewSet(AuditedViewSetMixin, ScopedQuerysetMixin, viewsets.ModelVie
         contact = self.get_object()
         changes = contact.status_changes.select_related("changed_by")
         return Response(StatusChangeSerializer(changes, many=True).data)
+
+    @extend_schema(responses={(200, "text/csv"): str})
+    @action(detail=False, methods=["get"])
+    def export(self, request):
+        """CSV of the contacts this user can see, with the same filters, search and ordering as the list."""
+        return export_contacts(request, self.filter_queryset(self.get_queryset()))
 
     @extend_schema(responses={200: dict})
     @action(detail=False, methods=["get"])

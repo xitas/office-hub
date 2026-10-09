@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.core.cache import cache
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -42,6 +43,9 @@ class OrganizationSettings(models.Model):
     timezone = models.CharField(max_length=64, default="Asia/Karachi")
     week_start = models.PositiveSmallIntegerField(choices=WeekStart.choices, default=WeekStart.MONDAY)
     default_language = models.CharField(max_length=5, choices=settings.LANGUAGES, default="en")
+    # Admin-controlled switches for staff (managers and admins always have these).
+    staff_can_import_contacts = models.BooleanField(default=True)
+    staff_can_export_contacts = models.BooleanField(default=False)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -54,10 +58,22 @@ class OrganizationSettings(models.Model):
     def save(self, *args, **kwargs):
         self.pk = 1
         super().save(*args, **kwargs)
+        cache.delete(self.CACHE_KEY)
+
+    CACHE_KEY = "org-settings"
 
     @classmethod
     def get_solo(cls):
         obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    @classmethod
+    def cached(cls):
+        """Read-mostly copy for hot paths (permission checks); refreshed whenever the settings are saved."""
+        obj = cache.get(cls.CACHE_KEY)
+        if obj is None:
+            obj = cls.get_solo()
+            cache.set(cls.CACHE_KEY, obj, timeout=300)
         return obj
 
 
@@ -70,6 +86,8 @@ class AuditLog(models.Model):
         LOGIN_FAILED = "login_failed", _("Failed sign-in")
         LOGOUT = "logout", _("Signed out")
         SECURITY = "security", _("Security change")
+        IMPORT = "import", _("Imported")
+        EXPORT = "export", _("Exported")
         OTHER = "other", _("Other")
 
     actor = models.ForeignKey(

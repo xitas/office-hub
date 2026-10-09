@@ -109,7 +109,7 @@ An office CRM for small-to-mid-sized offices (10–100 staff). It works on deskt
 
 ## Phase 2 — Contacts & task management
 
-**Status: in progress** (branch `phase-2-contacts`). Slices: 1 Companies ✓, 2 Contacts ✓, 3 Lead pipeline ✓, 4 Interaction timeline ✓, then 5–6.
+**Status: in progress** (branch `phase-2-contacts`). Slices: 1 Companies ✓, 2 Contacts ✓, 3 Lead pipeline ✓, 4 Interaction timeline ✓, 5 CSV import/export ✓, then 6.
 
 ### Module 2 — Contacts & clients
 - [x] Contact records: name, company, job title, phone, WhatsApp, email, address, city, tags (created on the fly), assigned staff, lead status
@@ -119,7 +119,7 @@ An office CRM for small-to-mid-sized offices (10–100 staff). It works on deskt
 - [x] Status history (old/new status, who, when, optional Won/Lost reason) and days-in-status on cards
 - [x] Search (name, phone, email) and filter by company, tag, city, status, assigned person
 - [x] Duplicate warning on matching phone/WhatsApp/email (warning only; hides details of contacts the user can't see)
-- [ ] CSV import and export
+- [x] CSV import and export: export follows the list's filters and the user's visibility (UTF-8 BOM for Urdu in Excel, phones kept as text, formula-safe cells); import with column matching (English/Urdu headers), 10-row preview, per-row validation, duplicate option (skip / update / add anyway), company linking or creation, results with downloadable failed rows, background processing with progress above 300 rows (Celery), 5 MB / 5,000-row limits, template CSV. Staff import/export are admin-controlled switches on the Organization page (import on, export off by default). One audit entry per import/export; created records get an "Imported" timeline entry
 - [x] Click-to-call and click-to-WhatsApp buttons on contact records
 
 ### Module 3 — Task management
@@ -217,7 +217,7 @@ An office CRM for small-to-mid-sized offices (10–100 staff). It works on deskt
 | Expenses | 4 | [ ] |
 | Visits | 5 | [ ] |
 
-Tables added beyond the spec: OrganizationSettings, Notification and NotificationPreference (Phase 1, done); Tag, ContactStatusChange and TimelineEntry (Phase 2).
+Tables added beyond the spec: OrganizationSettings, Notification and NotificationPreference (Phase 1, done); Tag, ContactStatusChange, TimelineEntry and ContactImport (Phase 2).
 
 ---
 
@@ -232,6 +232,7 @@ Tables added beyond the spec: OrganizationSettings, Notification and Notificatio
 ---
 
 ## Changelog
+- **2026-10-09:** Phase 2 slice 5 — CSV import and export for contacts and companies (see Module 2 checklist). New `ContactImport` table, `staff_can_import_contacts` / `staff_can_export_contacts` organization switches, Import/Export audit actions. Checked that the `cn` package is shadcn's official class-merging package (used by every ui component), not an accidental dependency. 34 new tests (226 total).
 - **2026-10-09:** Phase 2 slice 4 — Interaction timeline: `TimelineEntry` (one table, type key + per-type details) with a registry so later modules add entry types and automatic entries without schema changes; notes, call and meeting logs, automatic status-change and record-created entries; company roll-up of visible contacts' entries; author/department-manager/admin edit and delete with audit; Activity section on contact and company pages; quick-add Note; English and Urdu; seeded demo activity. 39 new tests (192 total).
 - **2026-10-09:** Phase 2 slice 3 — Lead pipeline: Kanban board with drag and drop and an accessible "Move to…" menu, Board/List views, status history with optional Won/Lost reasons, days in status, seeded history for demo contacts.
 - **2026-10-09:** Phase 2 slice 2 — Contacts: model with lead status and tags, scoped API with filters/search, duplicate warnings, list and detail pages, company page contact list, quick-add Contact, global search, 40 seeded contacts.

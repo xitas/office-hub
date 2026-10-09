@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { CalendarDays, CirclePlus, NotebookPen, Phone, Repeat2, type LucideIcon } from 'lucide-react'
+import { CalendarDays, CirclePlus, FileUp, NotebookPen, Phone, Repeat2, type LucideIcon } from 'lucide-react'
 import { api } from './api'
 import type { ContactStatus } from './types'
 
@@ -7,7 +7,7 @@ import type { ContactStatus } from './types'
 export const ENTRY_KINDS = ['note', 'call', 'meeting'] as const
 export type EntryKind = (typeof ENTRY_KINDS)[number]
 /** Everything the timeline can show, including automatic entries. */
-export const TIMELINE_FILTERS = [...ENTRY_KINDS, 'status', 'created'] as const
+export const TIMELINE_FILTERS = [...ENTRY_KINDS, 'status', 'created', 'imported'] as const
 
 export const CALL_DIRECTIONS = ['out', 'in'] as const
 export const CALL_OUTCOMES = ['connected', 'no_answer', 'busy', 'voicemail', 'wrong_number'] as const
@@ -73,6 +73,7 @@ export const KIND_ICONS: Record<string, LucideIcon> = {
   meeting: CalendarDays,
   status: Repeat2,
   created: CirclePlus,
+  imported: FileUp,
 }
 
 export const KIND_STYLES: Record<string, string> = {
@@ -81,6 +82,7 @@ export const KIND_STYLES: Record<string, string> = {
   meeting: 'bg-warning/20 text-foreground',
   status: 'bg-muted text-muted-foreground',
   created: 'bg-muted text-muted-foreground',
+  imported: 'bg-muted text-muted-foreground',
 }
 
 

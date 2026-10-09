@@ -490,3 +490,201 @@ msgstr "یا تو رابطہ دیں یا کمپنی۔"
 
 msgid "Invalid id."
 msgstr "غلط شناخت۔"
+
+msgid "First name"
+msgstr "پہلا نام"
+
+msgid "Last name"
+msgstr "آخری نام"
+
+msgid "Full name"
+msgstr "پورا نام"
+
+msgid "Company"
+msgstr "کمپنی"
+
+msgid "Job title"
+msgstr "عہدہ"
+
+msgid "Phone"
+msgstr "فون"
+
+msgid "WhatsApp"
+msgstr "واٹس ایپ"
+
+msgid "Email"
+msgstr "ای میل"
+
+msgid "Address"
+msgstr "پتہ"
+
+msgid "City"
+msgstr "شہر"
+
+msgid "Tags"
+msgstr "ٹیگز"
+
+msgid "Lead status"
+msgstr "لیڈ کی حیثیت"
+
+msgid "Assigned to"
+msgstr "ذمہ دار"
+
+msgid "Added on"
+msgstr "اندراج کی تاریخ"
+
+msgid "Company name"
+msgstr "کمپنی کا نام"
+
+msgid "Industry"
+msgstr "صنعت"
+
+msgid "Website"
+msgstr "ویب سائٹ"
+
+msgid "Notes"
+msgstr "نوٹس"
+
+msgid "Contacts"
+msgstr "رابطے"
+
+msgid "Companies"
+msgstr "کمپنیاں"
+
+msgid "Uploaded"
+msgstr "اپ لوڈ ہو گئی"
+
+msgid "Queued"
+msgstr "قطار میں"
+
+msgid "Running"
+msgstr "جاری"
+
+msgid "Done"
+msgstr "مکمل"
+
+msgid "Failed"
+msgstr "ناکام"
+
+msgid "import"
+msgstr "امپورٹ"
+
+msgid "imports"
+msgstr "امپورٹس"
+
+msgid "Imported"
+msgstr "امپورٹ کیا گیا"
+
+msgid "Exported"
+msgstr "ایکسپورٹ کیا گیا"
+
+msgid "Please choose a .csv file. In Excel use File → Save As → CSV UTF-8."
+msgstr "براہ کرم .csv فائل منتخب کریں۔ ایکسل میں File → Save As → CSV UTF-8 استعمال کریں۔"
+
+msgid "The file is too large. The limit is 5 MB."
+msgstr "فائل بہت بڑی ہے۔ حد 5 MB ہے۔"
+
+msgid "This looks like an Excel workbook, not a CSV file. Save it as CSV UTF-8 first."
+msgstr "یہ ایکسل ورک بک لگتی ہے، CSV فائل نہیں۔ پہلے اسے CSV UTF-8 کے طور پر محفوظ کریں۔"
+
+msgid "The file could not be read as CSV."
+msgstr "فائل CSV کے طور پر نہیں پڑھی جا سکی۔"
+
+msgid "The file is empty."
+msgstr "فائل خالی ہے۔"
+
+msgid "Column %(n)s"
+msgstr "کالم %(n)s"
+
+msgid "The file has a header row but no data."
+msgstr "فائل میں سرخیوں کی قطار ہے لیکن کوئی ڈیٹا نہیں۔"
+
+msgid "The file has %(count)s rows. The limit is %(max)s per import."
+msgstr "فائل میں %(count)s قطاریں ہیں۔ ایک امپورٹ کی حد %(max)s ہے۔"
+
+msgid "More than one person is called “%(name)s”. Use their email instead."
+msgstr "“%(name)s” نام کے ایک سے زیادہ افراد ہیں۔ ان کی ای میل استعمال کریں۔"
+
+msgid "Unknown person “%(name)s”."
+msgstr "نامعلوم شخص “%(name)s”۔"
+
+msgid "%(field)s “%(value)s” doesn’t look like a phone number."
+msgstr "%(field)s “%(value)s” فون نمبر نہیں لگتا۔"
+
+msgid "“%(value)s” is not a valid email address."
+msgstr "“%(value)s” درست ای میل پتہ نہیں ہے۔"
+
+msgid "First name is required."
+msgstr "پہلا نام ضروری ہے۔"
+
+msgid "Unknown lead status “%(value)s”."
+msgstr "نامعلوم لیڈ حیثیت “%(value)s”۔"
+
+msgid "Too many tags (the limit is %(max)s)."
+msgstr "بہت زیادہ ٹیگز (حد %(max)s ہے)۔"
+
+msgid "Company “%(name)s” belongs to someone else, so contacts can’t be linked to it."
+msgstr "کمپنی “%(name)s” کسی اور کی ذمہ داری ہے، اس لیے رابطے اس سے منسلک نہیں کیے جا سکتے۔"
+
+msgid "Company “%(name)s” not found."
+msgstr "کمپنی “%(name)s” نہیں ملی۔"
+
+msgid "New company “%(name)s” will be created."
+msgstr "نئی کمپنی “%(name)s” بنائی جائے گی۔"
+
+msgid "Updates %(name)s."
+msgstr "%(name)s کو اپ ڈیٹ کرے گا۔"
+
+msgid "Already in the CRM as %(name)s."
+msgstr "پہلے سے CRM میں بطور %(name)s موجود ہے۔"
+
+msgid "Already in the CRM, assigned to someone else."
+msgstr "پہلے سے CRM میں موجود ہے، کسی اور کے ذمے۔"
+
+msgid "Company name is required."
+msgstr "کمپنی کا نام ضروری ہے۔"
+
+msgid "Unknown industry “%(value)s”."
+msgstr "نامعلوم صنعت “%(value)s”۔"
+
+msgid "Unexpected error while saving this row."
+msgstr "اس قطار کو محفوظ کرتے وقت غیر متوقع خرابی۔"
+
+msgid "Imported contacts from a CSV file"
+msgstr "CSV فائل سے رابطے امپورٹ کیے"
+
+msgid "Imported companies from a CSV file"
+msgstr "CSV فائل سے کمپنیاں امپورٹ کیں"
+
+msgid "Exported contacts to a CSV file"
+msgstr "رابطے CSV فائل میں ایکسپورٹ کیے"
+
+msgid "Exported companies to a CSV file"
+msgstr "کمپنیاں CSV فائل میں ایکسپورٹ کیں"
+
+msgid "Unknown column."
+msgstr "نامعلوم کالم۔"
+
+msgid "Unknown field “%(key)s”."
+msgstr "نامعلوم فیلڈ “%(key)s”۔"
+
+msgid "Each field can only be used for one column."
+msgstr "ہر فیلڈ صرف ایک کالم کے لیے استعمال ہو سکتی ہے۔"
+
+msgid "Choose the column with the first name (or full name)."
+msgstr "پہلے نام (یا پورے نام) والا کالم منتخب کریں۔"
+
+msgid "Choose the column with the company name."
+msgstr "کمپنی کے نام والا کالم منتخب کریں۔"
+
+msgid "This import has already been run."
+msgstr "یہ امپورٹ پہلے ہی چلایا جا چکا ہے۔"
+
+msgid "Line"
+msgstr "لائن"
+
+msgid "Problem"
+msgstr "مسئلہ"
+
+msgid "Unknown import type."
+msgstr "نامعلوم امپورٹ کی قسم۔"

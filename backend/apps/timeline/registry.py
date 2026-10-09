@@ -22,6 +22,8 @@ class EntryType:
     details_serializer: type[serializers.Serializer] | None = None
     allows_follow_up: bool = False
     requires_summary: bool = True
+    # False for entries written by the system (e.g. "Imported"): not addable or editable through the API.
+    creatable: bool = True
 
 
 _types: dict[str, EntryType] = {}

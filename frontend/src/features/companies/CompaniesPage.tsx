@@ -16,6 +16,7 @@ import { useFormat } from '@/lib/format'
 import { usePermission } from '@/lib/permissions'
 import type { Company, Paginated } from '@/lib/types'
 import { useDebouncedValue } from '@/lib/utils'
+import { TransferButtons } from '@/features/transfer/TransferButtons'
 import { CompanyForm } from './CompanyForm'
 
 const ALL = 'all'
@@ -66,12 +67,23 @@ export function CompaniesPage() {
         title={t('companies.title')}
         subtitle={t('companies.subtitle')}
         actions={
-          canCreate && (
-            <Button onClick={() => setCreating(true)}>
-              <Plus className="size-4" />
-              {t('companies.add')}
-            </Button>
-          )
+          <>
+            <TransferButtons
+              kind="companies"
+              params={{
+                search: q || undefined,
+                city: city === ALL ? undefined : city,
+                industry: industry === ALL ? undefined : industry,
+                assigned_to: assignee === ALL ? undefined : assignee,
+              }}
+            />
+            {canCreate && (
+              <Button onClick={() => setCreating(true)}>
+                <Plus className="size-4" />
+                {t('companies.add')}
+              </Button>
+            )}
+          </>
         }
       />
 

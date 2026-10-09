@@ -250,7 +250,12 @@
         "0": "Sunday",
         "1": "Monday",
         "6": "Saturday"
-      }
+      },
+      "staffAccess": "Staff access to contacts",
+      "staff_can_import_contacts": "Staff can import contacts",
+      "staff_can_import_contacts_hint": "Imported contacts are assigned to the staff member who imports them.",
+      "staff_can_export_contacts": "Staff can export contacts",
+      "staff_can_export_contacts_hint": "Off by default. Staff only ever export the contacts and companies they can see."
     },
     "audit": {
       "title": "Audit log",
@@ -273,7 +278,9 @@
         "login": "Signed in",
         "login_failed": "Failed sign-in",
         "logout": "Signed out",
-        "security": "Security change"
+        "security": "Security change",
+        "import": "Imported",
+        "export": "Exported"
       }
     },
     "system": {
@@ -461,7 +468,8 @@
       "call": "Calls",
       "meeting": "Meetings",
       "status": "Status changes",
-      "created": "Record created"
+      "created": "Record created",
+      "imported": "Imported"
     },
     "placeholders": {
       "note": "Write a note…",
@@ -512,6 +520,132 @@
     "pickRecord": "Contact or company",
     "pickPlaceholder": "Search by name, phone or city…",
     "change": "Choose another",
-    "noteSaved": "Note added to {{name}}"
+    "noteSaved": "Note added to {{name}}",
+    "imported": "Imported from CSV"
+  },
+  "transfer": {
+    "import": "Import",
+    "export": "Export CSV",
+    "exportHint": "Download what this list shows (current filters and search) as a CSV file",
+    "exportFailed": "The download failed. Please try again.",
+    "title": {
+      "contacts": "Import contacts",
+      "companies": "Import companies"
+    },
+    "subtitle": "Add records from a CSV file, e.g. a spreadsheet saved from Excel.",
+    "notFound": "This import was not found.",
+    "steps": {
+      "label": "Import steps",
+      "upload": "Upload",
+      "match": "Match columns",
+      "results": "Results"
+    },
+    "whatToImport": "What to import",
+    "kinds": {
+      "contacts": "Contacts",
+      "companies": "Companies"
+    },
+    "dropHere": "Choose a CSV file or drop it here",
+    "uploading": "Checking the file…",
+    "limits": "CSV only · up to {{mb}} MB and {{rows}} rows",
+    "notCsv": "Please choose a .csv file.",
+    "tooLarge": "The file is too large. The limit is {{mb}} MB.",
+    "excelHint": "In Excel, use File → Save As → “CSV UTF-8” so Urdu names stay readable. Start from the template to get the column names right.",
+    "template": "Download template",
+    "recent": "Your recent imports",
+    "noRecent": "No imports yet",
+    "recentCounts": "{{created}} added, {{updated}} updated, {{failed}} failed",
+    "statuses": {
+      "uploaded": "Not run yet",
+      "queued": "Waiting",
+      "running": "Importing",
+      "done": "Done",
+      "failed": "Stopped"
+    },
+    "rowCount_one": "{{count}} row",
+    "rowCount_other": "{{count}} rows",
+    "match": {
+      "title": "Match columns",
+      "column": "Column in your file",
+      "sample": "Example values",
+      "field": "Import as",
+      "empty": "Empty",
+      "skip": "Don’t import",
+      "needName": "Choose the column with the first name (or full name).",
+      "needCompanyName": "Choose the column with the company name."
+    },
+    "options": {
+      "title": "Options",
+      "duplicates": "If a contact with the same phone number or email already exists",
+      "duplicatesCompanies": "If a company with the same name already exists",
+      "modes": {
+        "skip": "Skip it",
+        "update": "Update it",
+        "create": "Add it anyway"
+      },
+      "modeHints": {
+        "contacts": {
+          "skip": "Keep the existing contact as it is.",
+          "update": "Fill in the existing contact with the values from the file. Empty cells change nothing.",
+          "create": "Add a second contact. Use this only if they are different people."
+        },
+        "companies": {
+          "skip": "Keep the existing company as it is.",
+          "update": "Fill in the existing company with the values from the file. Empty cells change nothing.",
+          "create": "Add a second company with the same name."
+        }
+      },
+      "createCompanies": "Add companies that don’t exist yet",
+      "createCompaniesHint": "Otherwise rows with an unknown company are not imported.",
+      "assignTo": "Assign to",
+      "assignToHint": "For rows without an “Assigned to” value.",
+      "assignedToYou": "Imported records are assigned to you."
+    },
+    "preview": {
+      "title": "Preview",
+      "hint_one": "How the first row will be imported. Nothing is saved yet.",
+      "hint_other": "How the first {{count}} rows will be imported. Nothing is saved yet.",
+      "line": "Line",
+      "result": "Result"
+    },
+    "outcomes": {
+      "create": "Add",
+      "update": "Update",
+      "skip": "Skip",
+      "fail": "Problem",
+      "skipped": "Skipped",
+      "failed": "Failed"
+    },
+    "backgroundHint": "Large file: it will import in the background and you can follow the progress.",
+    "run_one": "Import {{count}} row",
+    "run_other": "Import {{count}} rows",
+    "importing": "Importing…",
+    "progress": {
+      "queued": "Waiting to start…",
+      "running": "Importing…",
+      "hint": "This continues even if you leave this page. Come back via Import → Your recent imports.",
+      "label": "Import progress",
+      "count": "{{done}} of {{total}} rows ({{pct}}%)"
+    },
+    "crashed": "The import stopped unexpectedly",
+    "crashedHint": "Rows saved before the problem are kept. Please try again, or contact your administrator if it happens again.",
+    "again": "Start a new import",
+    "results": {
+      "title": "Import finished",
+      "created": "Added",
+      "updated": "Updated",
+      "skipped": "Skipped",
+      "failed": "Failed",
+      "view": {
+        "contacts": "View contacts",
+        "companies": "View companies"
+      },
+      "another": "Import another file",
+      "downloadFailed": "Download failed rows",
+      "issues": "Skipped and failed rows",
+      "issuesTruncated": "Showing the first {{shown}} of {{total}}. The download has every failed row.",
+      "reason": "Reason",
+      "values": "Values in the file"
+    }
   }
 }

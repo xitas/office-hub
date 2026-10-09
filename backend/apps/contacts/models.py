@@ -134,3 +134,51 @@ class ContactStatusChange(models.Model):
 
     def __str__(self):
         return f"{self.contact}: {self.from_status or '-'} -> {self.to_status}"
+
+
+class ContactImport(models.Model):
+    """One CSV import: the uploaded rows, the chosen column mapping/options, progress and results.
+
+    Rows are kept only until the import has run; afterwards `issues` holds what is needed for the
+    results page (skipped and failed rows with their reasons and original values).
+    """
+
+    class Kind(models.TextChoices):
+        CONTACTS = "contacts", _("Contacts")
+        COMPANIES = "companies", _("Companies")
+
+    class Status(models.TextChoices):
+        UPLOADED = "uploaded", _("Uploaded")
+        QUEUED = "queued", _("Queued")
+        RUNNING = "running", _("Running")
+        DONE = "done", _("Done")
+        FAILED = "failed", _("Failed")
+
+    kind = models.CharField(max_length=20, choices=Kind.choices, default=Kind.CONTACTS)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.UPLOADED, db_index=True)
+    file_name = models.CharField(max_length=255)
+    headers = models.JSONField(default=list)
+    rows = models.JSONField(default=list)
+    mapping = models.JSONField(default=dict)  # {"<column index>": "<field key>"}
+    options = models.JSONField(default=dict)
+    total_rows = models.PositiveIntegerField(default=0)
+    processed_rows = models.PositiveIntegerField(default=0)
+    created_count = models.PositiveIntegerField(default=0)
+    updated_count = models.PositiveIntegerField(default=0)
+    skipped_count = models.PositiveIntegerField(default=0)
+    failed_count = models.PositiveIntegerField(default=0)
+    issues = models.JSONField(default=list)  # [{"line", "outcome": skipped|failed, "reason", "values"}]
+    error = models.TextField(blank=True)
+    background = models.BooleanField(default=False)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="+")
+    created_at = models.DateTimeField(auto_now_add=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = _("import")
+        verbose_name_plural = _("imports")
+
+    def __str__(self):
+        return self.file_name

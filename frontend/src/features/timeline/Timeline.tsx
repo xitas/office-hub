@@ -247,6 +247,19 @@ function Headline({ item }: { item: TimelineItem }) {
       </span>
     )
   }
+  if (item.kind === 'imported') {
+    return (
+      <span className="font-medium">
+        {t('timeline.imported')}
+        {item.summary && (
+          <span className="font-normal text-muted-foreground">
+            {' · '}
+            <bdi>{item.summary}</bdi>
+          </span>
+        )}
+      </span>
+    )
+  }
   const known = ['note', 'meeting'].includes(item.kind)
   return <span className="font-medium">{known ? t(`timeline.kinds.${item.kind}`) : item.kind}</span>
 }
@@ -256,7 +269,8 @@ function Body({ item }: { item: TimelineItem }) {
   const fmt = useFormat()
   const meeting = item.kind === 'meeting' ? (item.details as MeetingDetails) : null
   const hasExtras = !!(meeting?.location || meeting?.attendees || item.follow_up_on)
-  if (!item.summary && !hasExtras) return null
+  // An import's file name is already in the headline.
+  if ((!item.summary || item.kind === 'imported') && !hasExtras) return null
   return (
     <div className="mt-1.5 grid gap-1.5">
       {item.summary && (

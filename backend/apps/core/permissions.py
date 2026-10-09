@@ -48,6 +48,13 @@ PERMISSIONS: dict[str, dict[str, set[str]]] = {
     "reports": {"view": MGMT, "export": MGMT},
 }
 
+# Permissions an admin can switch on or off for staff on the Organization page
+# (OrganizationSettings fields). The matrix above still decides for managers and admins.
+STAFF_SWITCHES: dict[tuple[str, str], str] = {
+    ("contacts", "import"): "staff_can_import_contacts",
+    ("contacts", "export"): "staff_can_export_contacts",
+}
+
 METHOD_ACTIONS = {
     "GET": "view",
     "HEAD": "view",
@@ -64,6 +71,11 @@ def has_perm(user, module: str, action: str) -> bool:
         return False
     if user.role == ADMIN or user.is_superuser:
         return True
+    switch = STAFF_SWITCHES.get((module, action))
+    if switch and user.role == STAFF:
+        from .models import OrganizationSettings
+
+        return bool(getattr(OrganizationSettings.cached(), switch))
     return user.role in PERMISSIONS.get(module, {}).get(action, set())
 
 

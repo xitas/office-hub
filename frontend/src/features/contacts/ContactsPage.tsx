@@ -5,9 +5,10 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { FormDialog, PageHeader } from '@/components/common'
 import { Button } from '@/components/ui/button'
-import { EMPTY_CONTACT_FILTERS, type ContactFilters } from '@/lib/contacts'
+import { EMPTY_CONTACT_FILTERS, filterParams, type ContactFilters } from '@/lib/contacts'
 import { usePermission } from '@/lib/permissions'
 import { useDebouncedValue } from '@/lib/utils'
+import { TransferButtons } from '@/features/transfer/TransferButtons'
 import { ContactFilterBar, ContactResults } from './ContactBrowser'
 import { ContactForm } from './ContactForm'
 
@@ -37,12 +38,15 @@ export function ContactsPage() {
         title={t('contacts.title')}
         subtitle={t('contacts.subtitle')}
         actions={
-          canCreate && (
-            <Button onClick={() => setParams({ new: '1' })}>
-              <Plus className="size-4" />
-              {t('contacts.add')}
-            </Button>
-          )
+          <>
+            <TransferButtons kind="contacts" params={{ search: q || undefined, ...filterParams(filters) }} />
+            {canCreate && (
+              <Button onClick={() => setParams({ new: '1' })}>
+                <Plus className="size-4" />
+                {t('contacts.add')}
+              </Button>
+            )}
+          </>
         }
       />
       <ContactFilterBar

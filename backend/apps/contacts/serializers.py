@@ -13,6 +13,17 @@ from .visibility import visible_companies
 MAX_TAGS = 20
 
 
+def check_assignment(me, user):
+    """Raise unless `me` may assign a record to `user` (None = unassigned / default)."""
+    if user is None or user == me:
+        return user
+    if not has_perm(me, "contacts", "assign_others"):
+        raise serializers.ValidationError(_("You can only assign this to yourself."))
+    if me.role != ADMIN and not me.is_superuser and (not me.department_id or user.department_id != me.department_id):
+        raise serializers.ValidationError(_("You can only assign this to people in your department."))
+    return user
+
+
 class AssignmentMixin:
     """Shared assignment rules: staff -> themselves, managers -> their department, admins -> anyone.
 
@@ -20,14 +31,7 @@ class AssignmentMixin:
     """
 
     def validate_assigned_to(self, user):
-        me = self.context["request"].user
-        if user is None or user == me:
-            return user
-        if not has_perm(me, "contacts", "assign_others"):
-            raise serializers.ValidationError(_("You can only assign this to yourself."))
-        if me.role != ADMIN and not me.is_superuser and (not me.department_id or user.department_id != me.department_id):
-            raise serializers.ValidationError(_("You can only assign this to people in your department."))
-        return user
+        return check_assignment(self.context["request"].user, user)
 
     def create(self, validated_data):
         validated_data.setdefault("assigned_to", self.context["request"].user)
