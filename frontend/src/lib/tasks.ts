@@ -88,3 +88,60 @@ export function useTask(id: string | undefined) {
 
 /** "HH:MM:SS" from the API → "HH:MM" for inputs and display. */
 export const shortTime = (value: string | null) => (value ? value.slice(0, 5) : '')
+
+export interface TaskBoardColumn {
+  status: TaskStatus
+  label: string
+  /** Cards in the column (for Done: completed within the window). */
+  count: number
+  /** Every task with this status (for Done: all time). */
+  total: number
+  cards: Task[]
+}
+
+export interface TaskBoardData {
+  columns: TaskBoardColumn[]
+  done_since: string
+  done_window_days: number
+}
+
+export interface TaskCalendarData {
+  start: string
+  end: string
+  /** The office's date today (its time zone, not the browser's). */
+  today: string
+  tasks: Task[]
+  undated: Task[]
+  undated_count: number
+}
+
+export const TASK_LAYOUTS = ['list', 'board', 'calendar'] as const
+export type TaskLayout = (typeof TASK_LAYOUTS)[number]
+const LAYOUT_KEY = 'crm.tasks.layout'
+
+/** The last Tasks view this browser used (List / Board / Calendar). */
+export function loadLayout(): TaskLayout {
+  try {
+    const saved = localStorage.getItem(LAYOUT_KEY)
+    return TASK_LAYOUTS.includes(saved as TaskLayout) ? (saved as TaskLayout) : 'list'
+  } catch {
+    return 'list'
+  }
+}
+
+export function saveLayout(layout: TaskLayout) {
+  try {
+    localStorage.setItem(LAYOUT_KEY, layout)
+  } catch {
+    // Private mode or storage blocked: the choice just isn't remembered.
+  }
+}
+
+/** "YYYY-MM-DD" for a moment as seen on the office's clock. */
+export function officeDate(timeZone: string, at: Date = new Date()) {
+  try {
+    return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(at)
+  } catch {
+    return new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(at)
+  }
+}

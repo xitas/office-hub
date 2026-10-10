@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from apps.core.models import TimeStampedModel
+from apps.core.office_time import office_datetime, office_tz
 
 
 class Task(TimeStampedModel):
@@ -61,8 +62,7 @@ class Task(TimeStampedModel):
         """When the task is due (end of the day when no time is set), in the office time zone."""
         if self.due_date is None:
             return None
-        time = self.due_time or datetime.max.time()
-        return timezone.make_aware(datetime.combine(self.due_date, time))
+        return office_datetime(self.due_date, self.due_time or datetime.max.time())
 
     @property
     def is_overdue(self) -> bool:
@@ -79,8 +79,8 @@ PRIORITY_RANK = Case(
 
 
 def overdue_q(now=None) -> Q:
-    """Open tasks whose due date (and time, if set) has passed."""
-    now = timezone.localtime(now or timezone.now())
+    """Open tasks whose due date (and time, if set) has passed, by the office clock."""
+    now = (now or timezone.now()).astimezone(office_tz())
     today, current = now.date(), now.time()
     return ~Q(status=Task.Status.DONE) & (
         Q(due_date__lt=today) | Q(due_date=today, due_time__isnull=False, due_time__lt=current)

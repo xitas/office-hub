@@ -743,6 +743,50 @@
     "searchPeople": "افراد تلاش کریں",
     "removeAssignee": "{{name}} کو ہٹائیں",
     "linkRecord": "رابطہ یا کمپنی منسلک کریں",
-    "unlink": "ربط ہٹائیں"
+    "unlink": "ربط ہٹائیں",
+    "movedTo": "“{{title}}” کو {{status}} میں منتقل کر دیا گیا",
+    "layouts": {
+      "label": "منظر",
+      "list": "فہرست",
+      "board": "بورڈ",
+      "calendar": "کیلنڈر"
+    },
+    "board": {
+      "label": "کاموں کا بورڈ",
+      "columnLabel": "{{status}}، {{count}} کام",
+      "doneWindow_one": "پچھلے ایک دن میں مکمل",
+      "doneWindow_other": "پچھلے {{count}} دنوں میں مکمل",
+      "seeAllDone": "تمام {{count}} مکمل کام دیکھیں",
+      "showing": "{{count}} میں سے {{shown}} دکھائے گئے",
+      "empty": "کوئی کام نہیں",
+      "emptyDrop": "کام یہاں چھوڑیں",
+      "moveTo": "منتقل کریں…",
+      "moveLabel": "“{{title}}” کو دوسری حیثیت میں منتقل کریں"
+    },
+    "calendar": {
+      "month": "مہینہ",
+      "week": "ہفتہ",
+      "range": "کیلنڈر کی مدت",
+      "today": "آج",
+      "prevMonth": "پچھلا مہینہ",
+      "nextMonth": "اگلا مہینہ",
+      "prevWeek": "پچھلا ہفتہ",
+      "nextWeek": "اگلا ہفتہ",
+      "addOn": "{{date}} تک کا کام شامل کریں",
+      "more": "+{{count}} مزید",
+      "nothingDue": "کچھ واجب نہیں",
+      "taskCount_one": "{{count}} کام",
+      "taskCount_other": "{{count}} کام",
+      "noDate": "بغیر تاریخ",
+      "noUndated": "ہر کھلے کام کی تاریخ مقرر ہے۔",
+      "undatedMore": "فہرست میں {{count}} مزید",
+      "dragHint": "کسی کام کو دن پر گھسیٹ کر تاریخ دیں۔",
+      "moved": "“{{title}}” کو {{date}} پر منتقل کر دیا گیا",
+      "undated": "“{{title}}” کی تاریخ ہٹا دی گئی",
+      "moveToDate": "اس تاریخ پر منتقل کریں",
+      "move": "منتقل کریں",
+      "removeDate": "تاریخ ہٹائیں",
+      "openTask": "کام کھولیں"
+    }
   }
 }

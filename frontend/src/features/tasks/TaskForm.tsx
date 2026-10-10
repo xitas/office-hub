@@ -18,13 +18,24 @@ interface Linked {
 }
 
 /** Create or edit a task. New tasks are assigned to you unless you pick other people. */
-export function TaskForm({ task, onSaved, onCancel }: { task?: Task; onSaved: (task: Task) => void; onCancel: () => void }) {
+export function TaskForm({
+  task,
+  defaultDueDate,
+  onSaved,
+  onCancel,
+}: {
+  task?: Task
+  /** New tasks: pre-fill the due date (e.g. the day clicked in the calendar). */
+  defaultDueDate?: string
+  onSaved: (task: Task) => void
+  onCancel: () => void
+}) {
   const { t } = useTranslation()
   const me = useMe()
   const [title, setTitle] = useState(task?.title ?? '')
   const [description, setDescription] = useState(task?.description ?? '')
   const [assignees, setAssignees] = useState<number[]>(task?.assignees ?? [me.id])
-  const [dueDate, setDueDate] = useState(task?.due_date ?? '')
+  const [dueDate, setDueDate] = useState(task?.due_date ?? defaultDueDate ?? '')
   const [dueTime, setDueTime] = useState(shortTime(task?.due_time ?? null))
   const [priority, setPriority] = useState<TaskPriority>(task?.priority ?? 'medium')
   const [status, setStatus] = useState<TaskStatus>(task?.status ?? 'todo')

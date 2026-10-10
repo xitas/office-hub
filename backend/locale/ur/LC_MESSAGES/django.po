@@ -763,3 +763,9 @@ msgstr "پہلے آخری تاریخ مقرر کریں۔"
 
 msgid "Only managers, admins or the person who created a task can delete it."
 msgstr "کام صرف مینیجر، ایڈمن یا اسے بنانے والا حذف کر سکتا ہے۔"
+
+msgid "Give start and end dates as YYYY-MM-DD."
+msgstr "آغاز اور اختتام کی تاریخیں YYYY-MM-DD کی شکل میں دیں۔"
+
+msgid "Choose a range of up to %(days)s days."
+msgstr "زیادہ سے زیادہ %(days)s دن کی مدت منتخب کریں۔"

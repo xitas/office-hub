@@ -743,6 +743,50 @@
     "searchPeople": "Search people",
     "removeAssignee": "Remove {{name}}",
     "linkRecord": "Link a contact or company",
-    "unlink": "Remove link"
+    "unlink": "Remove link",
+    "movedTo": "“{{title}}” moved to {{status}}",
+    "layouts": {
+      "label": "View",
+      "list": "List",
+      "board": "Board",
+      "calendar": "Calendar"
+    },
+    "board": {
+      "label": "Task board",
+      "columnLabel": "{{status}}, {{count}} tasks",
+      "doneWindow_one": "Completed in the last day",
+      "doneWindow_other": "Completed in the last {{count}} days",
+      "seeAllDone": "See all {{count}} done tasks",
+      "showing": "Showing {{shown}} of {{count}}",
+      "empty": "No tasks",
+      "emptyDrop": "Drop tasks here",
+      "moveTo": "Move to…",
+      "moveLabel": "Move “{{title}}” to another status"
+    },
+    "calendar": {
+      "month": "Month",
+      "week": "Week",
+      "range": "Calendar range",
+      "today": "Today",
+      "prevMonth": "Previous month",
+      "nextMonth": "Next month",
+      "prevWeek": "Previous week",
+      "nextWeek": "Next week",
+      "addOn": "Add a task due {{date}}",
+      "more": "+{{count}} more",
+      "nothingDue": "Nothing due",
+      "taskCount_one": "{{count}} task",
+      "taskCount_other": "{{count}} tasks",
+      "noDate": "No date",
+      "noUndated": "Every open task has a date.",
+      "undatedMore": "{{count}} more in the list view",
+      "dragHint": "Drag a task onto a day to give it a date.",
+      "moved": "“{{title}}” moved to {{date}}",
+      "undated": "“{{title}}” no longer has a date",
+      "moveToDate": "Move to date",
+      "move": "Move",
+      "removeDate": "Remove date",
+      "openTask": "Open task"
+    }
   }
 }
