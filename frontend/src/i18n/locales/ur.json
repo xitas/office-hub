@@ -666,5 +666,83 @@
     "another": "ایک اور شامل کریں",
     "contactAdded": "رابطہ “{{name}}” شامل ہو گیا",
     "companyAdded": "کمپنی “{{name}}” شامل ہو گئی"
+  },
+  "tasks": {
+    "title": "کام",
+    "subtitle": "کیا کرنا ہے، کون کر رہا ہے اور کب تک۔",
+    "add": "نیا کام",
+    "create": "کام بنائیں",
+    "edit": "کام میں ترمیم",
+    "back": "تمام کام",
+    "details": "تفصیلات",
+    "created": "کام بن گیا",
+    "statusChanged": "حیثیت {{status}} کر دی گئی",
+    "completed": "“{{title}}” مکمل ہو گیا",
+    "reopened": "“{{title}}” دوبارہ کھول دیا گیا",
+    "markDone": "“{{title}}” کو مکمل کریں",
+    "reopen": "“{{title}}” دوبارہ کھولیں",
+    "overdue": "تاخیر شدہ",
+    "noDueDate": "کوئی آخری تاریخ نہیں",
+    "completedAt": "مکمل ہوا",
+    "noDescription": "کوئی تفصیل نہیں۔",
+    "notFound": "کام نہیں ملا",
+    "notFoundHint": "شاید یہ حذف ہو گیا ہے، یا یہ آپ کے کاموں میں شامل نہیں۔",
+    "deleteTitle": "“{{title}}” حذف کریں؟",
+    "deleteHint": "یہ کام تمام متعلقہ افراد کے لیے ہٹ جائے گا۔ اسے واپس نہیں لایا جا سکتا۔",
+    "searchPlaceholder": "عنوان سے کام تلاش کریں",
+    "allStatuses": "تمام حیثیتیں",
+    "allPriorities": "تمام ترجیحات",
+    "everyone": "سب",
+    "emptyFiltered": "ان فلٹرز سے کوئی کام نہیں ملا",
+    "emptyHint": "“نیا کام” سے کام بنائیں۔",
+    "empty": {
+      "mine": "آپ کو کوئی کام تفویض نہیں",
+      "today": "آج کوئی کام واجب نہیں",
+      "overdue": "کوئی تاخیر شدہ کام نہیں",
+      "all": "ابھی کوئی کام نہیں"
+    },
+    "views": {
+      "label": "دکھائیں",
+      "mine": "میرے کام",
+      "today": "آج واجب",
+      "overdue": "تاخیر شدہ",
+      "all": "سب"
+    },
+    "sorts": {
+      "default": "ترتیب: خودکار",
+      "due": "آخری تاریخ (پہلے)",
+      "-due": "آخری تاریخ (بعد میں)",
+      "priority": "ترجیح",
+      "-created": "نئے پہلے"
+    },
+    "statuses": {
+      "todo": "کرنا ہے",
+      "in_progress": "جاری",
+      "review": "جائزہ",
+      "done": "مکمل"
+    },
+    "priorities": {
+      "low": "کم",
+      "medium": "درمیانی",
+      "high": "زیادہ",
+      "urgent": "فوری"
+    },
+    "fields": {
+      "title": "عنوان",
+      "description": "تفصیل",
+      "assignees": "ذمہ دار",
+      "dueDate": "آخری تاریخ",
+      "dueTime": "وقت",
+      "priority": "ترجیح",
+      "status": "حیثیت",
+      "relatedTo": "متعلقہ"
+    },
+    "assigneesHint": "آپ اپنے آپ کو اور اپنے شعبے کے ساتھیوں کو کام تفویض کر سکتے ہیں۔",
+    "dueTimeHint": "اختیاری",
+    "pickAssignees": "افراد منتخب کریں",
+    "searchPeople": "افراد تلاش کریں",
+    "removeAssignee": "{{name}} کو ہٹائیں",
+    "linkRecord": "رابطہ یا کمپنی منسلک کریں",
+    "unlink": "ربط ہٹائیں"
   }
 }

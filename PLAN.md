@@ -112,7 +112,7 @@ An office CRM for small-to-mid-sized offices (10–100 staff). It works on deskt
 
 Phase 2 is split in two:
 - **Phase 2A — Contacts & clients: complete** (branch `phase-2-contacts`). Slices: 1 Companies ✓, 2 Contacts ✓, 3 Lead pipeline ✓, 4 Interaction timeline ✓, 5 CSV import/export ✓, 6 Hardening & polish ✓ (per-account sign-in protection, search and quick-add polish, contact dashboard widgets, full review on SQLite and PostgreSQL + Redis).
-- **Phase 2B — Task management (Module 3): next.** Planned order: Task model + list view with My/Team/Overdue filters → Kanban → subtasks/checklists and comments → attachments → calendar view → recurring tasks and deadline reminders (Celery Beat) → task notifications → dashboard task widgets, quick-add Task, tasks in global search and on the contact timeline (via the timeline provider registry).
+- **Phase 2B — Task management (Module 3): in progress** (branch `phase-2-tasks`). Slices: 1 Task basics ✓, then 2–6. Planned order: Task model + list view with My/Team/Overdue filters → Kanban → subtasks/checklists and comments → attachments → calendar view → recurring tasks and deadline reminders (Celery Beat) → task notifications → dashboard task widgets, quick-add Task, tasks in global search and on the contact timeline (via the timeline provider registry).
 
 ### Module 2 — Contacts & clients
 - [x] Contact records: name, company, job title, phone, WhatsApp, email, address, city, tags (created on the fly), assigned staff, lead status
@@ -126,8 +126,9 @@ Phase 2 is split in two:
 - [x] Click-to-call and click-to-WhatsApp buttons on contact records
 
 ### Module 3 — Task management
-- [ ] Tasks: title, description, assignees, due date, priority (Low/Medium/High/Urgent), status, linked contact or project
-- [ ] List view
+- [x] Tasks: title, description, assignees (one or more), due date + optional time, priority (Low/Medium/High/Urgent), status (To do/In progress/Review/Done), optional link to a contact or company, completed-at set/cleared with the status *(linking to projects and fuller record linking: slice 5)*
+- [x] Visibility and assignment: staff see tasks they created or are assigned to, managers their department's (creator or assignee), admins all; everyone assigns themselves and their department, admins anyone; delete by managers/admins or the creator. Audited (create, edit incl. status and assignees, delete)
+- [x] List view: table on desktop, cards on phone, quick filters (My tasks, Due today, Overdue, All), search, status/priority/person filters, smart sort (open first, by due date, most urgent first) or by due date/priority/newest; overdue clearly marked; one-click complete/reopen; task detail page with status dropdown and edit form; Tasks in sidebar and bottom nav; quick-add Task opens the new-task form
 - [ ] Kanban board (To Do / In Progress / Review / Done)
 - [ ] Calendar view
 - [ ] Subtasks and checklists
@@ -135,7 +136,7 @@ Phase 2 is split in two:
 - [ ] File attachments
 - [ ] Recurring tasks (daily, weekly, monthly)
 - [ ] Notifications: assignment, status change, comment, approaching deadline
-- [ ] Filters: My Tasks, Team Tasks, Overdue, By Project
+- [~] Filters: My Tasks, Team Tasks, Overdue, By Project *(My tasks, Due today, Overdue, All, by person/status/priority, due-date range done; By Project comes with projects)*
 - [x] Scheduled-job runner: Celery + Celery Beat (done in Phase 1 hardening)
 - [ ] Deadline reminder and recurring-task jobs
 
@@ -206,7 +207,7 @@ Phase 2 is split in two:
 | AuditLog | 1 | [x] |
 | Contacts | 2 | [x] |
 | Companies | 2 | [x] |
-| Tasks | 2 | [ ] |
+| Tasks | 2 | [x] |
 | Subtasks | 2 | [ ] |
 | Comments | 2 | [ ] |
 | Messages | 3 | [ ] |
@@ -236,6 +237,7 @@ Tables added beyond the spec: OrganizationSettings, Notification and Notificatio
 ---
 
 ## Changelog
+- **2026-10-10:** Phase 2B slice 1 — Task basics (branch `phase-2-tasks`): `tasks` app (Task model, scoped API with filters/search/sorting, assignment and delete rules, audit), Tasks list and detail pages, Tasks in sidebar and bottom nav (Companies moves under "More" on phones, as in the original spec), quick-add Task enabled, 30 seeded demo tasks, English and Urdu. Shared contact/company picker extracted from the quick-add note dialog. Permission matrix: staff may now delete tasks they created and assign within their department. 46 new tests (303 total).
 - **2026-10-10:** Phase 2 slice 6 — Phase 2A complete. Import "update" only fills empty fields (never names or status) and the preview lists the changes; import reasons stored as codes and translated per reader. Per-account sign-in protection with growing waits and owner notification; the shared cache now degrades to an in-process fallback when Redis is down (an outage used to make every sign-in fail with a server error). Global search: fixed group order, status and company on contacts, phone search in any format (new `phone_digits` on companies and users). Quick-add Contact/Company/Note in place with "Open" / "Add another". Dashboard: contacts by status and recent client activity. Fixed an intermittent Celery retry test. Real 450-row background import verified with a Celery worker. 258 backend tests pass on SQLite and on PostgreSQL 17 + Redis. Visual review extended to every page.
 - **2026-10-09:** Phase 2 slice 5 — CSV import and export for contacts and companies (see Module 2 checklist). New `ContactImport` table, `staff_can_import_contacts` / `staff_can_export_contacts` organization switches, Import/Export audit actions. Checked that the `cn` package is shadcn's official class-merging package (used by every ui component), not an accidental dependency. 34 new tests (226 total).
 - **2026-10-09:** Phase 2 slice 4 — Interaction timeline: `TimelineEntry` (one table, type key + per-type details) with a registry so later modules add entry types and automatic entries without schema changes; notes, call and meeting logs, automatic status-change and record-created entries; company roll-up of visible contacts' entries; author/department-manager/admin edit and delete with audit; Activity section on contact and company pages; quick-add Note; English and Urdu; seeded demo activity. 39 new tests (192 total).

@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "apps.dashboard",
     "apps.contacts",
     "apps.timeline",
+    "apps.tasks",
 ]
 
 MIDDLEWARE = [

@@ -666,5 +666,83 @@
     "another": "Add another",
     "contactAdded": "Contact “{{name}}” added",
     "companyAdded": "Company “{{name}}” added"
+  },
+  "tasks": {
+    "title": "Tasks",
+    "subtitle": "What needs doing, who is on it, and when it is due.",
+    "add": "New task",
+    "create": "Create task",
+    "edit": "Edit task",
+    "back": "All tasks",
+    "details": "Details",
+    "created": "Task created",
+    "statusChanged": "Status changed to {{status}}",
+    "completed": "“{{title}}” marked done",
+    "reopened": "“{{title}}” reopened",
+    "markDone": "Mark “{{title}}” as done",
+    "reopen": "Reopen “{{title}}”",
+    "overdue": "Overdue",
+    "noDueDate": "No due date",
+    "completedAt": "Completed",
+    "noDescription": "No description.",
+    "notFound": "Task not found",
+    "notFoundHint": "It may have been deleted, or it is not one of your tasks.",
+    "deleteTitle": "Delete “{{title}}”?",
+    "deleteHint": "The task is removed for everyone assigned to it. This cannot be undone.",
+    "searchPlaceholder": "Search tasks by title",
+    "allStatuses": "All statuses",
+    "allPriorities": "All priorities",
+    "everyone": "Everyone",
+    "emptyFiltered": "No tasks match these filters",
+    "emptyHint": "Create a task with “New task”.",
+    "empty": {
+      "mine": "Nothing assigned to you",
+      "today": "Nothing due today",
+      "overdue": "No overdue tasks",
+      "all": "No tasks yet"
+    },
+    "views": {
+      "label": "Show",
+      "mine": "My tasks",
+      "today": "Due today",
+      "overdue": "Overdue",
+      "all": "All"
+    },
+    "sorts": {
+      "default": "Sort: smart",
+      "due": "Due date (soonest)",
+      "-due": "Due date (latest)",
+      "priority": "Priority",
+      "-created": "Newest first"
+    },
+    "statuses": {
+      "todo": "To do",
+      "in_progress": "In progress",
+      "review": "Review",
+      "done": "Done"
+    },
+    "priorities": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "urgent": "Urgent"
+    },
+    "fields": {
+      "title": "Title",
+      "description": "Description",
+      "assignees": "Assigned to",
+      "dueDate": "Due date",
+      "dueTime": "Time",
+      "priority": "Priority",
+      "status": "Status",
+      "relatedTo": "Related to"
+    },
+    "assigneesHint": "You can assign yourself and colleagues in your department.",
+    "dueTimeHint": "Optional",
+    "pickAssignees": "Choose people",
+    "searchPeople": "Search people",
+    "removeAssignee": "Remove {{name}}",
+    "linkRecord": "Link a contact or company",
+    "unlink": "Remove link"
   }
 }

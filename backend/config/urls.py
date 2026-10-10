@@ -12,6 +12,7 @@ api_v1 = [
     path("dashboard/", include("apps.dashboard.urls")),
     path("", include("apps.contacts.urls")),
     path("", include("apps.timeline.urls")),
+    path("", include("apps.tasks.urls")),
 ]
 
 urlpatterns = [

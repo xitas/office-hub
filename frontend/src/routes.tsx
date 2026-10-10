@@ -49,6 +49,14 @@ export const router = createBrowserRouter([
             ),
           ),
           {
+            path: 'tasks',
+            lazy: () => import('@/features/tasks/TasksPage').then((m) => ({ Component: m.TasksPage })),
+          },
+          {
+            path: 'tasks/:id',
+            lazy: () => import('@/features/tasks/TaskDetailPage').then((m) => ({ Component: m.TaskDetailPage })),
+          },
+          {
             path: 'pipeline',
             lazy: () => import('@/features/pipeline/PipelinePage').then((m) => ({ Component: m.PipelinePage })),
           },

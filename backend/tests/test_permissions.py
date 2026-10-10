@@ -14,7 +14,7 @@ def test_admin_has_everything(admin):
 
 def test_matrix_examples(manager, staff):
     assert has_perm(staff, "tasks", "create")
-    assert not has_perm(staff, "tasks", "delete")
+    assert not has_perm(staff, "contacts", "delete")  # (staff may delete tasks they created: checked per task)
     assert has_perm(manager, "leave", "approve")
     assert not has_perm(staff, "leave", "approve")
     assert not has_perm(staff, "reports", "view")

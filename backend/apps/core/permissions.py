@@ -25,7 +25,8 @@ PERMISSIONS: dict[str, dict[str, set[str]]] = {
     "contacts": {
         "view": ALL, "create": ALL, "edit": ALL, "delete": MGMT, "import": MGMT, "export": MGMT, "assign_others": MGMT,
     },
-    "tasks": {"view": ALL, "create": ALL, "edit": ALL, "delete": MGMT, "assign_others": MGMT},
+    # Tasks: assign_others = colleagues in your own department (admins: anyone); staff delete only tasks they created.
+    "tasks": {"view": ALL, "create": ALL, "edit": ALL, "delete": ALL, "assign_others": ALL},
     # Phase 3
     "chat": {"view": ALL, "create": ALL, "edit": ALL, "delete": ALL, "manage_channels": MGMT},
     "comms": {"view": ALL, "create": ALL, "edit": ALL, "delete": MGMT},

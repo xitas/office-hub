@@ -7,6 +7,7 @@ from django.utils import timezone
 from apps.accounts.models import Department, User
 from apps.contacts.models import Company, Contact, ContactStatusChange, Tag
 from apps.core.models import OrganizationSettings
+from apps.tasks.models import Task
 from apps.timeline.models import TimelineEntry
 
 DEMO_PASSWORD = "Demo@12345"
@@ -94,6 +95,44 @@ COMPANY_ACTIVITY = [
     ("note", "Payments are processed on the 10th of each month through their accounts team.", {}, None),
 ]
 
+# Demo tasks: (title, creator, assignees, due in days (None = no date), due time, priority, status, link).
+# Assignees stay inside the creator's department (admins assign anyone), as the API requires.
+# link: ("contact", index into demo contacts) or ("company", company name).
+SALES_MGR, HAMZA, FATIMA = "sales.manager@office.test", "hamza@office.test", "fatima@office.test"
+OPS_MGR, USMAN, ZAINAB, ADMIN = "ops.manager@office.test", "usman@office.test", "zainab@office.test", "admin@office.test"
+TASKS = [
+    ("Send revised quotation to Clifton Retail", SALES_MGR, [HAMZA], -3, None, "urgent", "in_progress", ("company", "Clifton Retail Group")),
+    ("Follow up on pending payment", FATIMA, [FATIMA], -1, "11:00", "high", "todo", ("contact", 3)),
+    ("Prepare product demo for Saba Software", HAMZA, [HAMZA, FATIMA], -2, None, "high", "todo", ("company", "Saba Software House")),
+    ("Call back about bulk order discount", HAMZA, [HAMZA], -5, None, "medium", "in_progress", ("contact", 0)),
+    ("Update price list for Q4", SALES_MGR, [FATIMA], -4, None, "medium", "review", None),
+    ("Renew vehicle insurance", OPS_MGR, [USMAN], -6, None, "urgent", "todo", None),
+    ("Weekly sales meeting notes", SALES_MGR, [SALES_MGR], 0, "10:00", "medium", "todo", None),
+    ("Confirm delivery slot with Gwadar Port Services", USMAN, [USMAN], 0, "15:30", "high", "todo", ("company", "Gwadar Port Services")),
+    ("Reply to tender enquiry", FATIMA, [FATIMA, HAMZA], 0, None, "urgent", "in_progress", ("contact", 5)),
+    ("Reconcile petty cash", ZAINAB, [ZAINAB], 0, "17:00", "medium", "todo", None),
+    ("Book meeting room for client visit", ADMIN, [USMAN], 0, None, "low", "todo", None),
+    ("Draft annual maintenance contract", SALES_MGR, [HAMZA], 1, None, "high", "todo", ("contact", 2)),
+    ("Collect signed contract", HAMZA, [HAMZA], 2, "12:00", "high", "todo", ("contact", 7)),
+    ("Arrange site visit in Faisalabad", OPS_MGR, [USMAN, OPS_MGR], 3, None, "medium", "in_progress", None),
+    ("Check stock of brochures", USMAN, [USMAN], 4, None, "low", "todo", None),
+    ("Prepare monthly expense report", ZAINAB, [ZAINAB], 5, None, "high", "in_progress", None),
+    ("Introduce new pricing to key accounts", SALES_MGR, [FATIMA, HAMZA], 6, None, "medium", "todo", None),
+    ("Courier samples to Lahore office", OPS_MGR, [USMAN], 7, None, "low", "todo", None),
+    ("Quarterly review with Saba Software", SALES_MGR, [SALES_MGR, HAMZA], 10, "11:00", "medium", "todo", ("company", "Saba Software House")),
+    ("Plan trade show stand", ADMIN, [FATIMA, USMAN], 14, None, "medium", "todo", None),
+    ("Update CRM contact details after expo", FATIMA, [FATIMA], 9, None, "low", "review", None),
+    ("Train new staff on CRM", ADMIN, [ADMIN], 21, None, "medium", "todo", None),
+    ("Collect feedback from won clients", HAMZA, [HAMZA], None, None, "low", "todo", None),
+    ("Clean up duplicate contacts", FATIMA, [FATIMA], None, None, "low", "in_progress", None),
+    ("Research new suppliers for packaging", OPS_MGR, [OPS_MGR], None, None, "medium", "todo", None),
+    ("Send welcome pack to new client", HAMZA, [HAMZA], -8, None, "medium", "done", ("contact", 1)),
+    ("Submit monthly sales figures", SALES_MGR, [SALES_MGR], -2, None, "high", "done", None),
+    ("Fix office printer", OPS_MGR, [USMAN], -1, None, "low", "done", None),
+    ("Pay utility bills", ZAINAB, [ZAINAB], -3, None, "urgent", "done", None),
+    ("Approve leave policy draft", ADMIN, [ADMIN], 1, None, "medium", "review", None),
+]
+
 
 class Command(BaseCommand):
     help = "Create demo organization settings, departments, users, companies and contacts (idempotent)."
@@ -133,6 +172,7 @@ class Command(BaseCommand):
         self._seed_contacts()
         self._seed_status_history()
         self._seed_timeline()
+        self._seed_tasks()
 
         self.stdout.write(self.style.SUCCESS("Demo data ready. All demo users share the password: " + DEMO_PASSWORD))
         for email, name, role, dept, _ in USERS:
@@ -247,3 +287,30 @@ class Command(BaseCommand):
                     created_by=company.assigned_to, updated_by=company.assigned_to,
                 ))
         TimelineEntry.objects.bulk_create(entries)
+
+    def _seed_tasks(self):
+        """About 30 demo tasks across people, statuses, priorities and due dates (some overdue, some today)."""
+        if Task.objects.filter(title__in=[t[0] for t in TASKS]).exists():
+            return
+        users = {u.email: u for u in User.objects.filter(email__in={e for t in TASKS for e in [t[1], *t[2]]})}
+        demo = list(Contact.objects.filter(email__endswith=".pk", first_name__in=FIRST_NAMES).order_by("pk"))
+        companies = {c.name: c for c in Company.objects.filter(name__in=[c[0] for c in COMPANIES])}
+        today = timezone.localdate()
+        now = timezone.now()
+        for i, (title, creator, assignees, days, at, priority, status, link) in enumerate(TASKS):
+            if creator not in users:
+                continue
+            task = Task(
+                title=title, created_by=users[creator], updated_by=users[creator], priority=priority, status=status,
+                due_date=today + timedelta(days=days) if days is not None else None,
+                due_time=timezone.datetime.strptime(at, "%H:%M").time() if at else None,
+            )
+            if link and link[0] == "contact" and link[1] < len(demo):
+                task.contact = demo[link[1]]
+            elif link and link[0] == "company":
+                task.company = companies.get(link[1])
+            task.save()
+            task.assignees.set([users[e] for e in assignees if e in users])
+            # Spread creation dates over the last weeks so lists don't all say "today".
+            created = now - timedelta(days=3 + (i * 5) % 20, hours=i % 9)
+            Task.objects.filter(pk=task.pk).update(created_at=created)

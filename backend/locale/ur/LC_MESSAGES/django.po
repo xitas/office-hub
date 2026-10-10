@@ -718,3 +718,48 @@ msgstr "آپ کے اکاؤنٹ میں سائن اِن کی ناکام کوششی
 
 msgid "There were %(count)s failed attempts to sign in to your account, so sign-in is slowed down for a while. If this wasn't you, change your password."
 msgstr "آپ کے اکاؤنٹ میں سائن اِن کی %(count)s ناکام کوششیں ہوئیں، اس لیے کچھ دیر کے لیے سائن اِن سست کر دیا گیا ہے۔ اگر یہ آپ نہیں تھے تو اپنا پاس ورڈ تبدیل کریں۔"
+
+msgid "To do"
+msgstr "کرنا ہے"
+
+msgid "In progress"
+msgstr "جاری"
+
+msgid "Review"
+msgstr "جائزہ"
+
+msgid "Low"
+msgstr "کم"
+
+msgid "Medium"
+msgstr "درمیانی"
+
+msgid "High"
+msgstr "زیادہ"
+
+msgid "Urgent"
+msgstr "فوری"
+
+msgid "task"
+msgstr "کام"
+
+msgid "tasks"
+msgstr "کام"
+
+msgid "Assign at least one person."
+msgstr "کم از کم ایک فرد کو تفویض کریں۔"
+
+msgid "You can only assign tasks to yourself and people in your department."
+msgstr "آپ کام صرف اپنے آپ کو اور اپنے شعبے کے افراد کو تفویض کر سکتے ہیں۔"
+
+msgid "You can only assign tasks to yourself."
+msgstr "آپ کام صرف اپنے آپ کو تفویض کر سکتے ہیں۔"
+
+msgid "Link the task to a contact or a company, not both."
+msgstr "کام کو رابطے یا کمپنی سے منسلک کریں، دونوں سے نہیں۔"
+
+msgid "Set a due date first."
+msgstr "پہلے آخری تاریخ مقرر کریں۔"
+
+msgid "Only managers, admins or the person who created a task can delete it."
+msgstr "کام صرف مینیجر، ایڈمن یا اسے بنانے والا حذف کر سکتا ہے۔"
