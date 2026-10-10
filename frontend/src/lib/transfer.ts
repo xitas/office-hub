@@ -56,6 +56,8 @@ export interface PreviewRow {
   line: number
   values: Record<string, string>
   outcome: 'create' | 'update' | 'skip' | 'fail'
+  /** Fields an update fills in (only empty ones; names and status never change). */
+  changes: string[]
   messages: string[]
 }
 

@@ -1,3 +1,5 @@
+import type { TimelineItem } from './timeline'
+
 export type Role = 'admin' | 'manager' | 'staff'
 export type Language = 'en' | 'ur'
 export type ThemePref = 'light' | 'dark' | 'system'
@@ -123,6 +125,13 @@ export interface DashboardData {
   unread_notifications: number | null
   activity: ActivityItem[] | null
   stats: { active_users: number; departments: number | null; logged_in_today: number } | null
+  contacts_by_status: {
+    scope: 'mine' | 'department' | 'all'
+    total: number
+    counts: { status: ContactStatus; count: number }[]
+  } | null
+  /** Latest notes, calls, meetings and status changes (same shape as timeline items). */
+  client_activity: TimelineItem[] | null
 }
 
 export interface DashboardListItem {
@@ -139,6 +148,9 @@ export interface SearchHit {
   title: string
   subtitle: string
   url: string
+  /** Contacts only. */
+  status?: ContactStatus
+  company?: string | null
 }
 
 export interface Company {

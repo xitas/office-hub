@@ -337,18 +337,69 @@ def test_duplicates_skip(client_for, people, existing):
     assert Contact.objects.count() == 3
 
 
-def test_duplicates_update(client_for, people, existing):
-    result = import_rows(client_for(people["staff"]), DUP_ROWS, duplicates="update")
-    assert (result["created"], result["updated"], result["skipped"]) == (1, 2, 1)
+def test_duplicates_update_only_fills_empty_fields(client_for, people, existing):
+    rows = [
+        ["First name", "Last name", "Phone", "Email", "City", "Job title", "Tags", "Lead status"],
+        ["Ali", "New", "+92 300 1234567", "", "Lahore", "Buyer", "imported; old TAG", "Won"],  # same phone as Ali Old
+        ["Other", "", "", "ALI@acme.pk", "Quetta", "", "", ""],  # same email, nothing empty left to fill
+        ["Ghost", "", "0333-9999999", "", "", "Boss", "", ""],  # matches a contact this user can't see
+        ["Fresh", "", "0345 1111111", "", "", "", "", ""],
+    ]
+    result = import_rows(client_for(people["staff"]), rows, duplicates="update")
+    assert (result["created"], result["updated"], result["skipped"]) == (1, 1, 2)
     mine = existing["mine"]
     mine.refresh_from_db()
-    # Filled-in cells overwrite; blank cells keep what was there; tags are added, not replaced.
-    assert mine.first_name == "Other" and mine.last_name == "New" and mine.city == "Karachi"
-    assert mine.status == "won" and ContactStatusChange.objects.filter(contact=mine, to_status="won").exists()
-    assert sorted(mine.tags.values_list("name", flat=True)) == ["Imported", "Old tag"]
+    # Name, status and filled-in fields stay; only empty fields are filled; tags are added (ignoring case).
+    assert (mine.first_name, mine.last_name, mine.status, mine.city) == ("Ali", "Old", "new", "Karachi")
+    assert mine.job_title == "Buyer"
+    assert sorted(mine.tags.values_list("name", flat=True), key=str.casefold) == ["imported", "Old tag"]
+    assert not ContactStatusChange.objects.filter(contact=mine, to_status="won").exists()
+    reasons = [i["reason"] for i in result["issues"]]
+    assert reasons[0] == "Already in the CRM as Ali Old, with nothing new to add."
     existing["hidden"].refresh_from_db()
-    assert existing["hidden"].first_name == "Hidden"  # never touched
+    assert existing["hidden"].job_title == ""  # never touched
     assert not TimelineEntry.objects.filter(kind="imported", contact=mine).exists()
+
+
+def test_update_preview_lists_changes(client_for, people, existing):
+    c = client_for(people["staff"])
+    job = upload(c, [
+        ["First name", "Phone", "City", "Job title", "Company", "Tags"],
+        ["Renamed", "0300 1234567", "Lahore", "Buyer", "Acme New", "VIP"],
+    ]).data
+    res = c.post(f"{IMPORTS}{job['id']}/preview/", {"mapping": job["mapping"], "duplicates": "update"}, format="json")
+    row = res.data["rows"][0]
+    assert row["outcome"] == "update"
+    assert row["changes"] == ["job_title", "company", "tags"]
+    assert row["messages"] == [
+        "Updates Ali Old.",
+        "Fills in: Job title, Company.",
+        "Adds tags: VIP.",
+        "New company “Acme New” will be created.",
+    ]
+    ur = c.post(f"{IMPORTS}{job['id']}/preview/", {"mapping": job["mapping"], "duplicates": "update"}, format="json", **UR)
+    assert ur.data["rows"][0]["messages"][1] == "یہ خانے بھرے گا: عہدہ، کمپنی۔"
+    assert not Company.objects.filter(name="Acme New").exists()
+
+
+def test_reasons_follow_the_readers_language(client_for, people):
+    c = client_for(people["staff"])
+    # Run in Urdu, read in English (and the other way round).
+    job = upload(c, [["First name", "Email", "Assigned to"], ["", "x@y.pk", ""], ["Bad", "nope", ""], ["X", "", "Sara Colleague"]]).data
+    c.post(f"{IMPORTS}{job['id']}/run/", {"mapping": job["mapping"]}, format="json", **UR)
+    en = [i["reason"] for i in c.get(f"{IMPORTS}{job['id']}/").data["issues"]]
+    assert en == [
+        "First name is required.",
+        "“nope” is not a valid email address.",
+        "Assigned to: You can only assign this to yourself.",
+    ]
+    ur = [i["reason"] for i in c.get(f"{IMPORTS}{job['id']}/", **UR).data["issues"]]
+    assert ur[0] == "پہلا نام ضروری ہے۔"
+    assert ur[2] == "ذمہ دار: آپ اسے صرف اپنے آپ کو تفویض کر سکتے ہیں۔"
+    rows = read(c.get(f"{IMPORTS}{job['id']}/failed-rows/", **UR))
+    assert rows[0][-1] == "مسئلہ" and rows[1][-1] == "پہلا نام ضروری ہے۔"
+    stored = ContactImport.objects.get().issues[0]
+    assert stored["messages"] == [{"code": "first_name_required", "params": {}}] and "reason" not in stored
 
 
 def test_duplicates_create_anyway(client_for, people, existing):
@@ -398,7 +449,8 @@ def test_company_import(client_for, people):
     assert job["mapping"] == {"0": "name", "1": "industry", "2": "city", "3": "website", "4": "phone"}
     result = run(c, job, duplicates="update").data
     assert (result["created"], result["updated"], result["failed"]) == (1, 1, 1)
-    assert Company.objects.get(name="Acme").city == "Karachi"
+    acme = Company.objects.get(name="Acme")
+    assert acme.city == "Lahore" and acme.industry == "retail"  # existing city kept; empty industry filled
     bolan = Company.objects.get(name="Bolan Traders")
     assert bolan.industry == "logistics" and bolan.website == "https://bolan.pk" and bolan.assigned_to == people["manager"]
     assert TimelineEntry.objects.filter(kind="imported", company=bolan).exists()

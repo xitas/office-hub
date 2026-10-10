@@ -206,7 +206,10 @@ export function ImportSetup({ job }: { job: ImportJob }) {
             {t('transfer.preview.title')}
             {preview.isFetching && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
           </CardTitle>
-          <CardDescription>{t('transfer.preview.hint', { count: Math.min(10, job.total_rows) })}</CardDescription>
+          <CardDescription>
+            {t('transfer.preview.hint', { count: Math.min(10, job.total_rows) })}
+            {duplicates === 'update' && ` ${t('transfer.preview.updateLegend')}`}
+          </CardDescription>
         </CardHeader>
         <CardContent className="px-0">
           {previewError ? (
@@ -255,7 +258,7 @@ function PreviewTable({ rows, keys, label }: { rows: PreviewRow[]; keys: string[
                 .map((k) => (
                   <div key={k} className="contents">
                     <dt className="text-muted-foreground">{label(k)}</dt>
-                    <dd className="truncate">
+                    <dd className={cn('truncate', cellStyle(row, k))}>
                       <bdi>{row.values[k]}</bdi>
                     </dd>
                   </div>
@@ -288,7 +291,7 @@ function PreviewTable({ rows, keys, label }: { rows: PreviewRow[]; keys: string[
                   {row.messages.length > 0 && <Messages row={row} />}
                 </TableCell>
                 {keys.map((k) => (
-                  <TableCell key={k} className="max-w-48 truncate" title={row.values[k]}>
+                  <TableCell key={k} className={cn('max-w-48 truncate', cellStyle(row, k))} title={row.values[k]}>
                     <bdi>{row.values[k] || '—'}</bdi>
                   </TableCell>
                 ))}
@@ -301,11 +304,17 @@ function PreviewTable({ rows, keys, label }: { rows: PreviewRow[]; keys: string[
   )
 }
 
+/** On updates, the cells that will be filled in stand out; the rest of the row is kept as it is. */
+function cellStyle(row: PreviewRow, key: string) {
+  if (row.outcome !== 'update') return undefined
+  return row.changes.includes(key) ? 'font-medium text-primary' : 'text-muted-foreground'
+}
+
 function Messages({ row }: { row: PreviewRow }) {
   return (
     <ul className={cn('mt-1 grid gap-0.5 text-xs', row.outcome === 'fail' ? 'text-destructive' : 'text-muted-foreground')}>
       {row.messages.map((m) => (
-        <li key={m} dir="auto">
+        <li key={m}>
           {m}
         </li>
       ))}

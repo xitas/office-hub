@@ -1,6 +1,6 @@
 """CSV export of contacts/companies and the CSV import API (upload → map → preview → run → results)."""
 from django.http import HttpResponse
-from django.utils import timezone, translation
+from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_noop
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -16,6 +16,7 @@ from apps.core.models import AuditLog
 from apps.core.permissions import ModulePermission
 
 from .csv_io import CsvError, CsvWriter, columns_for, read_csv, suggest_mapping
+from .import_messages import issue_reason
 from .importer import DUPLICATE_MODES, Importer, run_import
 from .models import ContactImport
 from .serializers import check_assignment
@@ -133,7 +134,7 @@ def job_data(job: ContactImport) -> dict:
         "sample": job.rows[:5],
         "fields": field_list(job.kind),
         "mapping": job.mapping,
-        "options": {k: v for k, v in job.options.items() if k != "language"},
+        "options": job.options,
         "background": job.background,
         "total_rows": job.total_rows,
         "processed_rows": job.processed_rows,
@@ -141,7 +142,11 @@ def job_data(job: ContactImport) -> dict:
         "updated": job.updated_count,
         "skipped": job.skipped_count,
         "failed": job.failed_count,
-        "issues": job.issues[:ISSUES_IN_RESPONSE],
+        # Reasons are stored as message codes and rendered in the reader's language.
+        "issues": [
+            {"line": i["line"], "outcome": i["outcome"], "reason": issue_reason(i), "values": i["values"]}
+            for i in job.issues[:ISSUES_IN_RESPONSE]
+        ],
         "issue_count": len(job.issues),
         "error": job.error,
         "created_at": job.created_at,
@@ -210,7 +215,6 @@ class ContactImportViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             "duplicates": data["duplicates"],
             "create_companies": data["create_companies"],
             "assign_to": assignee.pk if assignee else None,
-            "language": translation.get_language(),
         }
         job.save(update_fields=["mapping", "options"])
         return job
@@ -248,7 +252,7 @@ class ContactImportViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         writer = CsvWriter(header=[_("Line"), *job.headers, _("Problem")])
         for issue in job.issues:
             if issue["outcome"] == "failed":
-                writer.raw_row([issue["line"], *issue["values"], issue["reason"]])
+                writer.raw_row([issue["line"], *issue["values"], issue_reason(issue)])
         stem = job.file_name.rsplit(".", 1)[0]
         return csv_response(writer.getvalue(), f"{stem}-failed-rows.csv")
 

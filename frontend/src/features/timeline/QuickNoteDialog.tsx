@@ -2,8 +2,9 @@ import { useQuery } from '@tanstack/react-query'
 import { Building2, Search, X } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { toast } from 'sonner'
+import { useNavigate } from 'react-router-dom'
 import { FormDialog, UserAvatar } from '@/components/common'
+import { CreatedPanel } from '@/components/common/CreatedPanel'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -25,17 +26,35 @@ const LIMIT = 6
 /** Quick add → Note: pick a contact or company (only ones the user can see), then write the note. */
 export function QuickNoteDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const [picked, setPicked] = useState<Picked | null>(null)
+  const [saved, setSaved] = useState<Picked | null>(null)
   const add = useAddEntry()
 
   const close = (next: boolean) => {
     onOpenChange(next)
-    if (!next) setPicked(null)
+    if (!next) {
+      setPicked(null)
+      setSaved(null)
+    }
   }
 
   return (
     <FormDialog open={open} onOpenChange={close} title={t('timeline.quickNote')} description={t('timeline.quickNoteHint')}>
-      {picked ? (
+      {saved ? (
+        <CreatedPanel
+          message={t('timeline.noteSaved', { name: saved.name })}
+          onOpen={() => {
+            close(false)
+            navigate('contact' in saved.target ? `/contacts/${saved.target.contact}` : `/companies/${saved.target.company}`)
+          }}
+          onAnother={() => {
+            setSaved(null)
+            setPicked(null)
+          }}
+          onClose={() => close(false)}
+        />
+      ) : picked ? (
         <div className="grid gap-4">
           <div className="flex items-center gap-3 rounded-lg border bg-muted/30 p-2.5">
             {picked.type === 'contact' ? (
@@ -60,8 +79,7 @@ export function QuickNoteDialog({ open, onOpenChange }: { open: boolean; onOpenC
             onCancel={() => close(false)}
             onSubmit={async (input) => {
               await add.mutateAsync({ ...input, ...picked.target })
-              toast.success(t('timeline.noteSaved', { name: picked.name }))
-              close(false)
+              setSaved(picked)
             }}
           />
         </div>

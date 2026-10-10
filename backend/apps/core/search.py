@@ -14,6 +14,7 @@ from django.db import connection
 from django.db.models import Q
 
 from .permissions import has_perm
+from .phones import phone_query_variants
 
 
 @dataclass
@@ -23,13 +24,15 @@ class SearchSource:
     fields: list[str]
     serialize: Callable  # (obj, user) -> dict with at least id, title, subtitle, url
     permission: tuple[str, str]
+    # Digits-only phone fields (see apps.core.phones); matched when the query looks like a number.
+    phone_fields: tuple[str, ...] = ()
 
 
 _registry: dict[str, SearchSource] = {}
 
 
-def register(key, *, queryset, fields, serialize, permission):
-    _registry[key] = SearchSource(key, queryset, fields, serialize, permission)
+def register(key, *, queryset, fields, serialize, permission, phone_fields=()):
+    _registry[key] = SearchSource(key, queryset, fields, serialize, permission, tuple(phone_fields))
 
 
 def search(user, query: str, limit: int = 5, types: list[str] | None = None) -> dict[str, list[dict]]:
@@ -37,6 +40,7 @@ def search(user, query: str, limit: int = 5, types: list[str] | None = None) -> 
     results: dict[str, list[dict]] = {}
     if len(query) < 2:
         return results
+    numbers = phone_query_variants(query)
 
     for source in _registry.values():
         if types and source.key not in types:
@@ -47,6 +51,9 @@ def search(user, query: str, limit: int = 5, types: list[str] | None = None) -> 
         match = Q()
         for field in source.fields:
             match |= Q(**{f"{field}__icontains": query})
+        for field in source.phone_fields:  # "0300-123", "+92 300 123" ... all match the stored digits
+            for number in numbers:
+                match |= Q(**{f"{field}__contains": number})
         if connection.vendor == "postgresql" and len(query) >= 3:
             from django.contrib.postgres.search import SearchQuery, SearchVector
 

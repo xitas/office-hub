@@ -14,7 +14,7 @@ from channels.db import database_sync_to_async
 from channels.middleware import BaseMiddleware
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
-from django.core.cache import cache
+from .safe_cache import safe_cache as cache
 
 TICKET_TTL = 30  # seconds
 _PREFIX = "ws-ticket:"

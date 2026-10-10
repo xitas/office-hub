@@ -22,6 +22,8 @@ WIDGET_KEYS = [
     "unread_notifications",
     "activity",
     "stats",
+    "contacts_by_status",   # Phase 2A
+    "client_activity",      # Phase 2A: latest notes, calls, meetings and status changes
 ]
 
 _providers: dict[str, Callable] = {}

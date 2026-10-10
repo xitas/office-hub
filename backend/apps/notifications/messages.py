@@ -26,8 +26,17 @@ def _account_updated(params: dict) -> tuple[str, str]:
     return _("Your account was updated"), body
 
 
+def _login_failures(params: dict) -> tuple[str, str]:
+    body = _(
+        "There were %(count)s failed attempts to sign in to your account, so sign-in is slowed down for a while. "
+        "If this wasn't you, change your password."
+    ) % {"count": params.get("count", 0)}
+    return _("Failed sign-in attempts on your account"), body
+
+
 RENDERERS = {
     "account_updated": _account_updated,
+    "login_failures": _login_failures,
 }
 
 

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
+import { StatusBadge } from '@/components/common/StatusBadge'
 import { api } from '@/lib/api'
 import type { SearchHit } from '@/lib/types'
 import { useDebouncedValue } from '@/lib/utils'
@@ -18,6 +19,10 @@ const GROUP_ICONS: Record<string, LucideIcon> = {
   messages: MessageSquare,
   files: FileText,
 }
+
+// Groups are shown in this order; anything else a later module registers follows.
+const GROUP_ORDER = ['users', 'companies', 'contacts', 'departments', 'tasks', 'messages', 'files']
+const groupRank = (g: string) => (GROUP_ORDER.includes(g) ? GROUP_ORDER.indexOf(g) : GROUP_ORDER.length)
 
 /** Ctrl/Cmd+K search across every module registered on the backend. */
 export function GlobalSearch() {
@@ -77,17 +82,26 @@ export function GlobalSearch() {
               !isFetching && <CommandEmpty>{t('common.noResults')}</CommandEmpty>
             )}
             {debounced.length >= 2 &&
-              Object.entries(data ?? {}).map(([group, hits]) => {
+              Object.entries(data ?? {})
+                .sort(([a], [b]) => groupRank(a) - groupRank(b))
+                .map(([group, hits]) => {
                 const Icon = GROUP_ICONS[group] ?? Search
                 return (
                   <CommandGroup key={group} heading={t(`search.groups.${group}`, { defaultValue: group })}>
                     {hits.map((hit) => (
                       <CommandItem key={`${group}-${hit.id}`} value={`${group}-${hit.id}`} onSelect={() => go(hit.url)}>
                         <Icon className="size-4" />
-                        <div className="min-w-0">
-                          <p className="truncate">{hit.title}</p>
-                          {hit.subtitle && <p className="truncate text-xs text-muted-foreground">{hit.subtitle}</p>}
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate">
+                            <bdi>{hit.title}</bdi>
+                          </p>
+                          {(hit.company || hit.subtitle) && (
+                            <p className="truncate text-xs text-muted-foreground">
+                              <bdi>{[hit.company, hit.subtitle].filter(Boolean).join(' · ')}</bdi>
+                            </p>
+                          )}
                         </div>
+                        {hit.status && <StatusBadge status={hit.status} className="shrink-0" />}
                       </CommandItem>
                     ))}
                   </CommandGroup>

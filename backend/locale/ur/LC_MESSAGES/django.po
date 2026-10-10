@@ -688,3 +688,33 @@ msgstr "مسئلہ"
 
 msgid "Unknown import type."
 msgstr "نامعلوم امپورٹ کی قسم۔"
+
+msgid "%(field)s is too long (the limit is %(max)s characters)."
+msgstr "%(field)s بہت لمبا ہے (حد %(max)s حروف ہے)۔"
+
+msgid "Fills in: %(fields)s."
+msgstr "یہ خانے بھرے گا: %(fields)s۔"
+
+msgid "Adds tags: %(tags)s."
+msgstr "یہ ٹیگز شامل کرے گا: %(tags)s۔"
+
+msgid "Already in the CRM as %(name)s, with nothing new to add."
+msgstr "پہلے سے CRM میں بطور %(name)s موجود ہے، شامل کرنے کو کچھ نیا نہیں۔"
+
+msgid "%(field)s: %(text)s"
+msgstr "%(field)s: %(text)s"
+
+msgid ", "
+msgstr "، "
+
+msgid "Too many failed sign-in attempts for this account."
+msgstr "اس اکاؤنٹ میں سائن اِن کی بہت سی ناکام کوششیں ہوئیں۔"
+
+msgid "Sign-in slowed down after repeated failed attempts"
+msgstr "بار بار ناکام کوششوں کے بعد سائن اِن سست کر دیا گیا"
+
+msgid "Failed sign-in attempts on your account"
+msgstr "آپ کے اکاؤنٹ میں سائن اِن کی ناکام کوششیں"
+
+msgid "There were %(count)s failed attempts to sign in to your account, so sign-in is slowed down for a while. If this wasn't you, change your password."
+msgstr "آپ کے اکاؤنٹ میں سائن اِن کی %(count)s ناکام کوششیں ہوئیں، اس لیے کچھ دیر کے لیے سائن اِن سست کر دیا گیا ہے۔ اگر یہ آپ نہیں تھے تو اپنا پاس ورڈ تبدیل کریں۔"

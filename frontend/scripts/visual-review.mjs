@@ -1,5 +1,5 @@
 /**
- * Visual review: screenshots every Phase 1 page for each role, theme, language and viewport,
+ * Visual review: screenshots every page for each role, theme, language and viewport,
  * and flags layout problems automatically (horizontal overflow, off-screen popups, clipped text,
  * wrong text direction, console errors).
  *
@@ -90,7 +90,15 @@ async function prepareData() {
     const { secret } = await (await call(z, 'POST', '/auth/2fa/setup/')).json()
     await call(z, 'POST', '/auth/2fa/enable/', { code: totp(secret) })
   }
-  return { users: byEmail, depts: dept }
+  // A contact and a company each role can see, with timeline entries (seeded by seed_demo).
+  const contact = {}
+  const company = {}
+  for (const [role, email] of Object.entries(ROLES)) {
+    const token = await apiLogin(email)
+    contact[role] = (await (await call(token, 'GET', '/contacts/?ordering=-updated_at')).json()).results[0].id
+    company[role] = (await (await call(token, 'GET', '/companies/')).json()).results[0].id
+  }
+  return { users: byEmail, depts: dept, contact, company }
 }
 
 // ---------------------------------------------------------------- page checks
@@ -200,7 +208,8 @@ async function publicPages(browser, vpName, vp) {
       const dir = path.join(OUT, vpName, `${theme}-${lang}`)
       await page.goto(`${BASE}/login`)
       await shot(page, dir, 'public-login', { expect: { theme } })
-      await page.fill('#email', 'nobody@office.test')
+      // A different unknown address each time, so per-account sign-in slowdown never kicks in here.
+      await page.fill('#email', `nobody.${vpName}.${theme}.${lang}@office.test`)
       await page.fill('#password', 'wrong-password')
       page.expectFailedLogin = true
       await page.click('button[type=submit]')
@@ -265,11 +274,51 @@ async function rolePages(browser, role, vpName, vp, data) {
       await page.waitForTimeout(700)
       await s('popup-search', { fullPage: false })
       await page.keyboard.press('Escape')
+      await page.keyboard.press('Control+k')
+      await page.keyboard.press('Control+a') // the box keeps the last query
+      await page.keyboard.type('0300-11') // phone numbers match in any format
+      await page.waitForTimeout(700)
+      await s('popup-search-phone', { fullPage: false })
+      await page.keyboard.press('Escape')
+      for (const [item, ready, name] of [
+        [/^(Contact|رابطہ)$/, '[role=dialog] #ct-first', 'dialog-quick-contact'],
+        [/^(Company|کمپنی)$/, '[role=dialog] input', 'dialog-quick-company'],
+        [/^(Note|نوٹ)$/, '[role=dialog] #quick-note-search', 'dialog-quick-note'],
+      ]) {
+        await page.locator('button[aria-haspopup]:visible:has(svg.lucide-plus)').first().click()
+        await page.getByRole('menuitem', { name: item }).click()
+        await page.waitForSelector(ready)
+        await page.waitForTimeout(400)
+        await s(name, { fullPage: false })
+        await page.keyboard.press('Escape')
+        await page.waitForSelector('[role=dialog]', { state: 'detached' })
+      }
       if (isPhone) {
         await page.locator('nav.fixed button').last().click() // "More"
         await s('popup-more-sheet', { fullPage: false })
         await page.keyboard.press('Escape')
       }
+
+      // Phase 2A: contacts, companies, pipeline, timeline, import/export
+      await go('/contacts')
+      await page.waitForSelector('main h1')
+      await s('contacts')
+      await go(`/contacts/${data.contact[role]}`)
+      await page.waitForSelector('main ol li')
+      await s('contact-detail')
+      await go('/pipeline')
+      await page.waitForSelector('main h1')
+      await page.waitForTimeout(400)
+      await s('pipeline')
+      await go('/companies')
+      await page.waitForSelector('main h1')
+      await s('companies')
+      await go(`/companies/${data.company[role]}`)
+      await page.waitForSelector('main ol li')
+      await s('company-detail')
+      await go('/contacts/import')
+      await page.waitForSelector('#import-file', { state: 'attached' })
+      await s('import-upload')
 
       await go('/team')
       await s('team')

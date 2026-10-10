@@ -27,6 +27,7 @@ import { useMe } from '@/lib/auth'
 import { useFormat } from '@/lib/format'
 import type { ActivityItem, DashboardData, DashboardListItem } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { ClientActivityWidget, ContactsByStatusWidget } from './ContactWidgets'
 
 function greetingKey(hour: number) {
   if (hour < 12) return 'dashboard.greetingMorning'
@@ -89,6 +90,8 @@ export function DashboardPage() {
                 items={data?.[w.key] as DashboardListItem[] | null | undefined}
               />
             ))}
+            <ContactsByStatusWidget data={data?.contacts_by_status} loading={isLoading} />
+            <ClientActivityWidget items={data?.client_activity} loading={isLoading} className="xl:col-span-2" />
             <ActivityWidget items={data?.activity} loading={isLoading} className="md:col-span-2" />
             {upcoming.length > 0 && <ComingSoonWidget widgets={upcoming} className="md:col-span-2 xl:col-span-1" />}
           </div>

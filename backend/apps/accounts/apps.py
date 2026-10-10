@@ -17,6 +17,7 @@ class AccountsConfig(AppConfig):
             "users",
             queryset=lambda user: User.objects.filter(is_active=True).select_related("department"),
             fields=["full_name", "email", "phone", "job_title"],
+            phone_fields=["phone_digits"],
             serialize=lambda u, viewer: {
                 "id": u.pk,
                 "title": u.full_name,

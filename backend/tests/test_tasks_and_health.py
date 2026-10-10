@@ -43,7 +43,9 @@ def test_send_email_task_schedules_retry_on_smtp_failure():
         with pytest.raises(Retry) as info:  # in a worker this re-queues the task with backoff
             send_email.apply(args=("S", "B", ["a@test.com"]), throw=True)
     assert isinstance(info.value.exc, smtplib.SMTPServerDisconnected)
-    assert info.value.when > 0  # delayed retry (exponential backoff with jitter)
+    # Delayed retry: exponential backoff with full jitter, so the first delay is random in 0..30 s
+    # (0 is a valid draw; asserting > 0 made this test fail about once in 31 runs).
+    assert info.value.when is not None and 0 <= info.value.when <= 30
 
 
 def test_send_email_task_sends(settings):

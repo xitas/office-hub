@@ -149,7 +149,8 @@ export function ImportResults({ job }: { job: ImportJob }) {
                       </Badge>
                     </TableCell>
                     <TableCell className="min-w-48 whitespace-normal text-sm">
-                      <p dir="auto">{issue.reason}</p>
+                      {/* Rendered in the reader's language by the server, so it follows the page direction. */}
+                      <p>{issue.reason}</p>
                     </TableCell>
                     <TableCell className="hidden max-w-72 truncate text-xs text-muted-foreground md:table-cell" title={issue.values.join(', ')}>
                       <bdi>{issue.values.filter(Boolean).join(' · ')}</bdi>

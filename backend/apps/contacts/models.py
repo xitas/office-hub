@@ -33,6 +33,8 @@ class Company(TimeStampedModel):
     address = models.CharField(max_length=255, blank=True)
     city = models.CharField(max_length=100, blank=True, db_index=True)
     notes = models.TextField(blank=True)
+    # Digits-only international form of `phone`, kept in sync on save (search by phone in any format).
+    phone_digits = models.CharField(max_length=30, blank=True, db_index=True, editable=False)
     assigned_to = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="companies"
     )
@@ -47,6 +49,12 @@ class Company(TimeStampedModel):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        self.phone_digits = normalize_phone(self.phone)
+        if kwargs.get("update_fields") is not None:
+            kwargs["update_fields"] = {*kwargs["update_fields"], "phone_digits"}
+        super().save(*args, **kwargs)
 
 
 class Tag(models.Model):

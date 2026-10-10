@@ -136,7 +136,19 @@
       "other": "{{actor}}: {{object}}"
     },
     "someone": "Someone",
-    "comingSoonHint": "These widgets fill in as their modules are released."
+    "comingSoonHint": "These widgets fill in as their modules are released.",
+    "company": "Company",
+    "contactsByStatus": {
+      "mine": "My contacts by status",
+      "department": "Department contacts by status",
+      "all": "All contacts by status"
+    },
+    "openPipeline": "Pipeline",
+    "total": "Total",
+    "noContacts": "No contacts yet",
+    "clientActivity": "Recent client activity",
+    "noClientActivity": "No client activity yet",
+    "noClientActivityHint": "Notes, calls, meetings and status changes on your contacts will appear here."
   },
   "notifications": {
     "title": "Notifications",
@@ -586,12 +598,12 @@
       "modeHints": {
         "contacts": {
           "skip": "Keep the existing contact as it is.",
-          "update": "Fill in the existing contact with the values from the file. Empty cells change nothing.",
+          "update": "Fill in only the fields that are empty on the existing contact and add new tags. Names, status and anything already filled in stay as they are.",
           "create": "Add a second contact. Use this only if they are different people."
         },
         "companies": {
           "skip": "Keep the existing company as it is.",
-          "update": "Fill in the existing company with the values from the file. Empty cells change nothing.",
+          "update": "Fill in only the fields that are empty on the existing company. The name and anything already filled in stay as they are.",
           "create": "Add a second company with the same name."
         }
       },
@@ -606,7 +618,8 @@
       "hint_one": "How the first row will be imported. Nothing is saved yet.",
       "hint_other": "How the first {{count}} rows will be imported. Nothing is saved yet.",
       "line": "Line",
-      "result": "Result"
+      "result": "Result",
+      "updateLegend": "Highlighted values will be filled in; the rest is kept as it is."
     },
     "outcomes": {
       "create": "Add",
@@ -647,5 +660,11 @@
       "reason": "Reason",
       "values": "Values in the file"
     }
+  },
+  "quickAdd": {
+    "open": "Open",
+    "another": "Add another",
+    "contactAdded": "Contact “{{name}}” added",
+    "companyAdded": "Company “{{name}}” added"
   }
 }

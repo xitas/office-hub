@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-from django.core.cache import cache
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -58,7 +57,9 @@ class OrganizationSettings(models.Model):
     def save(self, *args, **kwargs):
         self.pk = 1
         super().save(*args, **kwargs)
-        cache.delete(self.CACHE_KEY)
+        from .safe_cache import safe_cache
+
+        safe_cache.delete(self.CACHE_KEY)
 
     CACHE_KEY = "org-settings"
 
@@ -70,10 +71,12 @@ class OrganizationSettings(models.Model):
     @classmethod
     def cached(cls):
         """Read-mostly copy for hot paths (permission checks); refreshed whenever the settings are saved."""
-        obj = cache.get(cls.CACHE_KEY)
+        from .safe_cache import safe_cache
+
+        obj = safe_cache.get(cls.CACHE_KEY)
         if obj is None:
             obj = cls.get_solo()
-            cache.set(cls.CACHE_KEY, obj, timeout=300)
+            safe_cache.set(cls.CACHE_KEY, obj, timeout=300)
         return obj
 
 

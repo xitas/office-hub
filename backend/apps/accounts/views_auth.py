@@ -14,6 +14,7 @@ from rest_framework.exceptions import AuthenticationFailed, PermissionDenied, Va
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.exceptions import Throttled
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
@@ -26,7 +27,9 @@ from apps.core.email import queue_email
 from apps.core.models import AuditLog
 from apps.core.ws_auth import TICKET_TTL, issue_ticket
 
-from . import twofactor
+from apps.core.safe_cache import safe_cache
+
+from . import login_guard, twofactor
 from .models import User
 from .serializers import (
     ChangePasswordSerializer,
@@ -56,6 +59,7 @@ def _set_refresh_cookie(response, refresh: str):
 
 def _token_response(request, user, client="web"):
     """Issue tokens. Web clients get the refresh token as an httpOnly cookie; mobile clients in the body."""
+    login_guard.clear(user.email)
     refresh = RefreshToken.for_user(user)
     update_last_login(None, user)
     log_action(user, AuditLog.Action.LOGIN, user, request=request, description=N_("Signed in"), changes={"client": client})
@@ -78,8 +82,24 @@ class PublicAuthView(APIView):
         return "Bearer"
 
 
+class SafeScopedRateThrottle(ScopedRateThrottle):
+    """Per-IP limit that keeps working (per process) if Redis is down, instead of failing the request."""
+
+    cache = safe_cache
+
+
+def _check_account(email: str):
+    """Same answer for every address, registered or not."""
+    wait = login_guard.retry_after(email)
+    if wait:
+        raise Throttled(
+            wait=wait,
+            detail=_("Too many failed sign-in attempts for this account."),
+        )
+
+
 class LoginThrottleMixin:
-    throttle_classes = [ScopedRateThrottle]
+    throttle_classes = [SafeScopedRateThrottle]
     throttle_scope = "login"
 
 
@@ -89,11 +109,13 @@ class LoginView(LoginThrottleMixin, PublicAuthView):
         ser = LoginSerializer(data=request.data)
         ser.is_valid(raise_exception=True)
         email = ser.validated_data["email"].lower()
+        _check_account(email)
         user = authenticate(request, email=email, password=ser.validated_data["password"])
         if user is None:
             log_action(
                 None, AuditLog.Action.LOGIN_FAILED, request=request, object_repr=email, description=N_("Failed sign-in attempt")
             )
+            login_guard.record_failure(email, User.objects.filter(email__iexact=email, is_active=True).first(), request)
             raise AuthenticationFailed(_("Invalid email or password."))
         if user.two_factor_enabled:
             otp_token = signing.dumps({"uid": user.pk}, salt=OTP_SALT)
@@ -111,8 +133,10 @@ class VerifyOTPView(LoginThrottleMixin, PublicAuthView):
             user = User.objects.get(pk=payload["uid"], is_active=True)
         except (signing.BadSignature, User.DoesNotExist, KeyError):
             raise AuthenticationFailed(_("Your sign-in session expired. Please sign in again."))
+        _check_account(user.email)
         if not twofactor.verify_second_factor(user, ser.validated_data["code"]):
             log_action(user, AuditLog.Action.LOGIN_FAILED, user, request=request, description=N_("Invalid 2FA code"))
+            login_guard.record_failure(user.email, user, request)
             raise AuthenticationFailed(_("Invalid verification code."))
         return _token_response(request, user, ser.validated_data["client"])
 
@@ -229,7 +253,7 @@ class ChangePasswordView(APIView):
 
 
 class PasswordResetRequestView(PublicAuthView):
-    throttle_classes = [ScopedRateThrottle]
+    throttle_classes = [SafeScopedRateThrottle]
     throttle_scope = "password_reset"
 
     @extend_schema(request=PasswordResetRequestSerializer, responses={204: None})
@@ -273,6 +297,7 @@ class PasswordResetConfirmView(PublicAuthView):
             raise ValidationError({"new_password": list(getattr(exc, "messages", [str(exc)]))})
         user.set_password(ser.validated_data["new_password"])
         user.save(update_fields=["password"])
+        login_guard.clear(user.email)
         log_action(user, AuditLog.Action.SECURITY, user, request=request, description=N_("Reset password via email"))
         return Response(status=status.HTTP_204_NO_CONTENT)
 

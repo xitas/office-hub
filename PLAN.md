@@ -93,6 +93,7 @@ An office CRM for small-to-mid-sized offices (10–100 staff). It works on deskt
 - [x] 2FA secrets encrypted at rest (Fernet, `FIELD_ENCRYPTION_KEYS`), data migration for existing secrets, key rotation command
 - [x] Profile photos: 2 MB, JPEG/PNG/WebP only, decoded to verify, resized to 512px, metadata (EXIF/GPS) stripped, random file names
 - [x] Login rate limits in a shared cache (Redis), with an in-memory fallback; `NUM_PROXIES` so a forged X-Forwarded-For can't bypass them
+- [x] Per-account sign-in protection (Phase 2A slice 6): after 5 failures a growing wait (30 s, 1 min, 5 min, max 15 min, never a permanent lock), cleared by a successful sign-in or password reset, 2FA failures count too, same answer for unknown emails, owner notified in-app and by email at most hourly; Redis with a database fallback. Sign-in and permission checks keep working if Redis stops
 - [x] WebSocket auth with single-use 30-second tickets (no tokens in URLs)
 - [x] CSRF defence for the refresh-cookie endpoints (custom header + Origin check)
 - [x] Production headers (HSTS, CSP, Referrer-Policy, Permissions-Policy, nosniff, X-Frame-Options); strict ALLOWED_HOSTS; DEBUG forced off; API docs off by default
@@ -109,17 +110,19 @@ An office CRM for small-to-mid-sized offices (10–100 staff). It works on deskt
 
 ## Phase 2 — Contacts & task management
 
-**Status: in progress** (branch `phase-2-contacts`). Slices: 1 Companies ✓, 2 Contacts ✓, 3 Lead pipeline ✓, 4 Interaction timeline ✓, 5 CSV import/export ✓, then 6.
+Phase 2 is split in two:
+- **Phase 2A — Contacts & clients: complete** (branch `phase-2-contacts`). Slices: 1 Companies ✓, 2 Contacts ✓, 3 Lead pipeline ✓, 4 Interaction timeline ✓, 5 CSV import/export ✓, 6 Hardening & polish ✓ (per-account sign-in protection, search and quick-add polish, contact dashboard widgets, full review on SQLite and PostgreSQL + Redis).
+- **Phase 2B — Task management (Module 3): next.** Planned order: Task model + list view with My/Team/Overdue filters → Kanban → subtasks/checklists and comments → attachments → calendar view → recurring tasks and deadline reminders (Celery Beat) → task notifications → dashboard task widgets, quick-add Task, tasks in global search and on the contact timeline (via the timeline provider registry).
 
 ### Module 2 — Contacts & clients
 - [x] Contact records: name, company, job title, phone, WhatsApp, email, address, city, tags (created on the fly), assigned staff, lead status
 - [x] Company records linked to multiple contacts (company page lists its contacts, "Add contact" pre-fills the company)
-- [~] Interaction timeline per contact and company: notes, call logs (direction, outcome, duration), meeting logs (location, attendees), automatic status-change and "added" entries; backdating, optional follow-up date, type filter; edit/delete by author, their department manager or admin (audited); company timeline includes its contacts' entries *(emails, tasks and messages plug in via the type/provider registry in `apps/timeline/registry.py` with their modules)*
+- [x] Interaction timeline per contact and company: notes, call logs (direction, outcome, duration), meeting logs (location, attendees), automatic status-change and "added" entries; backdating, optional follow-up date, type filter; edit/delete by author, their department manager or admin (audited); company timeline includes its contacts' entries *(tasks, emails and messages plug in later via the type/provider registry in `apps/timeline/registry.py`)*
 - [x] Lead pipeline Kanban: New → Contacted → In Discussion → Won / Lost (drag and drop, "Move to…" menu for keyboard/touch, column counts, filters, Board/List views)
 - [x] Status history (old/new status, who, when, optional Won/Lost reason) and days-in-status on cards
 - [x] Search (name, phone, email) and filter by company, tag, city, status, assigned person
 - [x] Duplicate warning on matching phone/WhatsApp/email (warning only; hides details of contacts the user can't see)
-- [x] CSV import and export: export follows the list's filters and the user's visibility (UTF-8 BOM for Urdu in Excel, phones kept as text, formula-safe cells); import with column matching (English/Urdu headers), 10-row preview, per-row validation, duplicate option (skip / update / add anyway), company linking or creation, results with downloadable failed rows, background processing with progress above 300 rows (Celery), 5 MB / 5,000-row limits, template CSV. Staff import/export are admin-controlled switches on the Organization page (import on, export off by default). One audit entry per import/export; created records get an "Imported" timeline entry
+- [x] CSV import and export: export follows the list's filters and the user's visibility (UTF-8 BOM for Urdu in Excel, phones kept as text, formula-safe cells); import with column matching (English/Urdu headers), 10-row preview, per-row validation, duplicate option (skip / update / add anyway; "update" only fills empty fields and adds tags, never renames or changes status, and the preview shows what will change), row reasons stored as codes and shown in each reader's language, company linking or creation, results with downloadable failed rows, background processing with progress above 300 rows (Celery), 5 MB / 5,000-row limits, template CSV. Staff import/export are admin-controlled switches on the Organization page (import on, export off by default). One audit entry per import/export; created records get an "Imported" timeline entry
 - [x] Click-to-call and click-to-WhatsApp buttons on contact records
 
 ### Module 3 — Task management
@@ -137,9 +140,10 @@ An office CRM for small-to-mid-sized offices (10–100 staff). It works on deskt
 - [ ] Deadline reminder and recurring-task jobs
 
 ### Integration
-- [ ] Dashboard task widgets show live data
-- [~] Quick-add Contact and Note enabled (Note: pick a contact or company, then write) (Task comes with Module 3)
-- [~] Contacts and companies added to global search (tasks come with Module 3)
+- [x] Dashboard (Phase 2A): "My / Department / All contacts by status" and "Recent client activity" (from the timeline), scoped per role
+- [ ] Dashboard task widgets show live data *(Phase 2B)*
+- [~] Quick-add Contact, Company and Note open in place and offer "Open" / "Add another" after saving *(Task comes with Phase 2B)*
+- [~] Global search grouped by type (People, Companies, Contacts), contact results show status and company, phone numbers match in any format for contacts, companies and people *(tasks come with Phase 2B)*
 
 ---
 
@@ -232,6 +236,7 @@ Tables added beyond the spec: OrganizationSettings, Notification and Notificatio
 ---
 
 ## Changelog
+- **2026-10-10:** Phase 2 slice 6 — Phase 2A complete. Import "update" only fills empty fields (never names or status) and the preview lists the changes; import reasons stored as codes and translated per reader. Per-account sign-in protection with growing waits and owner notification; the shared cache now degrades to an in-process fallback when Redis is down (an outage used to make every sign-in fail with a server error). Global search: fixed group order, status and company on contacts, phone search in any format (new `phone_digits` on companies and users). Quick-add Contact/Company/Note in place with "Open" / "Add another". Dashboard: contacts by status and recent client activity. Fixed an intermittent Celery retry test. Real 450-row background import verified with a Celery worker. 258 backend tests pass on SQLite and on PostgreSQL 17 + Redis. Visual review extended to every page.
 - **2026-10-09:** Phase 2 slice 5 — CSV import and export for contacts and companies (see Module 2 checklist). New `ContactImport` table, `staff_can_import_contacts` / `staff_can_export_contacts` organization switches, Import/Export audit actions. Checked that the `cn` package is shadcn's official class-merging package (used by every ui component), not an accidental dependency. 34 new tests (226 total).
 - **2026-10-09:** Phase 2 slice 4 — Interaction timeline: `TimelineEntry` (one table, type key + per-type details) with a registry so later modules add entry types and automatic entries without schema changes; notes, call and meeting logs, automatic status-change and record-created entries; company roll-up of visible contacts' entries; author/department-manager/admin edit and delete with audit; Activity section on contact and company pages; quick-add Note; English and Urdu; seeded demo activity. 39 new tests (192 total).
 - **2026-10-09:** Phase 2 slice 3 — Lead pipeline: Kanban board with drag and drop and an accessible "Move to…" menu, Board/List views, status history with optional Won/Lost reasons, days in status, seeded history for demo contacts.

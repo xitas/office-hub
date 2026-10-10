@@ -1,4 +1,4 @@
-import { CalendarPlus, CheckSquare, NotebookPen, Plus, UserPlus, type LucideIcon } from 'lucide-react'
+import { Building2, CalendarPlus, CheckSquare, NotebookPen, Plus, UserPlus, type LucideIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
@@ -12,6 +12,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { QuickCreateDialog } from '@/features/quickadd/QuickCreateDialog'
 import { QuickNoteDialog } from '@/features/timeline/QuickNoteDialog'
 import { useMe } from '@/lib/auth'
 import { NAV_ITEMS } from '@/lib/modules'
@@ -25,12 +26,13 @@ interface QuickAction {
   permission: string
   /** Route that opens the "new" form for this record type (or a dialog opened in place). */
   path?: string
-  dialog?: 'note'
+  dialog?: 'contact' | 'company' | 'note'
 }
 
 const ACTIONS: QuickAction[] = [
   { key: 'task', label: 'dashboard.task', icon: CheckSquare, module: 'tasks', permission: 'tasks.create', path: '/tasks?new=1' },
-  { key: 'contact', label: 'dashboard.contact', icon: UserPlus, module: 'contacts', permission: 'contacts.create', path: '/contacts?new=1' },
+  { key: 'contact', label: 'dashboard.contact', icon: UserPlus, module: 'contacts', permission: 'contacts.create', dialog: 'contact' },
+  { key: 'company', label: 'dashboard.company', icon: Building2, module: 'companies', permission: 'contacts.create', dialog: 'company' },
   { key: 'note', label: 'dashboard.note', icon: NotebookPen, module: 'contacts', permission: 'contacts.create', dialog: 'note' },
   { key: 'meeting', label: 'dashboard.meeting', icon: CalendarPlus, module: 'calendar', permission: 'calendar.create', path: '/calendar?new=1' },
 ]
@@ -76,6 +78,8 @@ export function QuickAdd({ compact = false }: { compact?: boolean }) {
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
+      <QuickCreateDialog kind="contact" open={dialog === 'contact'} onOpenChange={(open) => setDialog(open ? 'contact' : null)} />
+      <QuickCreateDialog kind="company" open={dialog === 'company'} onOpenChange={(open) => setDialog(open ? 'company' : null)} />
       <QuickNoteDialog open={dialog === 'note'} onOpenChange={(open) => setDialog(open ? 'note' : null)} />
     </>
   )
