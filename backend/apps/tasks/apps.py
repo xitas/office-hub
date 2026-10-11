@@ -17,3 +17,7 @@ class TasksConfig(AppConfig):
                     f.storage.delete(f.name)
 
         post_delete.connect(remove_files, sender=TaskAttachment, dispatch_uid="tasks.attachment.files")
+
+        from . import integration
+
+        integration.register()  # timeline entries, dashboard widgets, global search

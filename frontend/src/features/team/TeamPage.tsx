@@ -1,19 +1,33 @@
 import { useQuery } from '@tanstack/react-query'
-import { Search, Users } from 'lucide-react'
+import { AlarmClock, CheckSquare, Search, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { EmptyState, ErrorState, PageHeader, Pagination, RoleBadge, SimpleSelect, UserAvatar } from '@/components/common'
 import { ContactButtons } from '@/components/common/ContactButtons'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/lib/api'
+import { useMe } from '@/lib/auth'
 import { useDepartments } from '@/lib/queries'
-import type { Paginated, User } from '@/lib/types'
+import type { Paginated, User, WorkloadRow } from '@/lib/types'
 import { cn, useDebouncedValue } from '@/lib/utils'
 
 const PAGE_SIZE = 24
+
+/** Open and overdue tasks per person, for managers and admins (counted over the tasks they can see). */
+function useWorkload() {
+  const me = useMe()
+  const allowed = me.role === 'admin' || me.role === 'manager'
+  const { data } = useQuery({
+    queryKey: ['tasks', 'workload'],
+    queryFn: async () => (await api.get<WorkloadRow[]>('/tasks/workload/')).data,
+    enabled: allowed,
+    staleTime: 60_000,
+  })
+  return allowed ? new Map((data ?? []).map((r) => [r.user_id, r])) : null
+}
 
 export function TeamPage() {
   const { t } = useTranslation()
@@ -25,6 +39,7 @@ export function TeamPage() {
   const [page, setPage] = useState(1)
   const q = useDebouncedValue(search.trim())
   const { data: departments } = useDepartments()
+  const workload = useWorkload()
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['users', 'directory', { q, department, page }],
@@ -87,7 +102,7 @@ export function TeamPage() {
 
       {highlight && spotlight && !onThisPage && (
         <div className="mb-4 sm:max-w-md">
-          <MemberCard user={spotlight} highlighted />
+          <MemberCard user={spotlight} highlighted workload={workload?.get(spotlight.id)} />
         </div>
       )}
 
@@ -105,7 +120,7 @@ export function TeamPage() {
         <>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {data.results.map((u) => (
-              <MemberCard key={u.id} user={u} highlighted={highlight === u.id} />
+              <MemberCard key={u.id} user={u} highlighted={highlight === u.id} workload={workload?.get(u.id)} />
             ))}
           </div>
           <Pagination page={page} count={data.count} pageSize={PAGE_SIZE} onPage={setPage} />
@@ -115,7 +130,7 @@ export function TeamPage() {
   )
 }
 
-function MemberCard({ user: u, highlighted }: { user: User; highlighted?: boolean }) {
+function MemberCard({ user: u, highlighted, workload }: { user: User; highlighted?: boolean; workload?: WorkloadRow }) {
   const { t } = useTranslation()
   return (
     <Card id={`user-${u.id}`} className={cn(highlighted && 'ring-2 ring-primary')}>
@@ -132,6 +147,24 @@ function MemberCard({ user: u, highlighted }: { user: User; highlighted?: boolea
             </div>
           </div>
         </div>
+        {workload && (
+          <Link
+            to={`/tasks?view=all&assignee=${u.id}`}
+            className="flex items-center gap-3 text-xs text-muted-foreground hover:text-foreground"
+            title={t('team.tasksTitle')}
+          >
+            <span className="inline-flex items-center gap-1">
+              <CheckSquare className="size-3.5" />
+              {t('team.openTasks', { count: workload.open })}
+            </span>
+            {workload.overdue > 0 && (
+              <span className="inline-flex items-center gap-1 font-medium text-destructive">
+                <AlarmClock className="size-3.5" />
+                {t('team.overdueTasks', { count: workload.overdue })}
+              </span>
+            )}
+          </Link>
+        )}
         <ContactButtons phone={u.phone} email={u.email} />
       </CardContent>
     </Card>

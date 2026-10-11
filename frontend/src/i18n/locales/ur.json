@@ -148,7 +148,26 @@
     "noContacts": "ابھی کوئی رابطہ نہیں",
     "clientActivity": "کلائنٹس کی حالیہ سرگرمی",
     "noClientActivity": "ابھی کلائنٹس کی کوئی سرگرمی نہیں",
-    "noClientActivityHint": "آپ کے رابطوں پر نوٹس، کالز، میٹنگز اور حیثیت کی تبدیلیاں یہاں نظر آئیں گی۔"
+    "noClientActivityHint": "آپ کے رابطوں پر نوٹس، کالز، میٹنگز اور حیثیت کی تبدیلیاں یہاں نظر آئیں گی۔",
+    "myTasks": "میرے کام",
+    "allTasks": "تمام کام",
+    "taskTabs": {
+      "today": "آج",
+      "overdue": "تاخیر شدہ",
+      "upcoming": "اگلے 7 دن"
+    },
+    "taskEmpty": {
+      "today": "آج کچھ واجب نہیں",
+      "overdue": "کوئی کام تاخیر کا شکار نہیں",
+      "upcoming": "اگلے 7 دنوں میں کچھ واجب نہیں"
+    },
+    "teamWorkload": "ٹیم کا کام کا بوجھ",
+    "open": "کھلے",
+    "overdueShort": "تاخیر شدہ",
+    "completion": "اس ہفتے کے کام",
+    "completionDone": "مکمل",
+    "completionCreated": "نئے",
+    "completionDay": "{{done}} مکمل، {{created}} نئے"
   },
   "notifications": {
     "title": "اطلاعات",
@@ -179,7 +198,12 @@
     "allDepartments": "تمام شعبہ جات",
     "call": "کال",
     "whatsapp": "واٹس ایپ",
-    "sendEmail": "ای میل"
+    "sendEmail": "ای میل",
+    "openTasks_one": "{{count}} کھلا کام",
+    "openTasks_other": "{{count}} کھلے کام",
+    "overdueTasks_one": "{{count}} تاخیر شدہ",
+    "overdueTasks_other": "{{count}} تاخیر شدہ",
+    "tasksTitle": "ان کے کام دکھائیں"
   },
   "settings": {
     "title": "ترتیبات",
@@ -474,7 +498,11 @@
       "won": "مثلاً سالانہ معاہدہ طے پایا",
       "lost": "مثلاً سستے سپلائر کا انتخاب کیا"
     },
-    "skip": "چھوڑ دیں"
+    "skip": "چھوڑ دیں",
+    "openTasks_one": "{{count}} کھلا کام",
+    "openTasks_other": "{{count}} کھلے کام",
+    "openTasksTitle": "اس رابطے کے کھلے کام",
+    "nextDue": "اگلا {{date}} تک"
   },
   "timeline": {
     "title": "سرگرمی",
@@ -491,7 +519,8 @@
       "meeting": "میٹنگز",
       "status": "حیثیت کی تبدیلیاں",
       "created": "ریکارڈ کا اندراج",
-      "imported": "امپورٹ شدہ"
+      "imported": "امپورٹ شدہ",
+      "task": "کام"
     },
     "placeholders": {
       "note": "نوٹ لکھیں…",
@@ -543,7 +572,12 @@
     "pickPlaceholder": "نام، فون یا شہر سے تلاش کریں…",
     "change": "کوئی اور منتخب کریں",
     "noteSaved": "{{name}} میں نوٹ شامل کر دیا گیا",
-    "imported": "CSV سے امپورٹ کیا گیا"
+    "imported": "CSV سے امپورٹ کیا گیا",
+    "taskEvents": {
+      "created": "کام شامل ہوا",
+      "completed": "کام مکمل ہوا",
+      "reopened": "کام دوبارہ کھلا"
+    }
   },
   "transfer": {
     "import": "امپورٹ",
@@ -926,6 +960,10 @@
       "created": "کام بن گیا",
       "dialogTitle": "فالو اپ سے کام",
       "title": "{{name}} سے فالو اپ"
+    },
+    "linked": {
+      "empty": "کوئی کھلا کام نہیں",
+      "recentlyDone": "پچھلے 2 ہفتوں میں مکمل"
     }
   }
 }

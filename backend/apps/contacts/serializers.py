@@ -222,10 +222,16 @@ class PipelineCardSerializer(serializers.ModelSerializer):
     company_name = serializers.CharField(source="company.name", default=None, read_only=True)
     assigned_to_name = serializers.CharField(source="assigned_to.full_name", default=None, read_only=True)
     tags = serializers.SerializerMethodField()
+    # Annotated by the pipeline view (tasks the viewer can see that are linked to this contact).
+    open_tasks = serializers.IntegerField(read_only=True, default=0)
+    next_due = serializers.DateField(read_only=True, default=None)
 
     class Meta:
         model = Contact
-        fields = ["id", "full_name", "company", "company_name", "assigned_to", "assigned_to_name", "tags", "status", "status_changed_at", "city"]
+        fields = [
+            "id", "full_name", "company", "company_name", "assigned_to", "assigned_to_name", "tags", "status",
+            "status_changed_at", "city", "open_tasks", "next_due",
+        ]
 
     def get_tags(self, obj) -> list[str]:
         return [t.name for t in obj.tags.all()]

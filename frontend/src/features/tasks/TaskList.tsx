@@ -60,17 +60,18 @@ function useToggleDone() {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (task: Task) =>
+    mutationFn: async (task: Pick<Task, 'id' | 'title' | 'status'>) =>
       (await api.patch<Task>(`/tasks/${task.id}/`, { status: task.status === 'done' ? 'todo' : 'done' })).data,
     onSuccess: (task) => {
       void queryClient.invalidateQueries({ queryKey: ['tasks'] })
+      void queryClient.invalidateQueries({ queryKey: ['dashboard'] })
       toast.success(task.status === 'done' ? t('tasks.completed', { title: task.title }) : t('tasks.reopened', { title: task.title }))
     },
     onError: (err) => toast.error(apiError(err).message),
   })
 }
 
-function DoneButton({ task }: { task: Task }) {
+export function DoneButton({ task }: { task: Pick<Task, 'id' | 'title' | 'status'> }) {
   const { t } = useTranslation()
   const toggle = useToggleDone()
   const done = task.status === 'done'

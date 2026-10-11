@@ -16,6 +16,7 @@ import { useFormat } from '@/lib/format'
 import { usePermission } from '@/lib/permissions'
 import type { Company } from '@/lib/types'
 import { CompanyContacts } from '@/features/contacts/CompanyContacts'
+import { LinkedTasks } from '@/features/tasks/LinkedTasks'
 import { Timeline } from '@/features/timeline/Timeline'
 import { CompanyForm } from './CompanyForm'
 
@@ -198,6 +199,8 @@ export function CompanyDetailPage() {
               )}
             </CardContent>
           </Card>
+
+          <LinkedTasks target={{ company: company.id, name: company.name }} />
 
           <Timeline target={{ company: company.id }} />
 

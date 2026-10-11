@@ -23,6 +23,26 @@ from .transfer import export_companies, export_contacts
 from .visibility import DEPARTMENT_FIELD, OWNER_FIELDS
 
 
+def with_task_summary(qs, user):
+    """Open tasks linked to each contact (that the user can see) and the nearest due date."""
+    from django.db.models import DateField, IntegerField, Min, OuterRef, Subquery
+    from django.db.models.functions import Coalesce
+
+    from apps.core.permissions import has_perm
+    from apps.tasks.models import Task
+    from apps.tasks.rules import visible_tasks
+
+    if not has_perm(user, "tasks", "view"):
+        return qs
+    open_tasks = Task.objects.filter(contact=OuterRef("pk"), pk__in=visible_tasks(user).values("pk")).exclude(status=Task.Status.DONE)
+    return qs.annotate(
+        open_tasks=Coalesce(
+            Subquery(open_tasks.order_by().values("contact").annotate(n=Count("pk")).values("n")[:1], output_field=IntegerField()), 0
+        ),
+        next_due=Subquery(open_tasks.order_by().values("contact").annotate(d=Min("due_date")).values("d")[:1], output_field=DateField()),
+    )
+
+
 def unique_cities(values) -> list[str]:
     """One entry per city regardless of capitalisation (filters match case-insensitively);
     prefer the capitalised spelling ("Lahore" over "lahore")."""
@@ -171,6 +191,7 @@ class ContactViewSet(AuditedViewSetMixin, ScopedQuerysetMixin, viewsets.ModelVie
         except ValueError:
             limit = PIPELINE_LIMIT
         counts = dict(qs.order_by().values_list("status").annotate(n=Count("id", distinct=True)))
+        qs = with_task_summary(qs, request.user)
         columns = []
         for status, label in Contact.Status.choices:
             cards = qs.filter(status=status).order_by("-status_changed_at", "pk")[:limit]

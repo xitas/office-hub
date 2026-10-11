@@ -1,5 +1,6 @@
 # Local development services. Redis does not run natively on Windows, so it runs here.
 #   docker compose up -d redis      start (data persists in the "redis-data" volume)
+#   docker compose up -d mailpit    catch outgoing email; read it at http://localhost:8026
 #   docker compose ps               health status
 #   docker compose down             stop (add -v to also delete the data volume)
 name: office-crm
@@ -19,6 +20,17 @@ services:
       timeout: 3s
       retries: 10
       start_period: 5s
+    restart: unless-stopped
+
+  mailpit:
+    # Development mail catcher: the app sends to SMTP port 1026 (EMAIL_URL), nothing leaves the machine.
+    # Ports 1026/8026 (not the usual 1025/8025) so it can run next to other projects' Mailpit.
+    image: axllent/mailpit:v1.27
+    ports:
+      - "127.0.0.1:1026:1025" # SMTP
+      - "127.0.0.1:8026:8025" # web inbox
+    environment:
+      MP_MAX_MESSAGES: 5000
     restart: unless-stopped
 
 volumes:

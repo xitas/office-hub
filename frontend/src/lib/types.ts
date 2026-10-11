@@ -117,9 +117,9 @@ export interface ActivityItem {
 
 /** Widget value is `null` while its module has not been released yet. */
 export interface DashboardData {
-  tasks_today: DashboardListItem[] | null
-  overdue: DashboardListItem[] | null
-  upcoming_deadlines: DashboardListItem[] | null
+  tasks_today: DashboardTask[] | null
+  overdue: DashboardTask[] | null
+  upcoming_deadlines: DashboardTask[] | null
   unread_messages: DashboardListItem[] | null
   pending_approvals: DashboardListItem[] | null
   meetings_today: DashboardListItem[] | null
@@ -134,15 +134,43 @@ export interface DashboardData {
   } | null
   /** Latest notes, calls, meetings and status changes (same shape as timeline items). */
   client_activity: TimelineItem[] | null
+  /** Managers and admins only. */
+  team_workload: WorkloadRow[] | null
+  task_completion: TaskCompletion | null
 }
 
 export interface DashboardListItem {
   id: number | string
   title: string
   subtitle?: string
-  time?: string
+  time?: string | null
   url?: string
   badge?: string
+}
+
+/** My tasks on the dashboard (tasks_today, overdue, upcoming_deadlines). */
+export interface DashboardTask extends DashboardListItem {
+  id: number
+  due_date: string | null
+  due_time: string | null
+  priority: 'low' | 'medium' | 'high' | 'urgent'
+  status: 'todo' | 'in_progress' | 'review' | 'done'
+  is_overdue: boolean
+}
+
+export interface WorkloadRow {
+  user_id: number
+  name: string
+  avatar: string | null
+  open: number
+  overdue: number
+}
+
+export interface TaskCompletion {
+  week_start: string
+  done: number
+  created: number
+  days: { date: string; done: number; created: number }[]
 }
 
 export interface SearchHit {
@@ -153,6 +181,10 @@ export interface SearchHit {
   /** Contacts only. */
   status?: ContactStatus
   company?: string | null
+  /** Tasks only. */
+  task_status?: 'todo' | 'in_progress' | 'review' | 'done'
+  due_date?: string | null
+  is_overdue?: boolean
 }
 
 export interface Company {
@@ -229,6 +261,9 @@ export interface PipelineCard {
   status: ContactStatus
   status_changed_at: string
   city: string
+  /** Open tasks linked to this contact (that you can see) and the nearest due date. */
+  open_tasks?: number
+  next_due?: string | null
 }
 
 export interface PipelineColumn {

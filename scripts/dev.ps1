@@ -39,7 +39,7 @@ if ($LASTEXITCODE -ne 0) {
     if ($LASTEXITCODE -ne 0) { throw 'Docker Desktop did not start. Open it manually, then re-run.' }
 }
 Push-Location $root
-try { docker compose up -d redis 2>&1 | Out-Null } finally { Pop-Location }
+try { docker compose up -d redis mailpit 2>&1 | Out-Null } finally { Pop-Location }
 if ($LASTEXITCODE -ne 0) { throw 'docker compose up failed. Check: docker compose logs redis' }
 $healthy = $false
 for ($i = 0; $i -lt 30; $i++) {

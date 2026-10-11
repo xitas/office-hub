@@ -1,11 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import {
-  AlarmClock,
   Bell,
   Building2,
-  CalendarClock,
   CalendarDays,
-  CheckSquare,
   DoorOpen,
   History,
   LogIn,
@@ -28,6 +25,7 @@ import { useFormat } from '@/lib/format'
 import type { ActivityItem, DashboardData, DashboardListItem } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { ClientActivityWidget, ContactsByStatusWidget } from './ContactWidgets'
+import { CompletionWidget, MyTasksWidget, TeamWorkloadWidget } from './TaskWidgets'
 
 function greetingKey(hour: number) {
   if (hour < 12) return 'dashboard.greetingMorning'
@@ -36,9 +34,6 @@ function greetingKey(hour: number) {
 }
 
 const LIST_WIDGETS: { key: keyof DashboardData; title: string; icon: LucideIcon; tone?: string }[] = [
-  { key: 'tasks_today', title: 'dashboard.tasksToday', icon: CheckSquare },
-  { key: 'overdue', title: 'dashboard.overdue', icon: AlarmClock, tone: 'text-destructive' },
-  { key: 'upcoming_deadlines', title: 'dashboard.deadlines', icon: CalendarClock },
   { key: 'unread_messages', title: 'dashboard.unreadMessages', icon: MessagesSquare },
   { key: 'pending_approvals', title: 'dashboard.pendingApprovals', icon: Stamp },
   { key: 'meetings_today', title: 'dashboard.meetingsToday', icon: CalendarDays },
@@ -90,6 +85,9 @@ export function DashboardPage() {
                 items={data?.[w.key] as DashboardListItem[] | null | undefined}
               />
             ))}
+            <MyTasksWidget data={data} loading={isLoading} className="md:col-span-2 xl:col-span-2" />
+            <CompletionWidget data={data?.task_completion} loading={isLoading} />
+            <TeamWorkloadWidget rows={data?.team_workload} loading={isLoading} className="md:col-span-2 xl:col-span-3" />
             <ContactsByStatusWidget data={data?.contacts_by_status} loading={isLoading} />
             <ClientActivityWidget items={data?.client_activity} loading={isLoading} className="xl:col-span-2" />
             <ActivityWidget items={data?.activity} loading={isLoading} className="md:col-span-2" />

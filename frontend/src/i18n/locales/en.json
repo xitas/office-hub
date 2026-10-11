@@ -148,7 +148,26 @@
     "noContacts": "No contacts yet",
     "clientActivity": "Recent client activity",
     "noClientActivity": "No client activity yet",
-    "noClientActivityHint": "Notes, calls, meetings and status changes on your contacts will appear here."
+    "noClientActivityHint": "Notes, calls, meetings and status changes on your contacts will appear here.",
+    "myTasks": "My tasks",
+    "allTasks": "All tasks",
+    "taskTabs": {
+      "today": "Today",
+      "overdue": "Overdue",
+      "upcoming": "Next 7 days"
+    },
+    "taskEmpty": {
+      "today": "Nothing due today",
+      "overdue": "Nothing overdue",
+      "upcoming": "Nothing due in the next 7 days"
+    },
+    "teamWorkload": "Team workload",
+    "open": "open",
+    "overdueShort": "overdue",
+    "completion": "Tasks this week",
+    "completionDone": "done",
+    "completionCreated": "created",
+    "completionDay": "{{done}} done, {{created}} created"
   },
   "notifications": {
     "title": "Notifications",
@@ -179,7 +198,12 @@
     "allDepartments": "All departments",
     "call": "Call",
     "whatsapp": "WhatsApp",
-    "sendEmail": "Email"
+    "sendEmail": "Email",
+    "openTasks_one": "{{count}} open task",
+    "openTasks_other": "{{count}} open tasks",
+    "overdueTasks_one": "{{count}} overdue",
+    "overdueTasks_other": "{{count}} overdue",
+    "tasksTitle": "Show their tasks"
   },
   "settings": {
     "title": "Settings",
@@ -474,7 +498,11 @@
       "won": "e.g. Signed annual contract",
       "lost": "e.g. Chose a cheaper supplier"
     },
-    "skip": "Skip"
+    "skip": "Skip",
+    "openTasks_one": "{{count}} open task",
+    "openTasks_other": "{{count}} open tasks",
+    "openTasksTitle": "Open tasks for this contact",
+    "nextDue": "next due {{date}}"
   },
   "timeline": {
     "title": "Activity",
@@ -491,7 +519,8 @@
       "meeting": "Meetings",
       "status": "Status changes",
       "created": "Record created",
-      "imported": "Imported"
+      "imported": "Imported",
+      "task": "Tasks"
     },
     "placeholders": {
       "note": "Write a note…",
@@ -543,7 +572,12 @@
     "pickPlaceholder": "Search by name, phone or city…",
     "change": "Choose another",
     "noteSaved": "Note added to {{name}}",
-    "imported": "Imported from CSV"
+    "imported": "Imported from CSV",
+    "taskEvents": {
+      "created": "Task added",
+      "completed": "Task completed",
+      "reopened": "Task reopened"
+    }
   },
   "transfer": {
     "import": "Import",
@@ -926,6 +960,10 @@
       "created": "Task created",
       "dialogTitle": "Task from follow-up",
       "title": "Follow up with {{name}}"
+    },
+    "linked": {
+      "empty": "No open tasks",
+      "recentlyDone": "Completed in the last 2 weeks"
     }
   }
 }

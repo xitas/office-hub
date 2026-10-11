@@ -72,7 +72,7 @@ An office CRM for small-to-mid-sized offices (10–100 staff). It works on deskt
 - [x] Permission-gated UI (`<Can>`, `usePermission`)
 
 ### Module 1 — Dashboard
-- [~] Today's tasks, overdue items, upcoming deadlines *(widgets ready; data arrives in Phase 2)*
+- [x] Today's tasks, overdue items, upcoming deadlines *(Phase 2B slice 5: "My tasks" widget with one-click complete, team workload, completion this week)*
 - [~] Unread messages and pending approvals *(data arrives in Phases 3 and 4)*
 - [~] Today's meetings and room bookings *(data arrives in Phase 4)*
 - [~] Quick-add button for task, contact, note, meeting *(button live; each item enables with its module)*
@@ -112,7 +112,7 @@ An office CRM for small-to-mid-sized offices (10–100 staff). It works on deskt
 
 Phase 2 is split in two:
 - **Phase 2A — Contacts & clients: complete** (branch `phase-2-contacts`). Slices: 1 Companies ✓, 2 Contacts ✓, 3 Lead pipeline ✓, 4 Interaction timeline ✓, 5 CSV import/export ✓, 6 Hardening & polish ✓ (per-account sign-in protection, search and quick-add polish, contact dashboard widgets, full review on SQLite and PostgreSQL + Redis).
-- **Phase 2B — Task management (Module 3): in progress** (branch `phase-2-tasks`). Slices: 1 Task basics ✓, 2 Board and calendar ✓, 3 Subtasks, comments and attachments ✓, 4 Recurring tasks and reminders ✓, then 5–6. Planned order: Task model + list view with My/Team/Overdue filters → Kanban → subtasks/checklists and comments → attachments → calendar view → recurring tasks and deadline reminders (Celery Beat) → task notifications → dashboard task widgets, quick-add Task, tasks in global search and on the contact timeline (via the timeline provider registry).
+- **Phase 2B — Task management (Module 3): in progress** (branch `phase-2-tasks`). Slices: 1 Task basics ✓, 2 Board and calendar ✓, 3 Subtasks, comments and attachments ✓, 4 Recurring tasks and reminders ✓, 5 Connecting tasks to the CRM ✓, then 6. Planned order: Task model + list view with My/Team/Overdue filters → Kanban → subtasks/checklists and comments → attachments → calendar view → recurring tasks and deadline reminders (Celery Beat) → task notifications → dashboard task widgets, quick-add Task, tasks in global search and on the contact timeline (via the timeline provider registry).
 
 ### Module 2 — Contacts & clients
 - [x] Contact records: name, company, job title, phone, WhatsApp, email, address, city, tags (created on the fly), assigned staff, lead status
@@ -126,7 +126,7 @@ Phase 2 is split in two:
 - [x] Click-to-call and click-to-WhatsApp buttons on contact records
 
 ### Module 3 — Task management
-- [x] Tasks: title, description, assignees (one or more), due date + optional time, priority (Low/Medium/High/Urgent), status (To do/In progress/Review/Done), optional link to a contact or company, completed-at set/cleared with the status *(linking to projects and fuller record linking: slice 5)*
+- [x] Tasks: title, description, assignees (one or more), due date + optional time, priority (Low/Medium/High/Urgent), status (To do/In progress/Review/Done), optional link to a contact or company, completed-at set/cleared with the status *(linking to projects comes with projects)*
 - [x] Visibility and assignment: staff see tasks they created or are assigned to, managers their department's (creator or assignee), admins all; everyone assigns themselves and their department, admins anyone; delete by managers/admins or the creator. Audited (create, edit incl. status and assignees, delete)
 - [x] List view: table on desktop, cards on phone, quick filters (My tasks, Due today, Overdue, All), search, status/priority/person filters, smart sort (open first, by due date, most urgent first) or by due date/priority/newest; overdue clearly marked; one-click complete/reopen; task detail page with status dropdown and edit form; Tasks in sidebar and bottom nav; quick-add Task opens the new-task form
 - [x] Kanban board (To Do / In Progress / Review / Done): counts, cards with priority, due date (overdue in red), assignees and linked record; drag and drop on desktop, "Move to…" menu on phones and for keyboard/screen readers; Done shows the last 14 days with a link to all; moves are the same PATCH as the status dropdown (same permissions and audit)
@@ -138,13 +138,15 @@ Phase 2 is split in two:
 - [~] Notifications: assigned to you (not when assigning yourself), due soon (1 hour / 1 day / off per person), overdue (once), new comments and @mentions; each reminder recorded so it is never sent twice, and catch-up after downtime is limited (no late "due soon", overdue only for the last 2 days) *(status-change notices: not yet)*
 - [~] Filters: My Tasks, Team Tasks, Overdue, By Project *(My tasks, Due today, Overdue, All, by person/status/priority, due-date range done; By Project comes with projects)*
 - [x] Scheduled-job runner: Celery + Celery Beat (done in Phase 1 hardening)
+- [x] Tasks on contact and company pages: open tasks plus those completed in the last 2 weeks, one-click complete, "New task" with the link pre-filled; a company also lists its contacts' tasks marked with the contact's name. Creating, completing and reopening a linked task appears on the contact's and company's activity (timeline provider `task`). Pipeline cards show the open-task count and next due date
+- [x] Team page: open and overdue task counts per person for managers and admins, linking to that person's tasks
 - [x] Deadline reminder and recurring-task jobs on Celery Beat (database schedules: reminders every 5 min, digest every 15 min, repeating tasks every 30 min) and a 9:00 office-time morning email digest (my tasks due today and overdue, plus due client follow-ups; skipped when empty; once per day, sent up to 13:00 if the worker was down). "Create task from follow-up" on timeline entries. Verified with a real Beat + worker run
 
 ### Integration
 - [x] Dashboard (Phase 2A): "My / Department / All contacts by status" and "Recent client activity" (from the timeline), scoped per role
-- [ ] Dashboard task widgets show live data *(Phase 2B)*
-- [~] Quick-add Contact, Company and Note open in place and offer "Open" / "Add another" after saving *(Task comes with Phase 2B)*
-- [~] Global search grouped by type (People, Companies, Contacts), contact results show status and company, phone numbers match in any format for contacts, companies and people *(tasks come with Phase 2B)*
+- [x] Dashboard task widgets show live data: My tasks (today / overdue / next 7 days, one-click complete), Team workload for managers (department) and admins (everyone) with overdue highlighted, Tasks this week (done vs created per day, from the organization's week start)
+- [x] Quick-add Contact, Company, Note and Task open in place and offer "Open" / "Add another" after saving; Task can also be added from contact and company pages with the link pre-filled
+- [~] Global search grouped by type (People, Companies, Contacts), contact results show status and company, phone numbers match in any format for contacts, companies and people; Tasks group shows status, due date (overdue marked) and assignees, limited to tasks the user can see
 
 ---
 
@@ -237,6 +239,7 @@ Tables added beyond the spec: OrganizationSettings, Notification and Notificatio
 ---
 
 ## Changelog
+- **2026-10-11:** Phase 2B slice 5 — Connecting tasks to the CRM: Tasks section on contact and company pages (company roll-up of its contacts' tasks), task events on the contact/company activity via the timeline provider registry, open-task count and next due date on pipeline cards, real dashboard task widgets (My tasks, Team workload, Tasks this week) scoped per role, tasks in global search, `/tasks/workload/` and per-person counts on the Team page. Mailpit added to docker-compose (SMTP 127.0.0.1:1026, inbox http://localhost:8026; ports moved off 1025/8025 to avoid clashing with other local projects) and dev email now goes there. Fixed weekly completion counts merging tasks completed at the same moment. 14 new tests (438 total).
 - **2026-10-11:** Phase 2B slice 4 — Recurring tasks and reminders: TaskSeries, ReminderLog and DigestLog tables; Task.series and Task.follow_up_of; User.task_reminder_lead; three Beat schedules (data migration); new notification types (task overdue, morning digest); repeat editor, "this / this and future" choice, repeat marks on cards; reminder setting on the notifications page. A real Beat + worker run sent "due soon", "overdue" and 7 digests once each (console email). 49 new tests (423 total).
 - **2026-10-11:** Phase 2B slice 3 — Subtasks, comments and attachments: ChecklistItem, TaskComment, TaskAttachment and TaskActivity tables; nested APIs under /tasks/{id}/; private file storage (`PRIVATE_MEDIA_ROOT`, git-ignored); mention and new-comment notifications; two-column task page. Tests always write uploads to a temp folder. 49 new tests (374 total).
 - **2026-10-10:** Phase 2B slice 2 — Board and calendar views: `/tasks/board/` and `/tasks/calendar/` endpoints, view switcher, Kanban with drag/drop and Move-to menu, month/week calendar with drag-to-reschedule and a phone date picker, "No date" panel. Task dates now follow the organization's time-zone setting (`apps/core/office_time.py`) instead of the server default. 22 new tests (325 total).

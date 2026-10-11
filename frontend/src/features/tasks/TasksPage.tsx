@@ -46,7 +46,8 @@ export function TasksPage() {
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState(ALL)
   const [priority, setPriority] = useState(ALL)
-  const [assignee, setAssignee] = useState(ALL)
+  // ?assignee=ID (e.g. from the Team page) opens the list filtered to that person.
+  const [assignee, setAssignee] = useState(() => params.get('assignee') ?? ALL)
   const [sort, setSort] = useState('default')
   const [page, setPage] = useState(1)
   const q = useDebouncedValue(search.trim())

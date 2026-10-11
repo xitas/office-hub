@@ -64,5 +64,5 @@ def test_client_activity_is_scoped(client_for, people, data, who, expected):
 
 def test_placeholders_stay_for_later_modules(client_for, people):
     data = client_for(people["staff"]).get(DASHBOARD).data
-    for key in ("tasks_today", "overdue", "unread_messages"):
+    for key in ("unread_messages", "meetings_today", "pending_approvals"):
         assert data[key] is None

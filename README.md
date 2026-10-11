@@ -56,6 +56,7 @@ Or start each part yourself, each in its own terminal:
 | What | Command (from the folder shown) |
 |---|---|
 | Redis | `docker compose up -d redis` (repository root) |
+| Mailpit (development email) | `docker compose up -d mailpit`, then open http://localhost:8026 to read every email the app sends |
 | Django: API + WebSockets | `.venv\Scripts\python manage.py runserver` (`backend`) |
 | Celery worker | `.venv\Scripts\celery -A config worker --pool=solo -l info` (`backend`) |
 | Celery Beat (scheduler) | `.venv\Scripts\celery -A config beat -l info` (`backend`) |

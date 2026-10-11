@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { StatusBadge } from '@/components/common/StatusBadge'
+import { DueLabel, TaskStatusBadge } from '@/features/tasks/TaskBits'
 import { api } from '@/lib/api'
 import type { SearchHit } from '@/lib/types'
 import { useDebouncedValue } from '@/lib/utils'
@@ -100,8 +101,15 @@ export function GlobalSearch() {
                               <bdi>{[hit.company, hit.subtitle].filter(Boolean).join(' · ')}</bdi>
                             </p>
                           )}
+                          {hit.task_status && hit.due_date && (
+                            <DueLabel
+                              task={{ due_date: hit.due_date, due_time: null, is_overdue: !!hit.is_overdue, status: hit.task_status }}
+                              className="text-xs"
+                            />
+                          )}
                         </div>
                         {hit.status && <StatusBadge status={hit.status} className="shrink-0" />}
+                        {hit.task_status && <TaskStatusBadge status={hit.task_status} className="shrink-0" />}
                       </CommandItem>
                     ))}
                   </CommandGroup>

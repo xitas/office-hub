@@ -24,6 +24,8 @@ WIDGET_KEYS = [
     "stats",
     "contacts_by_status",   # Phase 2A
     "client_activity",      # Phase 2A: latest notes, calls, meetings and status changes
+    "team_workload",        # Phase 2B: open/overdue tasks per person (managers, admins)
+    "task_completion",      # Phase 2B: tasks done vs created this week
 ]
 
 _providers: dict[str, Callable] = {}

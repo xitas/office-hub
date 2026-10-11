@@ -30,6 +30,7 @@ DONE_WINDOW_DAYS = 14  # the board's Done column shows recently completed tasks 
 CALENDAR_MAX_DAYS = 62  # a month view with its leading/trailing weeks fits easily
 CALENDAR_LIMIT = 1000
 UNDATED_LIMIT = 50
+RECENT_DAYS = 14
 
 
 def _count(subquery):
@@ -55,10 +56,23 @@ class TaskFilter(django_filters.FilterSet):
     overdue = django_filters.BooleanFilter(method="filter_overdue")
     contact = django_filters.NumberFilter(field_name="contact")
     company = django_filters.NumberFilter(field_name="company")
+    # A company page: tasks linked to the company or to any of its contacts.
+    related_company = django_filters.NumberFilter(method="filter_related_company")
+    # Open tasks plus those completed in the last RECENT_DAYS days.
+    recent = django_filters.BooleanFilter(method="filter_recent")
 
     class Meta:
         model = Task
         fields = ["mine", "assigned_to", "created_by", "status", "priority", "contact", "company"]
+
+    def filter_related_company(self, queryset, name, value):
+        return queryset.filter(Q(company_id=value) | Q(contact__company_id=value))
+
+    def filter_recent(self, queryset, name, value):
+        if not value:
+            return queryset
+        since = office_now() - timedelta(days=RECENT_DAYS)
+        return queryset.filter(~Q(status=Task.Status.DONE) | Q(completed_at__gte=since))
 
     def filter_mine(self, queryset, name, value):
         return queryset.filter(assignees=self.request.user) if value else queryset
@@ -264,6 +278,19 @@ class TaskViewSet(AuditedViewSetMixin, viewsets.ModelViewSet):
             "items": items,
             "attachments": AttachmentSerializer(attachments, many=True, context={"request": request}).data,
         })
+
+    @extend_schema(responses={200: dict})
+    @action(detail=False, methods=["get"])
+    def workload(self, request):
+        """Open and overdue tasks per person (managers and admins), counted over the tasks you can see."""
+        from apps.core.permissions import ADMIN, MANAGER
+
+        from .integration import workload
+
+        user = request.user
+        if not (user.role in (ADMIN, MANAGER) or user.is_superuser):
+            raise PermissionDenied()
+        return Response(workload(user))
 
     @extend_schema(responses={200: dict})
     @action(detail=True, methods=["get"])

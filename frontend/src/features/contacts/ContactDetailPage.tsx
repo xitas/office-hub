@@ -17,6 +17,7 @@ import { CONTACT_STATUSES } from '@/lib/contacts'
 import { useFormat } from '@/lib/format'
 import { usePermission } from '@/lib/permissions'
 import type { Contact, ContactStatus } from '@/lib/types'
+import { LinkedTasks } from '@/features/tasks/LinkedTasks'
 import { Timeline } from '@/features/timeline/Timeline'
 import { ContactForm } from './ContactForm'
 import { useStatusChange } from './useStatusChange'
@@ -230,6 +231,8 @@ export function ContactDetailPage() {
               </div>
             </CardContent>
           </Card>
+
+          <LinkedTasks target={{ contact: contact.id, name: contact.full_name }} />
 
           <Timeline target={{ contact: contact.id }} />
 

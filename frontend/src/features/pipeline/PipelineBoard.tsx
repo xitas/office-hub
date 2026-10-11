@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowRightLeft, Building, Check, Clock, GripVertical } from 'lucide-react'
+import { ArrowRightLeft, Building, Check, CheckSquare, Clock, GripVertical } from 'lucide-react'
 import { useState, type DragEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
@@ -18,7 +18,9 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/lib/api'
 import { CONTACT_STATUSES, filterParams, type ContactFilters } from '@/lib/contacts'
+import { useFormat } from '@/lib/format'
 import { usePermission } from '@/lib/permissions'
+import { officeDate } from '@/lib/tasks'
 import type { ContactStatus, PipelineCard, PipelineData } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { useStatusChange } from '@/features/contacts/useStatusChange'
@@ -248,6 +250,7 @@ function BoardCard({
           <TagList tags={card.tags} max={2} />
         </div>
       )}
+      <OpenTasks count={card.open_tasks ?? 0} nextDue={card.next_due ?? null} />
       <div className="mt-2 flex items-center justify-between gap-2 text-xs text-muted-foreground">
         <span className="flex min-w-0 items-center gap-1.5">
           {card.assigned_to_name && <UserAvatar name={card.assigned_to_name} className="size-5 text-[9px]" />}
@@ -262,5 +265,24 @@ function BoardCard({
         </span>
       </div>
     </article>
+  )
+}
+
+/** Open tasks on this contact and when the next one is due (red when already past). */
+function OpenTasks({ count, nextDue }: { count: number; nextDue: string | null }) {
+  const { t } = useTranslation()
+  const fmt = useFormat()
+  if (!count) return null
+  const late = nextDue !== null && nextDue < officeDate(fmt.settings.timezone)
+  return (
+    <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground" title={t('pipeline.openTasksTitle')}>
+      <CheckSquare className="size-3 shrink-0" />
+      <span className="font-latin">{t('pipeline.openTasks', { count })}</span>
+      {nextDue && (
+        <span className={late ? 'font-medium text-destructive' : undefined}>
+          · {t('pipeline.nextDue', { date: fmt.date(`${nextDue}T12:00:00`) })}
+        </span>
+      )}
+    </p>
   )
 }
