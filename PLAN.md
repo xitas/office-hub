@@ -112,7 +112,7 @@ An office CRM for small-to-mid-sized offices (10–100 staff). It works on deskt
 
 Phase 2 is split in two:
 - **Phase 2A — Contacts & clients: complete** (branch `phase-2-contacts`). Slices: 1 Companies ✓, 2 Contacts ✓, 3 Lead pipeline ✓, 4 Interaction timeline ✓, 5 CSV import/export ✓, 6 Hardening & polish ✓ (per-account sign-in protection, search and quick-add polish, contact dashboard widgets, full review on SQLite and PostgreSQL + Redis).
-- **Phase 2B — Task management (Module 3): in progress** (branch `phase-2-tasks`). Slices: 1 Task basics ✓, 2 Board and calendar ✓, 3 Subtasks, comments and attachments ✓, 4 Recurring tasks and reminders ✓, 5 Connecting tasks to the CRM ✓, then 6. Planned order: Task model + list view with My/Team/Overdue filters → Kanban → subtasks/checklists and comments → attachments → calendar view → recurring tasks and deadline reminders (Celery Beat) → task notifications → dashboard task widgets, quick-add Task, tasks in global search and on the contact timeline (via the timeline provider registry).
+- **Phase 2B — Task management (Module 3): complete** (branch `phase-2-tasks`). Slices: 1 Task basics ✓, 2 Board and calendar ✓, 3 Subtasks, comments and attachments ✓, 4 Recurring tasks and reminders ✓, 5 Connecting tasks to the CRM ✓, 6 Final review ✓ (query counts, indexes, real Beat + worker email run, full visual review). Planned order: Task model + list view with My/Team/Overdue filters → Kanban → subtasks/checklists and comments → attachments → calendar view → recurring tasks and deadline reminders (Celery Beat) → task notifications → dashboard task widgets, quick-add Task, tasks in global search and on the contact timeline (via the timeline provider registry).
 
 ### Module 2 — Contacts & clients
 - [x] Contact records: name, company, job title, phone, WhatsApp, email, address, city, tags (created on the fly), assigned staff, lead status
@@ -146,11 +146,27 @@ Phase 2 is split in two:
 - [x] Dashboard (Phase 2A): "My / Department / All contacts by status" and "Recent client activity" (from the timeline), scoped per role
 - [x] Dashboard task widgets show live data: My tasks (today / overdue / next 7 days, one-click complete), Team workload for managers (department) and admins (everyone) with overdue highlighted, Tasks this week (done vs created per day, from the organization's week start)
 - [x] Quick-add Contact, Company, Note and Task open in place and offer "Open" / "Add another" after saving; Task can also be added from contact and company pages with the link pre-filled
-- [~] Global search grouped by type (People, Companies, Contacts), contact results show status and company, phone numbers match in any format for contacts, companies and people; Tasks group shows status, due date (overdue marked) and assignees, limited to tasks the user can see
+- [x] Global search grouped by type (People, Companies, Contacts, Tasks), contact results show status and company, phone numbers match in any format for contacts, companies and people; Tasks group shows status, due date (overdue marked) and assignees, limited to tasks the user can see
+
+### Phase 2B verification
+- [x] Backend tests pass on SQLite (445 passed, 1 skipped: the Redis test) and on PostgreSQL 17 + Redis (446 passed)
+- [x] Query counts locked by tests: list, board, calendar, dashboard, workload, contact/company task lists and timelines, pipeline, search, task detail and activity stay the same from 12 to 312 tasks (with checklists, comments, activity and 1–3 assignees each); the office time zone is read once per response, not once per task
+- [x] Indexes for the common filters: assignee (both directions), status, due date, status + due date, linked contact and company, completed-at and created-at
+- [x] Real run with Celery worker + Beat and Mailpit: due-soon, overdue, @mention and morning-digest emails arrive once each, in English and Urdu; completing a daily repeating task creates the next occurrence
+- [x] Visual review of every page (Tasks list/board/calendar/detail/new-task dialogs now included): 844 screenshots across 3 roles × light/dark × English/Urdu × desktop/phone, 0 layout issues
 
 ---
 
 ## Phase 3 — Communication hub (Module 4)
+
+**Status: next.** Planned slices (branch `phase-3-communication`):
+1. **Chat foundations:** Channel, ChannelMember and Message tables; direct messages and department channels (project channels when projects exist); visibility rules; live delivery over the existing WebSocket (tickets, Redis channel layer); unread counts per channel
+2. **Chat screens:** channel list and conversation view (desktop split view, phone full screen), live updates, edit/delete own messages, file attachments (reusing private task-file storage), read markers, English/Urdu, light/dark
+3. **Mentions, search and dashboard:** @mentions in chat with notifications (reusing the task mention picker), messages in global search (only conversations you belong to), "Unread messages" dashboard widget live, chat in the bottom nav
+4. **Communication log:** "message" entries (WhatsApp, email, SMS) on the contact/company timeline next to calls and meetings; follow-up reminders created automatically from a logged follow-up date (task or reminder via Beat)
+5. **Message templates:** quotations, reminders and thank-you notes with placeholders (contact name, company, due amount); used from contact pages to copy, open WhatsApp or email; managed by admins and managers
+6. **Announcements and final review:** announcements board (pinned, audience by department, read receipts), then the same full review as Phase 2B (tests on both databases, query counts, real run, visual review)
+
 - [ ] Internal chat: direct messages (WebSocket)
 - [ ] Channels by department or project
 - [ ] @mentions with notifications
@@ -224,7 +240,7 @@ Phase 2 is split in two:
 | Expenses | 4 | [ ] |
 | Visits | 5 | [ ] |
 
-Tables added beyond the spec: OrganizationSettings, Notification and NotificationPreference (Phase 1, done); Tag, ContactStatusChange, TimelineEntry and ContactImport (Phase 2A); TaskAttachment and TaskActivity (Phase 2B).
+Tables added beyond the spec: OrganizationSettings, Notification and NotificationPreference (Phase 1, done); Tag, ContactStatusChange, TimelineEntry and ContactImport (Phase 2A); TaskAttachment, TaskActivity, TaskSeries, ReminderLog and DigestLog (Phase 2B).
 
 ---
 
@@ -236,9 +252,19 @@ Tables added beyond the spec: OrganizationSettings, Notification and Notificatio
 - Production file storage: local `MEDIA_ROOT` for now, with S3-compatible storage possible later via `STORAGES`.
 - Live staff location: currently based on check-ins only (no continuous tracking), as the spec requires.
 
+**Known limitations and follow-ups from Phase 2B**
+- Task status-change notifications are not sent yet (assigned, due soon, overdue, comments and @mentions are). "By Project" filtering and linking wait for projects.
+- The calendar returns up to 1,000 tasks and the board up to 100 cards per column. Query counts stay fixed, but serializing that many takes about 0.4–0.9 s on a dev machine. If an office ever gets that busy, give the calendar a lighter serializer or load a week at a time.
+- Notification and digest emails are plain text. Urdu reads right to left only where the email app detects it; HTML emails with `dir="rtl"` would be better.
+- The morning digest lists a task due earlier today under "Due today" even when its time has passed (the dashboard does the same); a "late" mark there would be clearer.
+- The contact/company activity loads every task event for linked tasks (no paging). Fine at current volumes; page it if a client collects hundreds of tasks.
+- Dev Mailpit uses ports 1026 (SMTP) and 8026 (inbox) because another local project already uses 1025/8025.
+- The visual review needs `LOGIN_THROTTLE_RATE=1000/min` on the backend; it can run beside a normal dev server on other ports (`VITE_BACKEND_URL`, `REVIEW_URL`, `CORS_ALLOWED_ORIGINS`).
+
 ---
 
 ## Changelog
+- **2026-10-11:** Phase 2B slice 6 — Final review; Phase 2B complete. No N+1 queries found in any task endpoint (checked at 2,000 tasks on SQLite and PostgreSQL); new tests lock the query count of 13 endpoints for all three roles. Faster task visibility: an id subquery replaces DISTINCT over joined rows (manager list SQL 159 → 25 ms, board 283 → 80 ms at 2,000 tasks on PostgreSQL). "Overdue" no longer reads the organization settings from the cache (Redis in production) once per task. New indexes on task completed-at and created-at. Real Celery worker + Beat run checked in Mailpit (due soon, overdue, mention, digest; English and Urdu; nothing sent twice) and a repeating task's next occurrence. Visual review script now covers the Tasks pages (844 screenshots, 0 layout issues); fixed the phone week-calendar title being cut off (now "5–11 Oct 2026"). 7 new tests (445 on SQLite, 446 on PostgreSQL + Redis).
 - **2026-10-11:** Phase 2B slice 5 — Connecting tasks to the CRM: Tasks section on contact and company pages (company roll-up of its contacts' tasks), task events on the contact/company activity via the timeline provider registry, open-task count and next due date on pipeline cards, real dashboard task widgets (My tasks, Team workload, Tasks this week) scoped per role, tasks in global search, `/tasks/workload/` and per-person counts on the Team page. Mailpit added to docker-compose (SMTP 127.0.0.1:1026, inbox http://localhost:8026; ports moved off 1025/8025 to avoid clashing with other local projects) and dev email now goes there. Fixed weekly completion counts merging tasks completed at the same moment. 14 new tests (438 total).
 - **2026-10-11:** Phase 2B slice 4 — Recurring tasks and reminders: TaskSeries, ReminderLog and DigestLog tables; Task.series and Task.follow_up_of; User.task_reminder_lead; three Beat schedules (data migration); new notification types (task overdue, morning digest); repeat editor, "this / this and future" choice, repeat marks on cards; reminder setting on the notifications page. A real Beat + worker run sent "due soon", "overdue" and 7 digests once each (console email). 49 new tests (423 total).
 - **2026-10-11:** Phase 2B slice 3 — Subtasks, comments and attachments: ChecklistItem, TaskComment, TaskAttachment and TaskActivity tables; nested APIs under /tasks/{id}/; private file storage (`PRIVATE_MEDIA_ROOT`, git-ignored); mention and new-comment notifications; two-column task page. Tests always write uploads to a temp folder. 49 new tests (374 total).

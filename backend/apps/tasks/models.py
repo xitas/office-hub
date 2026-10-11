@@ -51,7 +51,13 @@ class Task(TimeStampedModel):
         ordering = ["-created_at"]
         verbose_name = _("task")
         verbose_name_plural = _("tasks")
-        indexes = [models.Index(fields=["status", "due_date"])]
+        indexes = [
+            models.Index(fields=["status", "due_date"]),
+            # Board "Done" column, "recently completed" lists and the weekly completion widget.
+            models.Index(fields=["completed_at"], name="tasks_task_completed_idx"),
+            # "Newest" sort and "created this week".
+            models.Index(fields=["created_at"], name="tasks_task_created_idx"),
+        ]
 
     def __str__(self):
         return self.title

@@ -90,15 +90,18 @@ async function prepareData() {
     const { secret } = await (await call(z, 'POST', '/auth/2fa/setup/')).json()
     await call(z, 'POST', '/auth/2fa/enable/', { code: totp(secret) })
   }
-  // A contact and a company each role can see, with timeline entries (seeded by seed_demo).
+  // A contact, a company and a task each role can see (seeded by seed_demo); the busiest task.
   const contact = {}
   const company = {}
+  const task = {}
   for (const [role, email] of Object.entries(ROLES)) {
     const token = await apiLogin(email)
     contact[role] = (await (await call(token, 'GET', '/contacts/?ordering=-updated_at')).json()).results[0].id
     company[role] = (await (await call(token, 'GET', '/companies/')).json()).results[0].id
+    const tasks = (await (await call(token, 'GET', '/tasks/?page_size=100')).json()).results
+    task[role] = tasks.sort((a, b) => b.comment_count + b.checklist_total - (a.comment_count + a.checklist_total))[0].id
   }
-  return { users: byEmail, depts: dept, contact, company }
+  return { users: byEmail, depts: dept, contact, company, task }
 }
 
 // ---------------------------------------------------------------- page checks
@@ -316,6 +319,43 @@ async function rolePages(browser, role, vpName, vp, data) {
       await go(`/companies/${data.company[role]}`)
       await page.waitForSelector('main ol li')
       await s('company-detail')
+      // Phase 2B: tasks (list, board, calendar, detail, new-task dialogs)
+      const layout = async (name) => {
+        await page.getByRole('radio', { name }).first().click()
+        await page.waitForTimeout(400)
+      }
+      await go('/tasks?view=all')
+      await page.waitForSelector('main h1')
+      await layout(/^(List|فہرست)$/)
+      await s('tasks-list')
+      await layout(/^(Board|بورڈ)$/)
+      await page.waitForSelector('main [role=list] section')
+      await s('tasks-board')
+      await layout(/^(Calendar|کیلنڈر)$/)
+      await page.waitForSelector('main [role=grid], main ol')
+      await layout(/^(Month|مہینہ)$/)
+      await s('tasks-calendar-month')
+      await layout(/^(Week|ہفتہ)$/)
+      await s('tasks-calendar-week')
+      await layout(/^(Month|مہینہ)$/)
+      await layout(/^(List|فہرست)$/) // the chosen view is remembered; leave it on List
+      await go(`/tasks/${data.task[role]}`)
+      await page.waitForSelector('main h1')
+      await page.waitForSelector('main ol li')
+      await s('task-detail')
+      await go('/tasks?new=1')
+      await page.waitForSelector('[role=dialog] input')
+      await page.waitForTimeout(400)
+      await s('dialog-new-task', { fullPage: false })
+      await page.keyboard.press('Escape')
+      await go(`/contacts/${data.contact[role]}`)
+      await page.waitForSelector('main ol li')
+      await page.getByRole('button', { name: /^(New task|نیا کام)$/ }).first().click()
+      await page.waitForSelector('[role=dialog] input')
+      await page.waitForTimeout(400)
+      await s('dialog-contact-new-task', { fullPage: false })
+      await page.keyboard.press('Escape')
+
       await go('/contacts/import')
       await page.waitForSelector('#import-file', { state: 'attached' })
       await s('import-upload')
@@ -370,6 +410,13 @@ async function rolePages(browser, role, vpName, vp, data) {
 }
 
 // ---------------------------------------------------------------- main
+// The run only looks at tasks; this checks it never changed one.
+const taskState = async () => {
+  const token = await apiLogin(ROLES.admin)
+  const tasks = (await (await call(token, 'GET', '/tasks/?page_size=500')).json()).results
+  return JSON.stringify(tasks.map((t) => [t.id, t.status, t.due_date, t.checklist_done, t.comment_count]).sort())
+}
+const tasksBefore = await taskState()
 const browser = await chromium.launch({ channel: 'chrome' })
 try {
   const data = await prepareData()
@@ -388,6 +435,7 @@ try {
     const token = await apiLogin(email).catch(() => null)
     if (token) await call(token, 'PATCH', '/auth/me/', { theme: 'system', language: 'en' })
   }
+  if ((await taskState()) !== tasksBefore) report.issues.push({ file: 'GUARD', problems: ['task data changed during the run'] })
   mkdirSync(OUT, { recursive: true })
   writeFileSync(path.join(OUT, 'report.json'), JSON.stringify(report, null, 2))
   console.log(`${report.shots} screenshots, ${report.issues.length} with issues, ${report.consoleErrors.length} console errors`)

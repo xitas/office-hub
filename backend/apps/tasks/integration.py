@@ -142,7 +142,7 @@ def task_completion(user):
     tz = now.tzinfo
     since = now.replace(year=start.year, month=start.month, day=start.day, hour=0, minute=0, second=0, microsecond=0)
     scope = visible_tasks(user) if (user.role in (ADMIN, MANAGER) or user.is_superuser) else Task.objects.filter(assignees=user)
-    # (pk, time) pairs: the scope is DISTINCT, so selecting the time alone would merge equal timestamps.
+    # (pk, time) pairs, so tasks with equal timestamps are never merged (e.g. if the scope is made DISTINCT).
     done = [at for _pk, at in scope.filter(completed_at__gte=since).values_list("pk", "completed_at")]
     created = [at for _pk, at in scope.filter(created_at__gte=since).values_list("pk", "created_at")]
     days = []

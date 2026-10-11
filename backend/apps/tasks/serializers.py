@@ -1,10 +1,14 @@
+from datetime import datetime
+
 from django.db import transaction
+from django.utils import timezone
 from django.utils.translation import gettext as _
 from rest_framework import serializers
 
 from apps.accounts.models import User
 from apps.contacts.models import Company, Contact
 from apps.contacts.visibility import visible_companies, visible_contacts
+from apps.core.office_time import office_tz
 
 from apps.timeline.models import TimelineEntry
 
@@ -78,7 +82,7 @@ class TaskSerializer(serializers.ModelSerializer):
     priority_label = serializers.CharField(source="get_priority_display", read_only=True)
     created_by_name = serializers.CharField(source="created_by.full_name", default=None, read_only=True)
     updated_by_name = serializers.CharField(source="updated_by.full_name", default=None, read_only=True)
-    is_overdue = serializers.BooleanField(read_only=True)
+    is_overdue = serializers.SerializerMethodField()
     checklist_total = serializers.IntegerField(read_only=True, default=0)
     checklist_done = serializers.IntegerField(read_only=True, default=0)
     comment_count = serializers.IntegerField(read_only=True, default=0)
@@ -111,6 +115,16 @@ class TaskSerializer(serializers.ModelSerializer):
 
             fields["follow_up_of"].queryset = visible_entries(request.user)
         return fields
+
+    def get_is_overdue(self, task) -> bool:
+        # Same rule as Task.is_overdue, with the office time zone looked up once per response
+        # (it comes from the cache, which is Redis in production) instead of once per task.
+        if task.status == Task.Status.DONE or task.due_date is None:
+            return False
+        if "_office_tz" not in self.context:
+            self.context["_office_tz"] = office_tz()
+        due = datetime.combine(task.due_date, task.due_time or datetime.max.time(), tzinfo=self.context["_office_tz"])
+        return due < timezone.now()
 
     def get_repeat(self, task) -> dict | None:
         return series_data(task.series)

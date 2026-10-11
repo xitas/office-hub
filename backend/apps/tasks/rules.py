@@ -23,7 +23,9 @@ def visible_tasks(user, queryset=None):
     visible = Q(created_by=user) | Q(assignees=user)
     if user.role == MANAGER and user.department_id:
         visible |= Q(created_by__department_id=user.department_id) | Q(assignees__department_id=user.department_id)
-    return qs.filter(visible).distinct()
+    # An id subquery rather than .distinct() on the joined rows: no duplicates, and the database
+    # doesn't have to sort and compare every selected column (much faster for lists and counts).
+    return qs.filter(pk__in=Task.objects.filter(visible).values("pk"))
 
 
 def assignable_users(user, queryset):

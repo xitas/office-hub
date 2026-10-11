@@ -141,7 +141,9 @@ export function TaskCalendar({ params, onCreate }: { params: Record<string, stri
   // Dates are plain calendar days: format them at UTC noon so no time zone can shift the day.
   const dayDate = (d: string) => new Date(`${d}T12:00:00Z`)
   const title = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric', timeZone: 'UTC', numberingSystem: 'latn' }).format(dayDate(anchor))
-  const weekTitle = `${fmt.date(`${range.start}T12:00:00`)} – ${fmt.date(`${range.end}T12:00:00`)}`
+  // Compact, so it fits next to the controls on phones: "5–11 Oct 2026", "29 Sept – 5 Oct 2026".
+  const weekTitle = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC', numberingSystem: 'latn' })
+    .formatRange(dayDate(range.start), dayDate(range.end))
   const weekday = (d: string, style: 'short' | 'long') => new Intl.DateTimeFormat(locale, { weekday: style, timeZone: 'UTC' }).format(dayDate(d))
   const longDay = (d: string) =>
     new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC', numberingSystem: 'latn' }).format(dayDate(d))
@@ -201,7 +203,7 @@ export function TaskCalendar({ params, onCreate }: { params: Record<string, stri
             </Button>
           </div>
           <h2 className="min-w-0 flex-1 truncate text-base font-semibold" aria-live="polite">
-            {mode === 'month' ? title : <span className="font-latin">{weekTitle}</span>}
+            {mode === 'month' ? title : weekTitle}
           </h2>
           <Button variant="outline" size="sm" onClick={goToday}>
             {t('tasks.calendar.today')}
