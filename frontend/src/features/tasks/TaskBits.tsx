@@ -1,4 +1,4 @@
-import { AlarmClock, CalendarClock } from 'lucide-react'
+import { AlarmClock, CalendarClock, ListChecks, MessageSquare } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { UserAvatar } from '@/components/common'
 import { Badge } from '@/components/ui/badge'
@@ -67,6 +67,34 @@ export function AssigneeAvatars({ people, max = 3 }: { people: TaskAssignee[]; m
           +{more}
         </span>
       )}
+    </span>
+  )
+}
+
+/** "3/5" checklist progress (hidden when the task has no checklist). */
+export function ChecklistProgress({ done, total, className }: { done: number; total: number; className?: string }) {
+  const { t } = useTranslation()
+  if (!total) return null
+  const complete = done === total
+  return (
+    <span
+      className={cn('inline-flex items-center gap-1 text-xs font-latin', complete ? 'text-success' : 'text-muted-foreground', className)}
+      title={t('tasks.checklist.progress', { done, total })}
+      aria-label={t('tasks.checklist.progress', { done, total })}
+    >
+      <ListChecks className="size-3.5 shrink-0" />
+      {done}/{total}
+    </span>
+  )
+}
+
+export function CommentCount({ count }: { count: number }) {
+  const { t } = useTranslation()
+  if (!count) return null
+  return (
+    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground font-latin" aria-label={t('tasks.comments.count', { count })}>
+      <MessageSquare className="size-3.5 shrink-0" />
+      {count}
     </span>
   )
 }

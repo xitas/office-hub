@@ -329,7 +329,7 @@
     "task_status": "Task status changed",
     "task_comment": "New comment on my task",
     "task_deadline": "Task deadline approaching",
-    "mention": "Mentioned in chat",
+    "mention": "Mentioned in a comment or chat",
     "direct_message": "New direct message",
     "follow_up": "Client follow-up due",
     "approval_request": "Approval requested",
@@ -787,6 +787,72 @@
       "move": "Move",
       "removeDate": "Remove date",
       "openTask": "Open task"
+    },
+    "checklist": {
+      "title": "Checklist",
+      "progress": "{{done}} of {{total}} done",
+      "add": "Add",
+      "addPlaceholder": "Add an item",
+      "empty": "No checklist items.",
+      "tick": "Mark “{{text}}” as done",
+      "untick": "Mark “{{text}}” as not done",
+      "editItem": "Edit item",
+      "itemActions": "Actions for “{{text}}”",
+      "moveUp": "Move up",
+      "moveDown": "Move down"
+    },
+    "files": {
+      "title": "Files",
+      "upload": "Upload",
+      "empty": "No files yet.",
+      "hint": "PDF, images, Office documents, text/CSV or ZIP, up to {{mb}} MB each. You can also drop files here.",
+      "uploaded_one": "File uploaded",
+      "uploaded_other": "{{count}} files uploaded",
+      "tooLarge": "“{{name}}” is larger than {{mb}} MB.",
+      "preview": "Preview {{name}}",
+      "download": "Download {{name}}",
+      "delete": "Delete {{name}}",
+      "remove": "Remove {{name}}",
+      "deleteTitle": "Delete “{{name}}”?",
+      "deleteHint": "The file is removed for everyone. This cannot be undone."
+    },
+    "comments": {
+      "count_one": "{{count}} comment",
+      "count_other": "{{count}} comments",
+      "write": "Write a comment",
+      "placeholder": "Write a comment… Type @ to mention someone",
+      "send": "Send",
+      "attach": "Attach files",
+      "hint": "People you mention and everyone on the task are notified. Ctrl+Enter sends.",
+      "edited": "edited",
+      "actions": "Comment actions",
+      "mentionSomeone": "Mention someone",
+      "deleteTitle": "Delete this comment?",
+      "deleteHint": "This cannot be undone.",
+      "deleteHintFiles": "Its attached files are deleted too. This cannot be undone."
+    },
+    "activity": {
+      "title": "Activity",
+      "listSeparator": ", ",
+      "events": {
+        "created": "<b>{{actor}}</b> created the task",
+        "status": "<b>{{actor}}</b> changed the status from {{old}} to <q>{{new}}</q>",
+        "priority": "<b>{{actor}}</b> changed the priority from {{old}} to <q>{{new}}</q>",
+        "title": "<b>{{actor}}</b> renamed the task to <q>“{{new}}”</q>",
+        "due": "<b>{{actor}}</b> moved the due date from {{old}} to <q>{{new}}</q>",
+        "dueSet": "<b>{{actor}}</b> set the due date to <q>{{new}}</q>",
+        "dueRemoved": "<b>{{actor}}</b> removed the due date",
+        "assigneesAdded": "<b>{{actor}}</b> assigned <q>{{added}}</q>",
+        "assigneesRemoved": "<b>{{actor}}</b> unassigned <q>{{removed}}</q>",
+        "assigneesBoth": "<b>{{actor}}</b> assigned <q>{{added}}</q> and unassigned <q>{{removed}}</q>",
+        "checklist_added": "<b>{{actor}}</b> added <q>“{{text}}”</q> to the checklist",
+        "checklist_done": "<b>{{actor}}</b> ticked <q>“{{text}}”</q>",
+        "checklist_undone": "<b>{{actor}}</b> unticked <q>“{{text}}”</q>",
+        "checklist_renamed": "<b>{{actor}}</b> renamed “{{old}}” to <q>“{{text}}”</q>",
+        "checklist_removed": "<b>{{actor}}</b> removed <q>“{{text}}”</q> from the checklist",
+        "attachment_added": "<b>{{actor}}</b> attached <q>{{text}}</q>",
+        "attachment_removed": "<b>{{actor}}</b> deleted the file <q>{{text}}</q>"
+      }
     }
   }
 }

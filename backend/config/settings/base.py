@@ -111,6 +111,10 @@ STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
+# Task attachments and other files that need a permission check: never served directly.
+PRIVATE_MEDIA_ROOT = env.path("PRIVATE_MEDIA_ROOT", default=str(BASE_DIR / "private_media"))
+# Uploads above this many bytes go to a temp file instead of memory; the 10 MB per-file limit is checked in the API.
+DATA_UPLOAD_MAX_MEMORY_SIZE = 12 * 1024 * 1024
 
 # Channels
 # Redis: cache (rate limits, WS tickets), Channels and Celery. See config/settings/services.py.

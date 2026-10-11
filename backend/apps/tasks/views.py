@@ -1,7 +1,8 @@
 from datetime import date, timedelta
 
 import django_filters
-from django.db.models import Case, F, Value, When
+from django.db.models import Case, Count, F, IntegerField, OuterRef, Q, Subquery, Value, When
+from django.db.models.functions import Coalesce
 from django.utils.translation import gettext as _
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
@@ -15,7 +16,9 @@ from apps.core.audit import AuditedViewSetMixin, snapshot
 from apps.core.office_time import office_now, office_today
 from apps.core.permissions import ModulePermission
 
-from .models import PRIORITY_RANK, Task, overdue_q
+from .collab import people_who_can_see, record
+from .collab_serializers import AttachmentSerializer, CommentSerializer
+from .models import PRIORITY_RANK, ChecklistItem, Task, TaskActivity, TaskComment, overdue_q
 from .rules import can_delete, visible_tasks
 from .serializers import TaskSerializer
 
@@ -26,6 +29,13 @@ DONE_WINDOW_DAYS = 14  # the board's Done column shows recently completed tasks 
 CALENDAR_MAX_DAYS = 62  # a month view with its leading/trailing weeks fits easily
 CALENDAR_LIMIT = 1000
 UNDATED_LIMIT = 50
+
+
+def _count(subquery):
+    return Coalesce(
+        Subquery(subquery.order_by().values("task").annotate(n=Count("pk")).values("n")[:1], output_field=IntegerField()),
+        0,
+    )
 
 
 class MultiValueFilter(django_filters.BaseInFilter, django_filters.CharFilter):
@@ -109,6 +119,10 @@ class TaskViewSet(AuditedViewSetMixin, viewsets.ModelViewSet):
         ).prefetch_related("assignees").annotate(
             priority_rank=PRIORITY_RANK,
             is_done=Case(When(status=Task.Status.DONE, then=Value(1)), default=Value(0)),
+            # Subqueries rather than joins, so the counts stay right next to the assignee join.
+            checklist_total=_count(ChecklistItem.objects.filter(task=OuterRef("pk"))),
+            checklist_done=_count(ChecklistItem.objects.filter(task=OuterRef("pk"), done=True)),
+            comment_count=_count(TaskComment.objects.filter(task=OuterRef("pk"))),
         )
         ordering = ORDERINGS.get(self.request.query_params.get("ordering", ""), DEFAULT_ORDERING)
         return qs.order_by(*ordering)
@@ -183,6 +197,75 @@ class TaskViewSet(AuditedViewSetMixin, viewsets.ModelViewSet):
             "undated": self.get_serializer(undated[:UNDATED_LIMIT], many=True).data,
             "undated_count": undated.count(),
         })
+
+    TRACKED = ("status", "priority", "title", "due_date", "due_time")
+
+    def perform_create(self, serializer):
+        super().perform_create(serializer)
+        record(serializer.instance, self.request.user, "created")
+
+    def perform_update(self, serializer):
+        task = serializer.instance
+        before = {f: getattr(task, f) for f in self.TRACKED}
+        before_people = {u.pk: u.full_name for u in task.assignees.all()}
+        super().perform_update(serializer)
+        task = serializer.instance
+        actor = self.request.user
+        if task.status != before["status"]:
+            record(task, actor, "status", old=before["status"], new=task.status)
+        if task.priority != before["priority"]:
+            record(task, actor, "priority", old=before["priority"], new=task.priority)
+        if task.title != before["title"]:
+            record(task, actor, "title", old=before["title"], new=task.title)
+        if (task.due_date, task.due_time) != (before["due_date"], before["due_time"]):
+            record(
+                task, actor, "due",
+                old=before["due_date"].isoformat() if before["due_date"] else None,
+                new=task.due_date.isoformat() if task.due_date else None,
+                old_time=before["due_time"].strftime("%H:%M") if before["due_time"] else None,
+                new_time=task.due_time.strftime("%H:%M") if task.due_time else None,
+            )
+        now_people = {u.pk: u.full_name for u in task.assignees.all()}
+        if set(now_people) != set(before_people):
+            record(
+                task, actor, "assignees",
+                added=[now_people[i] for i in now_people if i not in before_people],
+                removed=[before_people[i] for i in before_people if i not in now_people],
+            )
+
+    @extend_schema(responses={200: dict})
+    @action(detail=True, methods=["get"])
+    def activity(self, request, pk=None):
+        """One timeline (oldest first): comments plus status, assignee, due date, checklist and file changes."""
+        task = self.get_object()
+        events = [
+            {"type": "event", "id": f"event-{a.pk}", "kind": a.kind, "data": a.data,
+             "actor_name": a.actor.full_name if a.actor else None, "created_at": a.created_at}
+            for a in TaskActivity.objects.filter(task=task).select_related("actor")
+        ]
+        comments = list(TaskComment.objects.filter(task=task).select_related("author").prefetch_related("attachments__uploaded_by"))
+        data = CommentSerializer(comments, many=True, context={"request": request}).data
+        items = events + [
+            {"type": "comment", "id": f"comment-{c.pk}", "created_at": c.created_at, "comment": d}
+            for c, d in zip(comments, data)
+        ]
+        items.sort(key=lambda i: i["created_at"])  # real datetimes, not strings
+        attachments = task.attachments.filter(comment__isnull=True).select_related("uploaded_by")
+        return Response({
+            "items": items,
+            "attachments": AttachmentSerializer(attachments, many=True, context={"request": request}).data,
+        })
+
+    @extend_schema(responses={200: dict})
+    @action(detail=True, methods=["get"])
+    def people(self, request, pk=None):
+        """People who can see this task (for @mention suggestions). `?q=` narrows by name."""
+        task = self.get_object()
+        users = people_who_can_see(task).order_by("full_name")
+        q = request.query_params.get("q", "").strip()
+        if q:
+            users = users.filter(Q(full_name__icontains=q) | Q(email__icontains=q))
+        return Response([{"id": u.pk, "full_name": u.full_name, "avatar": u.avatar.url if u.avatar else None} for u in users[:20]])
 
     def perform_destroy(self, instance):
         if not can_delete(self.request.user, instance):

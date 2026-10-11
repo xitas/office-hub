@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Building2, CalendarClock, CheckCircle2, ClipboardCheck, Flag, Link2, Pencil, Trash2, UserRound, Users } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
@@ -12,9 +12,12 @@ import { api, apiError } from '@/lib/api'
 import { useConfirm } from '@/lib/confirm'
 import { useFormat } from '@/lib/format'
 import { usePermission } from '@/lib/permissions'
-import { TASK_STATUSES, useTask, type Task, type TaskStatus } from '@/lib/tasks'
+import { TASK_STATUSES, useTask, type Task, type TaskActivityData, type TaskStatus } from '@/lib/tasks'
 import { cn } from '@/lib/utils'
-import { DueLabel, PriorityBadge, TaskStatusBadge } from './TaskBits'
+import { ChecklistProgress, DueLabel, PriorityBadge, TaskStatusBadge } from './TaskBits'
+import { TaskActivity } from './TaskActivity'
+import { TaskAttachments } from './TaskAttachments'
+import { TaskChecklist } from './TaskChecklist'
 import { TaskForm } from './TaskForm'
 
 function Detail({ icon: Icon, label, children }: { icon: typeof Flag; label: string; children: ReactNode }) {
@@ -40,10 +43,16 @@ export function TaskDetailPage() {
   const [editing, setEditing] = useState(false)
   const key = ['tasks', 'detail', id]
   const { data: task, isLoading, isError, error, refetch } = useTask(id)
+  const activity = useQuery({
+    queryKey: ['tasks', 'activity', Number(id)],
+    queryFn: async () => (await api.get<TaskActivityData>(`/tasks/${id}/activity/`)).data,
+    enabled: !!task,
+  })
 
   const saved = (updated: Task) => {
     queryClient.setQueryData(key, updated)
     void queryClient.invalidateQueries({ queryKey: ['tasks', 'list'] })
+    void queryClient.invalidateQueries({ queryKey: ['tasks', 'activity', updated.id] })
   }
 
   const setStatus = useMutation({
@@ -72,7 +81,7 @@ export function TaskDetailPage() {
     </Button>
   )
 
-  if (isLoading) return <Skeleton className="h-96 max-w-3xl rounded-xl" />
+  if (isLoading) return <Skeleton className="h-96 max-w-6xl rounded-xl" />
   if (isError || !task) {
     const notFound = (error as { response?: { status?: number } } | null)?.response?.status === 404
     return (
@@ -98,7 +107,7 @@ export function TaskDetailPage() {
   }
 
   return (
-    <div className="max-w-3xl">
+    <div className="max-w-6xl">
       {back}
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
@@ -109,6 +118,7 @@ export function TaskDetailPage() {
             <TaskStatusBadge status={task.status} />
             <PriorityBadge priority={task.priority} />
             {task.is_overdue && <DueLabel task={task} className="text-sm" />}
+            <ChecklistProgress done={task.checklist_done} total={task.checklist_total} className="text-sm" />
           </div>
         </div>
         {!editing && (
@@ -156,83 +166,88 @@ export function TaskDetailPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('tasks.details')}</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-5 sm:grid-cols-2">
-              <Detail icon={CalendarClock} label={t('tasks.fields.dueDate')}>
-                <DueLabel task={task} />
-              </Detail>
-              <Detail icon={Flag} label={t('tasks.fields.priority')}>
-                {t(`tasks.priorities.${task.priority}`)}
-              </Detail>
-              <Detail icon={Users} label={t('tasks.fields.assignees')}>
-                <ul className="mt-1 grid gap-1.5">
-                  {task.assignee_details.map((p) => (
-                    <li key={p.id} className="flex items-center gap-2">
-                      <UserAvatar name={p.full_name} src={p.avatar} className="size-6" />
-                      <bdi>{p.full_name}</bdi>
-                    </li>
-                  ))}
-                </ul>
-              </Detail>
-              <Detail icon={Link2} label={t('tasks.fields.relatedTo')}>
-                {task.contact ? (
-                  <Link to={`/contacts/${task.contact}`} className="inline-flex items-center gap-1 text-primary hover:underline">
-                    <UserRound className="size-3.5" />
-                    <bdi>{task.contact_name}</bdi>
-                  </Link>
-                ) : task.company ? (
-                  <Link to={`/companies/${task.company}`} className="inline-flex items-center gap-1 text-primary hover:underline">
-                    <Building2 className="size-3.5" />
-                    <bdi>{task.company_name}</bdi>
-                  </Link>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+          <div className="grid min-w-0 grid-cols-1 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('tasks.fields.description')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {task.description ? (
+                  <p dir="auto" className="text-sm whitespace-pre-wrap break-words">
+                    {task.description}
+                  </p>
                 ) : (
-                  <span className="text-muted-foreground">—</span>
+                  <p className="text-sm text-muted-foreground">{t('tasks.noDescription')}</p>
                 )}
-              </Detail>
-              {task.completed_at && (
-                <Detail icon={CheckCircle2} label={t('tasks.completedAt')}>
-                  {fmt.dateTime(task.completed_at)}
+              </CardContent>
+            </Card>
+            <TaskChecklist taskId={task.id} />
+            <TaskActivity taskId={task.id} items={activity.data?.items} loading={activity.isLoading} />
+          </div>
+          <div className="grid gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('tasks.details')}</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
+                <Detail icon={CalendarClock} label={t('tasks.fields.dueDate')}>
+                  <DueLabel task={task} />
                 </Detail>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('tasks.fields.description')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {task.description ? (
-                <p dir="auto" className="text-sm whitespace-pre-wrap break-words">
-                  {task.description}
-                </p>
-              ) : (
-                <p className="text-sm text-muted-foreground">{t('tasks.noDescription')}</p>
-              )}
-            </CardContent>
-          </Card>
-
-          <p className="text-xs text-muted-foreground">
-            <bdi>
-              <Trans
-                i18nKey="companies.createdBy"
-                values={{ name: task.created_by_name ?? t('admin.audit.system'), when: fmt.dateTime(task.created_at) }}
-                components={{ b: <bdi className="whitespace-nowrap" /> }}
-              />
-            </bdi>
-            {' · '}
-            <bdi>
-              <Trans
-                i18nKey="companies.updatedBy"
-                values={{ name: task.updated_by_name ?? task.created_by_name ?? t('admin.audit.system'), when: fmt.relative(task.updated_at) }}
-                components={{ b: <bdi className="whitespace-nowrap" /> }}
-              />
-            </bdi>
-          </p>
+                <Detail icon={Flag} label={t('tasks.fields.priority')}>
+                  {t(`tasks.priorities.${task.priority}`)}
+                </Detail>
+                <Detail icon={Users} label={t('tasks.fields.assignees')}>
+                  <ul className="mt-1 grid gap-1.5">
+                    {task.assignee_details.map((p) => (
+                      <li key={p.id} className="flex items-center gap-2">
+                        <UserAvatar name={p.full_name} src={p.avatar} className="size-6" />
+                        <bdi>{p.full_name}</bdi>
+                      </li>
+                    ))}
+                  </ul>
+                </Detail>
+                <Detail icon={Link2} label={t('tasks.fields.relatedTo')}>
+                  {task.contact ? (
+                    <Link to={`/contacts/${task.contact}`} className="inline-flex items-center gap-1 text-primary hover:underline">
+                      <UserRound className="size-3.5" />
+                      <bdi>{task.contact_name}</bdi>
+                    </Link>
+                  ) : task.company ? (
+                    <Link to={`/companies/${task.company}`} className="inline-flex items-center gap-1 text-primary hover:underline">
+                      <Building2 className="size-3.5" />
+                      <bdi>{task.company_name}</bdi>
+                    </Link>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </Detail>
+                {task.completed_at && (
+                  <Detail icon={CheckCircle2} label={t('tasks.completedAt')}>
+                    {fmt.dateTime(task.completed_at)}
+                  </Detail>
+                )}
+              </CardContent>
+            </Card>
+            <TaskAttachments taskId={task.id} attachments={activity.data?.attachments} />
+            <p className="text-xs text-muted-foreground">
+              <bdi>
+                <Trans
+                  i18nKey="companies.createdBy"
+                  values={{ name: task.created_by_name ?? t('admin.audit.system'), when: fmt.dateTime(task.created_at) }}
+                  components={{ b: <bdi className="whitespace-nowrap" /> }}
+                />
+              </bdi>
+              {' · '}
+              <bdi>
+                <Trans
+                  i18nKey="companies.updatedBy"
+                  values={{ name: task.updated_by_name ?? task.created_by_name ?? t('admin.audit.system'), when: fmt.relative(task.updated_at) }}
+                  components={{ b: <bdi className="whitespace-nowrap" /> }}
+                />
+              </bdi>
+            </p>
+          </div>
         </div>
       )}
     </div>

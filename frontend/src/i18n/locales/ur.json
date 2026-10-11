@@ -329,7 +329,7 @@
     "task_status": "کام کی حیثیت تبدیل ہوئی",
     "task_comment": "میرے کام پر نیا تبصرہ",
     "task_deadline": "کام کی آخری تاریخ قریب",
-    "mention": "چیٹ میں ذکر",
+    "mention": "کسی تبصرے یا چیٹ میں ذکر",
     "direct_message": "نیا براہ راست پیغام",
     "follow_up": "کلائنٹ فالو اپ کا وقت",
     "approval_request": "منظوری کی درخواست",
@@ -787,6 +787,72 @@
       "move": "منتقل کریں",
       "removeDate": "تاریخ ہٹائیں",
       "openTask": "کام کھولیں"
+    },
+    "checklist": {
+      "title": "چیک لسٹ",
+      "progress": "{{total}} میں سے {{done}} مکمل",
+      "add": "شامل کریں",
+      "addPlaceholder": "آئٹم شامل کریں",
+      "empty": "چیک لسٹ میں کوئی آئٹم نہیں۔",
+      "tick": "“{{text}}” کو مکمل کریں",
+      "untick": "“{{text}}” کو نامکمل کریں",
+      "editItem": "آئٹم میں ترمیم",
+      "itemActions": "“{{text}}” کے اختیارات",
+      "moveUp": "اوپر لے جائیں",
+      "moveDown": "نیچے لے جائیں"
+    },
+    "files": {
+      "title": "فائلیں",
+      "upload": "اپ لوڈ",
+      "empty": "ابھی کوئی فائل نہیں۔",
+      "hint": "PDF، تصاویر، آفس دستاویزات، متن/CSV یا ZIP، ہر ایک زیادہ سے زیادہ {{mb}} MB۔ فائلیں یہاں چھوڑ بھی سکتے ہیں۔",
+      "uploaded_one": "فائل اپ لوڈ ہو گئی",
+      "uploaded_other": "{{count}} فائلیں اپ لوڈ ہو گئیں",
+      "tooLarge": "“{{name}}” {{mb}} MB سے بڑی ہے۔",
+      "preview": "{{name}} کا پیش منظر",
+      "download": "{{name}} ڈاؤن لوڈ کریں",
+      "delete": "{{name}} حذف کریں",
+      "remove": "{{name}} ہٹائیں",
+      "deleteTitle": "“{{name}}” حذف کریں؟",
+      "deleteHint": "یہ فائل سب کے لیے ہٹ جائے گی۔ اسے واپس نہیں لایا جا سکتا۔"
+    },
+    "comments": {
+      "count_one": "{{count}} تبصرہ",
+      "count_other": "{{count}} تبصرے",
+      "write": "تبصرہ لکھیں",
+      "placeholder": "تبصرہ لکھیں… کسی کا ذکر کرنے کے لیے @ لکھیں",
+      "send": "بھیجیں",
+      "attach": "فائلیں منسلک کریں",
+      "hint": "جن کا آپ ذکر کریں اور کام سے متعلق سب افراد کو اطلاع ملے گی۔ Ctrl+Enter سے بھیجیں۔",
+      "edited": "ترمیم شدہ",
+      "actions": "تبصرے کے اختیارات",
+      "mentionSomeone": "کسی کا ذکر کریں",
+      "deleteTitle": "یہ تبصرہ حذف کریں؟",
+      "deleteHint": "اسے واپس نہیں لایا جا سکتا۔",
+      "deleteHintFiles": "اس کی منسلک فائلیں بھی حذف ہو جائیں گی۔ اسے واپس نہیں لایا جا سکتا۔"
+    },
+    "activity": {
+      "title": "سرگرمی",
+      "listSeparator": "، ",
+      "events": {
+        "created": "<b>{{actor}}</b> نے کام بنایا",
+        "status": "<b>{{actor}}</b> نے حیثیت {{old}} سے <q>{{new}}</q> کر دی",
+        "priority": "<b>{{actor}}</b> نے ترجیح {{old}} سے <q>{{new}}</q> کر دی",
+        "title": "<b>{{actor}}</b> نے کام کا نام <q>“{{new}}”</q> رکھا",
+        "due": "<b>{{actor}}</b> نے آخری تاریخ {{old}} سے <q>{{new}}</q> کر دی",
+        "dueSet": "<b>{{actor}}</b> نے آخری تاریخ <q>{{new}}</q> مقرر کی",
+        "dueRemoved": "<b>{{actor}}</b> نے آخری تاریخ ہٹا دی",
+        "assigneesAdded": "<b>{{actor}}</b> نے <q>{{added}}</q> کو تفویض کیا",
+        "assigneesRemoved": "<b>{{actor}}</b> نے <q>{{removed}}</q> کو ہٹا دیا",
+        "assigneesBoth": "<b>{{actor}}</b> نے <q>{{added}}</q> کو تفویض کیا اور <q>{{removed}}</q> کو ہٹا دیا",
+        "checklist_added": "<b>{{actor}}</b> نے چیک لسٹ میں <q>“{{text}}”</q> شامل کیا",
+        "checklist_done": "<b>{{actor}}</b> نے <q>“{{text}}”</q> مکمل کیا",
+        "checklist_undone": "<b>{{actor}}</b> نے <q>“{{text}}”</q> نامکمل کیا",
+        "checklist_renamed": "<b>{{actor}}</b> نے “{{old}}” کو <q>“{{text}}”</q> کر دیا",
+        "checklist_removed": "<b>{{actor}}</b> نے چیک لسٹ سے <q>“{{text}}”</q> ہٹایا",
+        "attachment_added": "<b>{{actor}}</b> نے <q>{{text}}</q> منسلک کی",
+        "attachment_removed": "<b>{{actor}}</b> نے فائل <q>{{text}}</q> حذف کی"
+      }
     }
   }
 }

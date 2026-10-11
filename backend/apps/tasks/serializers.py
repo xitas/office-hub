@@ -30,6 +30,9 @@ class TaskSerializer(serializers.ModelSerializer):
     created_by_name = serializers.CharField(source="created_by.full_name", default=None, read_only=True)
     updated_by_name = serializers.CharField(source="updated_by.full_name", default=None, read_only=True)
     is_overdue = serializers.BooleanField(read_only=True)
+    checklist_total = serializers.IntegerField(read_only=True, default=0)
+    checklist_done = serializers.IntegerField(read_only=True, default=0)
+    comment_count = serializers.IntegerField(read_only=True, default=0)
     can_delete = serializers.SerializerMethodField()
 
     class Meta:
@@ -38,6 +41,7 @@ class TaskSerializer(serializers.ModelSerializer):
             "id", "title", "description", "assignees", "assignee_details", "due_date", "due_time",
             "priority", "priority_label", "status", "status_label", "contact", "contact_name",
             "company", "company_name", "completed_at", "is_overdue", "can_delete",
+            "checklist_total", "checklist_done", "comment_count",
             "created_by", "created_by_name", "updated_by_name", "created_at", "updated_at",
         ]
         read_only_fields = ["completed_at", "created_by", "created_at", "updated_at"]

@@ -11,7 +11,7 @@ import { api, apiError } from '@/lib/api'
 import type { Task } from '@/lib/tasks'
 import type { Paginated } from '@/lib/types'
 import { cn } from '@/lib/utils'
-import { AssigneeAvatars, DueLabel, PriorityBadge, TaskStatusBadge } from './TaskBits'
+import { AssigneeAvatars, ChecklistProgress, CommentCount, DueLabel, PriorityBadge, TaskStatusBadge } from './TaskBits'
 
 /** List view: table on desktop, cards on phones, with one-click complete. */
 export function TaskList({
@@ -132,7 +132,11 @@ function TaskTable({ tasks }: { tasks: Task[] }) {
                 >
                   {task.title}
                 </Link>
-                <Related task={task} />
+                <span className="flex flex-wrap items-center gap-x-3">
+                  <Related task={task} />
+                  <ChecklistProgress done={task.checklist_done} total={task.checklist_total} />
+                  <CommentCount count={task.comment_count} />
+                </span>
               </TableCell>
               <TableCell>
                 <AssigneeAvatars people={task.assignee_details} />
@@ -173,6 +177,8 @@ function TaskCards({ tasks }: { tasks: Task[] }) {
                 <DueLabel task={task} />
                 <PriorityBadge priority={task.priority} />
                 <TaskStatusBadge status={task.status} />
+                <ChecklistProgress done={task.checklist_done} total={task.checklist_total} />
+                <CommentCount count={task.comment_count} />
               </div>
             </div>
             <AssigneeAvatars people={task.assignee_details} max={2} />

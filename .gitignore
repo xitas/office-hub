@@ -9,6 +9,7 @@ htmlcov/
 
 # Django
 backend/media/
+backend/private_media/
 backend/staticfiles/
 *.sqlite3
 *.sqlite3-journal

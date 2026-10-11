@@ -7,7 +7,7 @@ from django.utils import timezone
 from apps.accounts.models import Department, User
 from apps.contacts.models import Company, Contact, ContactStatusChange, Tag
 from apps.core.models import OrganizationSettings
-from apps.tasks.models import Task
+from apps.tasks.models import ChecklistItem, Task, TaskActivity, TaskComment
 from apps.timeline.models import TimelineEntry
 
 DEMO_PASSWORD = "Demo@12345"
@@ -133,6 +133,28 @@ TASKS = [
     ("Approve leave policy draft", ADMIN, [ADMIN], 1, None, "medium", "review", None),
 ]
 
+# Checklists and comments on a few demo tasks: title -> (checklist [(text, done)], comments [(author, text)]).
+TASK_DETAILS = {
+    "Send revised quotation to Clifton Retail": (
+        [("Confirm quantities with the buyer", True), ("Apply the 12-month payment plan", True),
+         ("Get manager approval for the discount", False), ("Email the PDF and share on WhatsApp", False)],
+        [(SALES_MGR, "They asked for the payment plan in writing, please include it."),
+         (HAMZA, "Quantities confirmed. Waiting on the discount approval.")],
+    ),
+    "Prepare product demo for Saba Software": (
+        [("Book the meeting room", True), ("Prepare slides", False), ("Test the demo account", False)],
+        [(FATIMA, "I can take the reporting part of the demo.")],
+    ),
+    "Arrange site visit in Faisalabad": (
+        [("Confirm date with the client", True), ("Book a car", True), ("Share the route with Usman", True)],
+        [(USMAN, "Car booked for 8 am.")],
+    ),
+    "Prepare monthly expense report": (
+        [("Collect receipts", True), ("Reconcile petty cash", False), ("Send to accounts", False)],
+        [],
+    ),
+}
+
 
 class Command(BaseCommand):
     help = "Create demo organization settings, departments, users, companies and contacts (idempotent)."
@@ -173,6 +195,7 @@ class Command(BaseCommand):
         self._seed_status_history()
         self._seed_timeline()
         self._seed_tasks()
+        self._seed_task_details()
 
         self.stdout.write(self.style.SUCCESS("Demo data ready. All demo users share the password: " + DEMO_PASSWORD))
         for email, name, role, dept, _ in USERS:
@@ -314,3 +337,29 @@ class Command(BaseCommand):
             # Spread creation dates over the last weeks so lists don't all say "today".
             created = now - timedelta(days=3 + (i * 5) % 20, hours=i % 9)
             Task.objects.filter(pk=task.pk).update(created_at=created)
+
+    def _seed_task_details(self):
+        """Checklists and comments on a few demo tasks (skipped once any exist)."""
+        tasks = {t.title: t for t in Task.objects.filter(title__in=TASK_DETAILS)}
+        if not tasks or ChecklistItem.objects.filter(task__in=tasks.values()).exists():
+            return
+        users = {u.email: u for u in User.objects.filter(email__in={a for _, c in TASK_DETAILS.values() for a, _ in c})}
+        for title, (checklist, comments) in TASK_DETAILS.items():
+            task = tasks.get(title)
+            if task is None:
+                continue
+            owner = task.assignees.first() or task.created_by
+            for position, (text, done) in enumerate(checklist, start=1):
+                ChecklistItem.objects.create(
+                    task=task, text=text, done=done, position=position, created_by=task.created_by,
+                    done_by=owner if done else None, done_at=timezone.now() if done else None,
+                )
+            created = TaskActivity.objects.create(task=task, actor=task.created_by, kind="created")
+            TaskActivity.objects.filter(pk=created.pk).update(created_at=task.created_at)
+            # Comments spread between the task's creation and a day ago.
+            span = max(timezone.now() - timedelta(days=1) - task.created_at, timedelta(hours=len(comments) + 1))
+            for n, (author, text) in enumerate(comments, start=1):
+                if author in users:
+                    comment = TaskComment.objects.create(task=task, author=users[author], body=text)
+                    at = task.created_at + span * n / (len(comments) + 1)
+                    TaskComment.objects.filter(pk=comment.pk).update(created_at=at)

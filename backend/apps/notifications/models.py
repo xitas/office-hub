@@ -8,7 +8,7 @@ class NotificationType(models.TextChoices):
     TASK_STATUS = "task_status", _("Task status changed")
     TASK_COMMENT = "task_comment", _("New comment on my task")
     TASK_DEADLINE = "task_deadline", _("Task deadline approaching")
-    MENTION = "mention", _("Mentioned in chat")
+    MENTION = "mention", _("Mentioned in a comment or chat")
     DIRECT_MESSAGE = "direct_message", _("New direct message")
     FOLLOW_UP = "follow_up", _("Client follow-up due")
     APPROVAL_REQUEST = "approval_request", _("Approval requested")

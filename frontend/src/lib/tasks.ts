@@ -44,6 +44,9 @@ export interface Task {
   completed_at: string | null
   is_overdue: boolean
   can_delete: boolean
+  checklist_total: number
+  checklist_done: number
+  comment_count: number
   created_by: number | null
   created_by_name: string | null
   updated_by_name: string | null
@@ -144,4 +147,90 @@ export function officeDate(timeZone: string, at: Date = new Date()) {
   } catch {
     return new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(at)
   }
+}
+
+export interface ChecklistItem {
+  id: number
+  text: string
+  done: boolean
+  position: number
+  done_by_name: string | null
+  done_at: string | null
+  created_at: string
+}
+
+export interface TaskAttachment {
+  id: number
+  original_name: string
+  size: number
+  content_type: string
+  kind: 'image' | 'pdf' | 'office' | 'text' | 'zip'
+  comment: number | null
+  uploaded_by_name: string | null
+  created_at: string
+  /** API paths (fetched with the user's token). */
+  download_url: string
+  thumbnail_url: string | null
+  can_delete: boolean
+}
+
+export interface TaskComment {
+  id: number
+  body: string
+  author: number | null
+  author_name: string | null
+  author_avatar: string | null
+  created_at: string
+  edited_at: string | null
+  attachments: TaskAttachment[]
+  can_edit: boolean
+  can_delete: boolean
+}
+
+export type TaskActivityItem =
+  | { type: 'event'; id: string; kind: string; data: Record<string, unknown>; actor_name: string | null; created_at: string }
+  | { type: 'comment'; id: string; created_at: string; comment: TaskComment }
+
+export interface TaskActivityData {
+  items: TaskActivityItem[]
+  /** Files on the task itself (comment files are listed with their comment). */
+  attachments: TaskAttachment[]
+}
+
+export interface MentionPerson {
+  id: number
+  full_name: string
+  avatar: string | null
+}
+
+/** Allowed uploads (the server checks the real content too). */
+export const ATTACHMENT_ACCEPT = '.pdf,.png,.jpg,.jpeg,.gif,.webp,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip'
+export const ATTACHMENT_MAX_MB = 10
+
+/** @[Full Name](user:12) tokens written by the mention picker. */
+export const MENTION_RE = /@\[([^\]\n]{1,150})\]\(user:(\d+)\)/g
+
+/** Stored body → editable text ("@Full Name") plus the people it mentions. */
+export function bodyToEditable(body: string): { text: string; mentions: MentionPerson[] } {
+  const mentions: MentionPerson[] = []
+  const text = body.replace(MENTION_RE, (_m, name: string, id: string) => {
+    if (!mentions.some((p) => p.id === Number(id))) mentions.push({ id: Number(id), full_name: name, avatar: null })
+    return `@${name}`
+  })
+  return { text, mentions }
+}
+
+/** Editable text → stored body: "@Full Name" of a picked person becomes its token. */
+export function editableToBody(text: string, mentions: MentionPerson[]): string {
+  let body = text
+  for (const p of [...mentions].sort((a, b) => b.full_name.length - a.full_name.length)) {
+    body = body.split(`@${p.full_name}`).join(`@[${p.full_name}](user:${p.id})`)
+  }
+  return body
+}
+
+export function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`
 }

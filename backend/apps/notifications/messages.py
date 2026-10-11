@@ -34,9 +34,25 @@ def _login_failures(params: dict) -> tuple[str, str]:
     return _("Failed sign-in attempts on your account"), body
 
 
+def _task_comment(params: dict) -> tuple[str, str]:
+    return (
+        _("New comment on “%(task)s”") % {"task": params.get("task", "")},
+        _("%(actor)s commented on the task.") % {"actor": params.get("actor", "")},
+    )
+
+
+def _task_mention(params: dict) -> tuple[str, str]:
+    return (
+        _("%(actor)s mentioned you") % {"actor": params.get("actor", "")},
+        _("In a comment on “%(task)s”.") % {"task": params.get("task", "")},
+    )
+
+
 RENDERERS = {
     "account_updated": _account_updated,
     "login_failures": _login_failures,
+    "task_comment": _task_comment,
+    "task_mention": _task_mention,
 }
 
 

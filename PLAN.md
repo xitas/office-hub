@@ -112,7 +112,7 @@ An office CRM for small-to-mid-sized offices (10–100 staff). It works on deskt
 
 Phase 2 is split in two:
 - **Phase 2A — Contacts & clients: complete** (branch `phase-2-contacts`). Slices: 1 Companies ✓, 2 Contacts ✓, 3 Lead pipeline ✓, 4 Interaction timeline ✓, 5 CSV import/export ✓, 6 Hardening & polish ✓ (per-account sign-in protection, search and quick-add polish, contact dashboard widgets, full review on SQLite and PostgreSQL + Redis).
-- **Phase 2B — Task management (Module 3): in progress** (branch `phase-2-tasks`). Slices: 1 Task basics ✓, 2 Board and calendar ✓, then 3–6. Planned order: Task model + list view with My/Team/Overdue filters → Kanban → subtasks/checklists and comments → attachments → calendar view → recurring tasks and deadline reminders (Celery Beat) → task notifications → dashboard task widgets, quick-add Task, tasks in global search and on the contact timeline (via the timeline provider registry).
+- **Phase 2B — Task management (Module 3): in progress** (branch `phase-2-tasks`). Slices: 1 Task basics ✓, 2 Board and calendar ✓, 3 Subtasks, comments and attachments ✓, then 4–6. Planned order: Task model + list view with My/Team/Overdue filters → Kanban → subtasks/checklists and comments → attachments → calendar view → recurring tasks and deadline reminders (Celery Beat) → task notifications → dashboard task widgets, quick-add Task, tasks in global search and on the contact timeline (via the timeline provider registry).
 
 ### Module 2 — Contacts & clients
 - [x] Contact records: name, company, job title, phone, WhatsApp, email, address, city, tags (created on the fly), assigned staff, lead status
@@ -131,9 +131,9 @@ Phase 2 is split in two:
 - [x] List view: table on desktop, cards on phone, quick filters (My tasks, Due today, Overdue, All), search, status/priority/person filters, smart sort (open first, by due date, most urgent first) or by due date/priority/newest; overdue clearly marked; one-click complete/reopen; task detail page with status dropdown and edit form; Tasks in sidebar and bottom nav; quick-add Task opens the new-task form
 - [x] Kanban board (To Do / In Progress / Review / Done): counts, cards with priority, due date (overdue in red), assignees and linked record; drag and drop on desktop, "Move to…" menu on phones and for keyboard/screen readers; Done shows the last 14 days with a link to all; moves are the same PATCH as the status dropdown (same permissions and audit)
 - [x] Calendar view: month and week, tasks on their due dates coloured by priority, overdue marked; click a day to add a task due that day, click a task to open it; drag to another day (desktop) or pick a date (phones); "No date" panel; weeks start on the organization's week-start day; "today", "due today" and "overdue" follow the organization's time zone; mirrors in Urdu. Built with date-fns and the existing UI components (no calendar library). List / Board / Calendar switcher remembers the last choice and shares all filters
-- [ ] Subtasks and checklists
-- [ ] Comments
-- [ ] File attachments
+- [x] Subtasks and checklists: add, edit, tick, drag to reorder ("Move up/down" for keyboard and phones), delete; progress (3/5) on list rows, board cards and the detail page; anyone who can see the task ticks items, changing them needs task edit rights
+- [x] Comments: add, edit own (marked "edited"), delete own (managers/admins any in their scope), oldest first; @mentions suggest people who can see the task and notify them; assignees and the creator are notified of new comments (never their own), all through notification preferences (in-app, and email via Celery)
+- [x] File attachments on tasks and comments: up to 10 MB each; PDF, images, Office, text/CSV, ZIP, checked by content (not just the extension; SVG and programs refused); random names in PRIVATE_MEDIA_ROOT (outside the web root), served only through a download endpoint that checks the task is visible; image thumbnails; delete by uploader, managers or admins; audited. Task page shows one activity timeline (status, assignees, due date, checklist and file changes alongside comments)
 - [ ] Recurring tasks (daily, weekly, monthly)
 - [ ] Notifications: assignment, status change, comment, approaching deadline
 - [~] Filters: My Tasks, Team Tasks, Overdue, By Project *(My tasks, Due today, Overdue, All, by person/status/priority, due-date range done; By Project comes with projects)*
@@ -208,8 +208,8 @@ Phase 2 is split in two:
 | Contacts | 2 | [x] |
 | Companies | 2 | [x] |
 | Tasks | 2 | [x] |
-| Subtasks | 2 | [ ] |
-| Comments | 2 | [ ] |
+| Subtasks | 2 | [x] *(ChecklistItem)* |
+| Comments | 2 | [x] *(TaskComment)* |
 | Messages | 3 | [ ] |
 | Channels | 3 | [ ] |
 | CommunicationLogs | 3 | [~] *(TimelineEntry, Phase 2: notes, calls, meetings)* |
@@ -222,7 +222,7 @@ Phase 2 is split in two:
 | Expenses | 4 | [ ] |
 | Visits | 5 | [ ] |
 
-Tables added beyond the spec: OrganizationSettings, Notification and NotificationPreference (Phase 1, done); Tag, ContactStatusChange, TimelineEntry and ContactImport (Phase 2).
+Tables added beyond the spec: OrganizationSettings, Notification and NotificationPreference (Phase 1, done); Tag, ContactStatusChange, TimelineEntry and ContactImport (Phase 2A); TaskAttachment and TaskActivity (Phase 2B).
 
 ---
 
@@ -237,6 +237,7 @@ Tables added beyond the spec: OrganizationSettings, Notification and Notificatio
 ---
 
 ## Changelog
+- **2026-10-11:** Phase 2B slice 3 — Subtasks, comments and attachments: ChecklistItem, TaskComment, TaskAttachment and TaskActivity tables; nested APIs under /tasks/{id}/; private file storage (`PRIVATE_MEDIA_ROOT`, git-ignored); mention and new-comment notifications; two-column task page. Tests always write uploads to a temp folder. 49 new tests (374 total).
 - **2026-10-10:** Phase 2B slice 2 — Board and calendar views: `/tasks/board/` and `/tasks/calendar/` endpoints, view switcher, Kanban with drag/drop and Move-to menu, month/week calendar with drag-to-reschedule and a phone date picker, "No date" panel. Task dates now follow the organization's time-zone setting (`apps/core/office_time.py`) instead of the server default. 22 new tests (325 total).
 - **2026-10-10:** Phase 2B slice 1 — Task basics (branch `phase-2-tasks`): `tasks` app (Task model, scoped API with filters/search/sorting, assignment and delete rules, audit), Tasks list and detail pages, Tasks in sidebar and bottom nav (Companies moves under "More" on phones, as in the original spec), quick-add Task enabled, 30 seeded demo tasks, English and Urdu. Shared contact/company picker extracted from the quick-add note dialog. Permission matrix: staff may now delete tasks they created and assign within their department. 46 new tests (303 total).
 - **2026-10-10:** Phase 2 slice 6 — Phase 2A complete. Import "update" only fills empty fields (never names or status) and the preview lists the changes; import reasons stored as codes and translated per reader. Per-account sign-in protection with growing waits and owner notification; the shared cache now degrades to an in-process fallback when Redis is down (an outage used to make every sign-in fail with a server error). Global search: fixed group order, status and company on contacts, phone search in any format (new `phone_digits` on companies and users). Quick-add Contact/Company/Note in place with "Open" / "Add another". Dashboard: contacts by status and recent client activity. Fixed an intermittent Celery retry test. Real 450-row background import verified with a Celery worker. 258 backend tests pass on SQLite and on PostgreSQL 17 + Redis. Visual review extended to every page.

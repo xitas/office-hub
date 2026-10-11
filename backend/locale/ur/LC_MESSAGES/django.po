@@ -769,3 +769,96 @@ msgstr "آغاز اور اختتام کی تاریخیں YYYY-MM-DD کی شکل 
 
 msgid "Choose a range of up to %(days)s days."
 msgstr "زیادہ سے زیادہ %(days)s دن کی مدت منتخب کریں۔"
+
+msgid "New comment on “%(task)s”"
+msgstr "“%(task)s” پر نیا تبصرہ"
+
+msgid "%(actor)s commented on the task."
+msgstr "%(actor)s نے کام پر تبصرہ کیا۔"
+
+msgid "%(actor)s mentioned you"
+msgstr "%(actor)s نے آپ کا ذکر کیا"
+
+msgid "In a comment on “%(task)s”."
+msgstr "“%(task)s” پر ایک تبصرے میں۔"
+
+msgid "Mentioned in a comment or chat"
+msgstr "کسی تبصرے یا چیٹ میں ذکر"
+
+msgid "checklist item"
+msgstr "چیک لسٹ آئٹم"
+
+msgid "checklist items"
+msgstr "چیک لسٹ آئٹمز"
+
+msgid "comment"
+msgstr "تبصرہ"
+
+msgid "comments"
+msgstr "تبصرے"
+
+msgid "attachment"
+msgstr "منسلک فائل"
+
+msgid "attachments"
+msgstr "منسلک فائلیں"
+
+msgid "task activity"
+msgstr "کام کی سرگرمی"
+
+msgid "Image"
+msgstr "تصویر"
+
+msgid "PDF"
+msgstr "PDF"
+
+msgid "Office document"
+msgstr "آفس دستاویز"
+
+msgid "Text"
+msgstr "متن"
+
+msgid "ZIP archive"
+msgstr "ZIP فائل"
+
+msgid "“%(name)s” is too large. Files can be up to 10 MB."
+msgstr "“%(name)s” بہت بڑی ہے۔ فائل زیادہ سے زیادہ 10 MB ہو سکتی ہے۔"
+
+msgid "“%(name)s” is empty."
+msgstr "“%(name)s” خالی ہے۔"
+
+msgid "“%(name)s” is not an allowed file type."
+msgstr "“%(name)s” کی قسم کی اجازت نہیں۔"
+
+msgid "“%(name)s” is not really a %(ext)s file."
+msgstr "“%(name)s” دراصل %(ext)s فائل نہیں ہے۔"
+
+msgid "Send every checklist item once, in the new order."
+msgstr "ہر چیک لسٹ آئٹم ایک بار، نئی ترتیب میں بھیجیں۔"
+
+msgid "Upload up to %(n)s files at a time."
+msgstr "ایک وقت میں زیادہ سے زیادہ %(n)s فائلیں اپ لوڈ کریں۔"
+
+msgid "Choose a file to upload."
+msgstr "اپ لوڈ کے لیے فائل منتخب کریں۔"
+
+msgid "Only the person who uploaded a file, a manager or an admin can delete it."
+msgstr "فائل صرف اپ لوڈ کرنے والا، مینیجر یا ایڈمن حذف کر سکتا ہے۔"
+
+msgid "Write a comment or attach a file."
+msgstr "تبصرہ لکھیں یا فائل منسلک کریں۔"
+
+msgid "You can only edit your own comments."
+msgstr "آپ صرف اپنے تبصروں میں ترمیم کر سکتے ہیں۔"
+
+msgid "You can only delete your own comments."
+msgstr "آپ صرف اپنے تبصرے حذف کر سکتے ہیں۔"
+
+msgid "Attached a file to a task"
+msgstr "کام کے ساتھ فائل منسلک کی"
+
+msgid "Deleted a file from a task"
+msgstr "کام سے فائل حذف کی"
+
+msgid "Deleted a task comment"
+msgstr "کام کا تبصرہ حذف کیا"
