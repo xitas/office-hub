@@ -14,7 +14,7 @@ import { useFormat } from '@/lib/format'
 import { usePermission } from '@/lib/permissions'
 import { TASK_STATUSES, useTask, type Task, type TaskActivityData, type TaskStatus } from '@/lib/tasks'
 import { cn } from '@/lib/utils'
-import { ChecklistProgress, DueLabel, PriorityBadge, TaskStatusBadge } from './TaskBits'
+import { ChecklistProgress, DueLabel, PriorityBadge, RepeatMark, TaskStatusBadge } from './TaskBits'
 import { TaskActivity } from './TaskActivity'
 import { TaskAttachments } from './TaskAttachments'
 import { TaskChecklist } from './TaskChecklist'
@@ -64,6 +64,15 @@ export function TaskDetailPage() {
     onError: (err) => toast.error(apiError(err).message),
   })
 
+  const stopRepeat = useMutation({
+    mutationFn: async () => (await api.patch<Task>(`/tasks/${id}/`, { recurrence: null })).data,
+    onSuccess: (updated) => {
+      saved(updated)
+      toast.success(t('tasks.repeat.stopped'))
+    },
+    onError: (err) => toast.error(apiError(err).message),
+  })
+
   const remove = useMutation({
     mutationFn: () => api.delete(`/tasks/${id}/`),
     onSuccess: () => {
@@ -96,6 +105,15 @@ export function TaskDetailPage() {
     )
   }
 
+  const askStop = async () => {
+    const ok = await confirm({
+      title: t('tasks.repeat.stopTitle'),
+      description: t('tasks.repeat.stopHint'),
+      confirmLabel: t('tasks.repeat.stop'),
+    })
+    if (ok) stopRepeat.mutate()
+  }
+
   const askDelete = async () => {
     const ok = await confirm({
       title: t('tasks.deleteTitle', { title: task.title }),
@@ -120,6 +138,16 @@ export function TaskDetailPage() {
             {task.is_overdue && <DueLabel task={task} className="text-sm" />}
             <ChecklistProgress done={task.checklist_done} total={task.checklist_total} className="text-sm" />
           </div>
+          {task.repeat?.active && (
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <RepeatMark task={task} withText className="text-sm" />
+              {canEdit && (
+                <Button variant="link" size="sm" className="h-auto p-0 text-muted-foreground" onClick={() => void askStop()} disabled={stopRepeat.isPending}>
+                  {t('tasks.repeat.stop')}
+                </Button>
+              )}
+            </div>
+          )}
         </div>
         {!editing && (
           <div className="flex shrink-0 flex-wrap gap-2">

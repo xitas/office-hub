@@ -47,6 +47,9 @@ export interface Task {
   checklist_total: number
   checklist_done: number
   comment_count: number
+  /** How the task repeats (null: a one-off task). */
+  repeat: TaskRepeat | null
+  follow_up_of: number | null
   created_by: number | null
   created_by_name: string | null
   updated_by_name: string | null
@@ -233,4 +236,81 @@ export function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`
+}
+
+// ---------------------------------------------------------------- repeating tasks
+
+export type Frequency = 'daily' | 'weekly' | 'monthly'
+
+export interface RecurrenceInput {
+  frequency: Frequency
+  interval: number
+  /** 0 = Monday … 6 = Sunday */
+  weekdays: number[]
+  monthly_mode: 'day' | 'weekday'
+  month_day: number | null
+  /** 1–4, or -1 for "last" */
+  month_week: number | null
+  month_weekday: number | null
+  end_date: string | null
+  count: number | null
+}
+
+export interface TaskRepeat extends RecurrenceInput {
+  id: number
+  start_date: string
+  occurrences_created: number
+  active: boolean
+}
+
+const MONDAY = Date.UTC(2026, 9, 5, 12) // a Monday; weekday i is MONDAY + i days
+
+/** Weekday name for 0 = Monday … 6 = Sunday. */
+export function weekdayName(i: number, locale: string, style: 'long' | 'short' = 'long') {
+  return new Intl.DateTimeFormat(locale, { weekday: style, timeZone: 'UTC' }).format(new Date(MONDAY + i * 86_400_000))
+}
+
+/** The rule in plain words, e.g. "Every Monday and Thursday" or "Monthly on the last Friday, until 31/12/2026". */
+export function describeRule(
+  rule: RecurrenceInput,
+  t: (key: string, options?: Record<string, unknown>) => string,
+  locale: string,
+  formatDate: (iso: string) => string,
+) {
+  const n = rule.interval || 1
+  let text: string
+  if (rule.frequency === 'daily') {
+    text = t('tasks.repeat.rule.daily', { count: n })
+  } else if (rule.frequency === 'weekly') {
+    const days = new Intl.ListFormat(locale, { type: 'conjunction' }).format(rule.weekdays.map((d) => weekdayName(d, locale)))
+    text = t('tasks.repeat.rule.weekly', { count: n, days })
+  } else if (rule.monthly_mode === 'weekday' && rule.month_week !== null && rule.month_weekday !== null) {
+    text = t('tasks.repeat.rule.monthlyWeekday', {
+      count: n,
+      which: t(`tasks.repeat.ordinals.${rule.month_week === -1 ? 'last' : rule.month_week}`),
+      day: weekdayName(rule.month_weekday, locale),
+    })
+  } else {
+    text = t('tasks.repeat.rule.monthlyDay', { count: n, day: rule.month_day ?? 1 })
+  }
+  if (rule.end_date) text += t('tasks.repeat.rule.until', { date: formatDate(`${rule.end_date}T12:00:00`) })
+  else if (rule.count) text += t('tasks.repeat.rule.times', { count: rule.count })
+  return text
+}
+
+/** A sensible starting rule for a due date. */
+export function defaultRule(dueDate: string | null): RecurrenceInput {
+  const d = dueDate ? new Date(`${dueDate}T12:00:00Z`) : new Date()
+  const weekday = (d.getUTCDay() + 6) % 7
+  return {
+    frequency: 'weekly',
+    interval: 1,
+    weekdays: [weekday],
+    monthly_mode: 'day',
+    month_day: d.getUTCDate(),
+    month_week: d.getUTCDate() > 28 ? -1 : Math.ceil(d.getUTCDate() / 7),
+    month_weekday: weekday,
+    end_date: null,
+    count: null,
+  }
 }

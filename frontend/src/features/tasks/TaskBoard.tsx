@@ -20,7 +20,7 @@ import { api, apiError } from '@/lib/api'
 import { usePermission } from '@/lib/permissions'
 import { TASK_STATUSES, type Task, type TaskBoardData, type TaskStatus } from '@/lib/tasks'
 import { cn } from '@/lib/utils'
-import { AssigneeAvatars, ChecklistProgress, CommentCount, DueLabel, PriorityBadge } from './TaskBits'
+import { AssigneeAvatars, ChecklistProgress, CommentCount, DueLabel, PriorityBadge, RepeatMark } from './TaskBits'
 import { Related } from './TaskList'
 
 // Column accents use theme tokens (they match the status badges), so they work in light and dark mode.
@@ -248,6 +248,7 @@ function BoardCard({
       <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs">
         <PriorityBadge priority={task.priority} />
         {task.due_date && <DueLabel task={task} />}
+        <RepeatMark task={task} />
         <ChecklistProgress done={task.checklist_done} total={task.checklist_total} />
         <CommentCount count={task.comment_count} />
         <span className="ms-auto">

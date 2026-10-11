@@ -16,6 +16,8 @@ export interface Me {
   avatar: string | null
   language: Language
   theme: ThemePref
+  /** When "due soon" task reminders go out. */
+  task_reminder_lead?: '1h' | '1d' | 'off'
   two_factor_enabled: boolean
   permissions: string[]
   date_joined: string

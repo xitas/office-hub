@@ -49,6 +49,8 @@ export interface TimelineItem {
   details: Record<string, unknown>
   occurred_at: string
   follow_up_on: string | null
+  /** A task made from this follow-up, if any. */
+  follow_up_task?: number | null
   created_by_name: string | null
   created_at: string
   updated_at: string

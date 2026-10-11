@@ -8,6 +8,8 @@ class NotificationType(models.TextChoices):
     TASK_STATUS = "task_status", _("Task status changed")
     TASK_COMMENT = "task_comment", _("New comment on my task")
     TASK_DEADLINE = "task_deadline", _("Task deadline approaching")
+    TASK_OVERDUE = "task_overdue", _("Task overdue")
+    DAILY_DIGEST = "daily_digest", _("Morning digest (email)")
     MENTION = "mention", _("Mentioned in a comment or chat")
     DIRECT_MESSAGE = "direct_message", _("New direct message")
     FOLLOW_UP = "follow_up", _("Client follow-up due")
@@ -24,6 +26,8 @@ DEFAULT_PREFERENCES = {
     t.value: {"in_app": True, "email": t.value in {"task_assigned", "approval_request", "approval_result", "system"}}
     for t in NotificationType
 }
+# The digest is an email only.
+DEFAULT_PREFERENCES["daily_digest"] = {"in_app": False, "email": True}
 
 
 class Notification(models.Model):

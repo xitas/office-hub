@@ -16,6 +16,7 @@ from apps.core.audit import AuditedViewSetMixin, snapshot
 from apps.core.office_time import office_now, office_today
 from apps.core.permissions import ModulePermission
 
+from . import schedule
 from .collab import people_who_can_see, record
 from .collab_serializers import AttachmentSerializer, CommentSerializer
 from .models import PRIORITY_RANK, ChecklistItem, Task, TaskActivity, TaskComment, overdue_q
@@ -115,7 +116,7 @@ class TaskViewSet(AuditedViewSetMixin, viewsets.ModelViewSet):
         if getattr(self, "swagger_fake_view", False):
             return Task.objects.none()
         qs = visible_tasks(self.request.user).select_related(
-            "contact", "company", "created_by", "updated_by"
+            "contact", "company", "created_by", "updated_by", "series"
         ).prefetch_related("assignees").annotate(
             priority_rank=PRIORITY_RANK,
             is_done=Case(When(status=Task.Status.DONE, then=Value(1)), default=Value(0)),
@@ -202,7 +203,9 @@ class TaskViewSet(AuditedViewSetMixin, viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         super().perform_create(serializer)
-        record(serializer.instance, self.request.user, "created")
+        task = serializer.instance
+        record(task, self.request.user, "created")
+        schedule.notify_assigned(task, list(task.assignees.all()), self.request.user)
 
     def perform_update(self, serializer):
         task = serializer.instance
@@ -226,6 +229,12 @@ class TaskViewSet(AuditedViewSetMixin, viewsets.ModelViewSet):
                 new_time=task.due_time.strftime("%H:%M") if task.due_time else None,
             )
         now_people = {u.pk: u.full_name for u in task.assignees.all()}
+        added_people = [u for u in task.assignees.all() if u.pk not in before_people]
+        if added_people:
+            schedule.notify_assigned(task, added_people, actor)
+        if task.status == Task.Status.DONE and before["status"] != Task.Status.DONE:
+            # The next occurrence of a repeating task (no "assigned" notice: people already have the series).
+            schedule.on_completed(task, actor)
         if set(now_people) != set(before_people):
             record(
                 task, actor, "assignees",

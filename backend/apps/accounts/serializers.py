@@ -45,7 +45,7 @@ class MeSerializer(AvatarMixin, serializers.ModelSerializer):
         model = User
         fields = [
             "id", "email", "full_name", "phone", "job_title", "role", "department", "department_name",
-            "avatar", "language", "theme", "two_factor_enabled", "permissions", "date_joined", "last_login",
+            "avatar", "language", "theme", "task_reminder_lead", "two_factor_enabled", "permissions", "date_joined", "last_login",
         ]
         read_only_fields = [
             "id", "email", "role", "department", "two_factor_enabled", "permissions", "date_joined", "last_login",

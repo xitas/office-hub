@@ -155,6 +155,13 @@ TASK_DETAILS = {
     ),
 }
 
+# Demo tasks that repeat: title -> rule (the task's due date is the first occurrence).
+REPEATING = {
+    "Weekly sales meeting notes": {"frequency": "weekly", "weekdays": [0, 3]},  # Monday and Thursday
+    "Pay utility bills": {"frequency": "monthly", "monthly_mode": "day", "month_day": 5},
+    "Reconcile petty cash": {"frequency": "monthly", "monthly_mode": "weekday", "month_week": -1, "month_weekday": 4},  # last Friday
+}
+
 
 class Command(BaseCommand):
     help = "Create demo organization settings, departments, users, companies and contacts (idempotent)."
@@ -196,6 +203,7 @@ class Command(BaseCommand):
         self._seed_timeline()
         self._seed_tasks()
         self._seed_task_details()
+        self._seed_repeating_tasks()
 
         self.stdout.write(self.style.SUCCESS("Demo data ready. All demo users share the password: " + DEMO_PASSWORD))
         for email, name, role, dept, _ in USERS:
@@ -363,3 +371,12 @@ class Command(BaseCommand):
                     comment = TaskComment.objects.create(task=task, author=users[author], body=text)
                     at = task.created_at + span * n / (len(comments) + 1)
                     TaskComment.objects.filter(pk=comment.pk).update(created_at=at)
+
+    def _seed_repeating_tasks(self):
+        """Make a few demo tasks repeat (skipped for tasks that already belong to a series)."""
+        from apps.tasks import schedule
+
+        for title, rule in REPEATING.items():
+            task = Task.objects.filter(title=title, series__isnull=True).exclude(due_date__isnull=True).first()
+            if task is not None:
+                schedule.start_series(task, {"interval": 1, **rule}, task.created_by)

@@ -1,9 +1,10 @@
-import { AlarmClock, CalendarClock, ListChecks, MessageSquare } from 'lucide-react'
+import { AlarmClock, CalendarClock, ListChecks, MessageSquare, Repeat } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { UserAvatar } from '@/components/common'
 import { Badge } from '@/components/ui/badge'
 import { useFormat } from '@/lib/format'
 import { PRIORITY_STYLES, shortTime, STATUS_STYLES, type Task, type TaskAssignee, type TaskPriority, type TaskStatus } from '@/lib/tasks'
+import { useRuleText } from '@/lib/useRuleText'
 import { cn } from '@/lib/utils'
 
 export function TaskStatusBadge({ status, className }: { status: TaskStatus; className?: string }) {
@@ -95,6 +96,18 @@ export function CommentCount({ count }: { count: number }) {
     <span className="inline-flex items-center gap-1 text-xs text-muted-foreground font-latin" aria-label={t('tasks.comments.count', { count })}>
       <MessageSquare className="size-3.5 shrink-0" />
       {count}
+    </span>
+  )
+}
+
+/** Repeat icon for cards; the rule is in its tooltip and accessible name. */
+export function RepeatMark({ task, withText, className }: { task: Pick<Task, 'repeat'>; withText?: boolean; className?: string }) {
+  const text = useRuleText(task)
+  if (!text) return null
+  return (
+    <span className={cn('inline-flex min-w-0 items-center gap-1 text-xs text-primary', className)} title={text} aria-label={text}>
+      <Repeat className="size-3.5 shrink-0" />
+      {withText && <span className="truncate">{text}</span>}
     </span>
   )
 }

@@ -37,6 +37,12 @@ class Task(TimeStampedModel):
     contact = models.ForeignKey("contacts.Contact", null=True, blank=True, on_delete=models.SET_NULL, related_name="tasks")
     company = models.ForeignKey("contacts.Company", null=True, blank=True, on_delete=models.SET_NULL, related_name="tasks")
     completed_at = models.DateTimeField(null=True, blank=True)
+    # Repeating tasks: every occurrence points at its series (see TaskSeries).
+    series = models.ForeignKey("TaskSeries", null=True, blank=True, on_delete=models.SET_NULL, related_name="occurrences")
+    # Created with "Create task from follow-up" on a contact/company timeline entry.
+    follow_up_of = models.ForeignKey(
+        "timeline.TimelineEntry", null=True, blank=True, on_delete=models.SET_NULL, related_name="follow_up_tasks"
+    )
     updated_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+", editable=False
     )
@@ -199,3 +205,90 @@ class TaskActivity(models.Model):
         ordering = ["created_at", "id"]
         verbose_name = _("task activity")
         verbose_name_plural = _("task activity")
+
+
+class TaskSeries(models.Model):
+    """A repeating task: its rule and the template copied into each new occurrence.
+
+    Only one upcoming occurrence exists at a time. The next one is created when the current one is
+    completed, or by the scheduled job once the current one's due date has passed (so a missed task
+    never stalls the series). After a long gap it jumps to the next date from today instead of
+    creating every missed occurrence.
+    """
+
+    class Frequency(models.TextChoices):
+        DAILY = "daily", _("Daily")
+        WEEKLY = "weekly", _("Weekly")
+        MONTHLY = "monthly", _("Monthly")
+
+    frequency = models.CharField(max_length=10, choices=Frequency.choices)
+    interval = models.PositiveSmallIntegerField(default=1)
+    weekdays = models.JSONField(default=list, blank=True)  # 0 = Monday … 6 = Sunday
+    monthly_mode = models.CharField(max_length=10, default="day")  # "day" or "weekday"
+    month_day = models.PositiveSmallIntegerField(null=True, blank=True)
+    month_week = models.SmallIntegerField(null=True, blank=True)  # 1..4, or -1 for "last"
+    month_weekday = models.PositiveSmallIntegerField(null=True, blank=True)
+    start_date = models.DateField()
+    end_date = models.DateField(null=True, blank=True)
+    count = models.PositiveIntegerField(null=True, blank=True)  # total occurrences, including the first
+    occurrences_created = models.PositiveIntegerField(default=1)
+    active = models.BooleanField(default=True)
+    # Template for new occurrences ("this and future" edits update it).
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    priority = models.CharField(max_length=10, choices=Task.Priority.choices, default=Task.Priority.MEDIUM)
+    assignee_ids = models.JSONField(default=list, blank=True)
+    due_time = models.TimeField(null=True, blank=True)
+    contact = models.ForeignKey("contacts.Contact", null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    company = models.ForeignKey("contacts.Company", null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    checklist = models.JSONField(default=list, blank=True)  # item texts, copied unticked
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="+")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("repeating task")
+        verbose_name_plural = _("repeating tasks")
+
+    def __str__(self):
+        return self.title
+
+    def rule(self):
+        from .recurrence import Rule
+
+        return Rule(
+            frequency=self.frequency, start=self.start_date, interval=self.interval, weekdays=list(self.weekdays or []),
+            monthly_mode=self.monthly_mode, month_day=self.month_day, month_week=self.month_week,
+            month_weekday=self.month_weekday, end_date=self.end_date, count=self.count,
+        )
+
+
+class ReminderLog(models.Model):
+    """One row per reminder sent, so nothing is ever sent twice (also across worker restarts).
+
+    `due_key` is the due moment the reminder was about: if the due date changes, a new reminder can go out.
+    """
+
+    class Kind(models.TextChoices):
+        DUE_SOON = "due_soon", _("Due soon")
+        OVERDUE = "overdue", _("Overdue")
+
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="+")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="+")
+    kind = models.CharField(max_length=20, choices=Kind.choices)
+    due_key = models.CharField(max_length=40)
+    sent_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["task", "user", "kind", "due_key"], name="unique_task_reminder")]
+
+
+class DigestLog(models.Model):
+    """The morning digest a user got (or was checked for) on an office date: at most one per day."""
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="+")
+    date = models.DateField()
+    sent = models.BooleanField(default=False)  # False: nothing to report that day
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["user", "date"], name="unique_daily_digest")]

@@ -219,7 +219,15 @@
     "confirmWithPassword": "Confirm with your password",
     "prefType": "Notify me about",
     "inApp": "In-app",
-    "emailChannel": "Email"
+    "emailChannel": "Email",
+    "reminderLead": "Remind me before tasks are due",
+    "reminderLeadHint": "A \"due soon\" notice for tasks assigned to you.",
+    "leads": {
+      "1h": "1 hour before",
+      "1d": "1 day before",
+      "off": "Off"
+    },
+    "emailOnly": "Email only"
   },
   "admin": {
     "users": {
@@ -328,7 +336,7 @@
     "task_assigned": "Task assigned to me",
     "task_status": "Task status changed",
     "task_comment": "New comment on my task",
-    "task_deadline": "Task deadline approaching",
+    "task_deadline": "Task due soon",
     "mention": "Mentioned in a comment or chat",
     "direct_message": "New direct message",
     "follow_up": "Client follow-up due",
@@ -337,7 +345,9 @@
     "announcement": "New announcement",
     "booking": "Booking updates",
     "visit": "Field visit updates",
-    "system": "System and security"
+    "system": "System and security",
+    "task_overdue": "Task overdue",
+    "daily_digest": "Morning digest (email)"
   },
   "companies": {
     "title": "Companies",
@@ -853,6 +863,69 @@
         "attachment_added": "<b>{{actor}}</b> attached <q>{{text}}</q>",
         "attachment_removed": "<b>{{actor}}</b> deleted the file <q>{{text}}</q>"
       }
+    },
+    "repeat": {
+      "label": "Repeat",
+      "needsDueDate": "Set a due date first: it is the first occurrence.",
+      "every": "Every",
+      "units": {
+        "daily_one": "day",
+        "daily_other": "days",
+        "weekly_one": "week",
+        "weekly_other": "weeks",
+        "monthly_one": "month",
+        "monthly_other": "months"
+      },
+      "onDays": "On these days",
+      "monthlyOn": "Day of the month",
+      "onDay": "On day",
+      "dayOfMonth": "Day of the month",
+      "onThe": "On the",
+      "ordinals": {
+        "1": "first",
+        "2": "second",
+        "3": "third",
+        "4": "fourth",
+        "last": "last"
+      },
+      "monthEndHint": "Days 29–31 fall on the last day of shorter months.",
+      "ends": "Ends",
+      "endOptions": {
+        "never": "Never",
+        "date": "On a date",
+        "count": "After"
+      },
+      "endDate": "End date",
+      "occurrences": "Number of times",
+      "timesLabel": "times",
+      "pickDays": "Choose at least one day.",
+      "rule": {
+        "daily_one": "Every day",
+        "daily_other": "Every {{count}} days",
+        "weekly_one": "Every {{days}}",
+        "weekly_other": "Every {{count}} weeks on {{days}}",
+        "monthlyDay_one": "Monthly on day {{day}}",
+        "monthlyDay_other": "Every {{count}} months on day {{day}}",
+        "monthlyWeekday_one": "Monthly on the {{which}} {{day}}",
+        "monthlyWeekday_other": "Every {{count}} months on the {{which}} {{day}}",
+        "until": ", until {{date}}",
+        "times_one": ", once",
+        "times_other": ", {{count}} times"
+      },
+      "scopeTitle": "Change a repeating task",
+      "scopeHint": "Apply your changes to this task only, or also to the tasks that come after it?",
+      "scopeThis": "This task only",
+      "scopeFuture": "This and future tasks",
+      "stop": "Stop repeating",
+      "stopTitle": "Stop repeating this task?",
+      "stopHint": "Existing tasks stay as they are; no new ones will be created.",
+      "stopped": "This task no longer repeats"
+    },
+    "followUp": {
+      "create": "Create task",
+      "created": "Task created",
+      "dialogTitle": "Task from follow-up",
+      "title": "Follow up with {{name}}"
     }
   }
 }

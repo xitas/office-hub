@@ -862,3 +862,103 @@ msgstr "کام سے فائل حذف کی"
 
 msgid "Deleted a task comment"
 msgstr "کام کا تبصرہ حذف کیا"
+
+msgid "Good morning, %(name)s. Here is your day."
+msgstr "صبح بخیر، %(name)s۔ یہ رہا آپ کا دن۔"
+
+msgid "Due today (%(count)s):"
+msgstr "آج واجب (%(count)s):"
+
+msgid "Overdue (%(count)s):"
+msgstr "تاخیر شدہ (%(count)s):"
+
+msgid "Client follow-ups (%(count)s):"
+msgstr "کلائنٹس کے فالو اپ (%(count)s):"
+
+msgid "You get this email because the morning digest is on in your notification settings."
+msgstr "آپ کو یہ ای میل اس لیے ملی کیونکہ اطلاعات کی ترتیبات میں صبح کا خلاصہ آن ہے۔"
+
+
+msgid "New task: “%(task)s”"
+msgstr "نیا کام: “%(task)s”"
+
+msgid "%(actor)s assigned you a task."
+msgstr "%(actor)s نے آپ کو ایک کام تفویض کیا۔"
+
+msgid "Someone"
+msgstr "کسی"
+
+msgid "Due soon: “%(task)s”"
+msgstr "جلد واجب: “%(task)s”"
+
+msgid "This task is due %(when)s."
+msgstr "یہ کام %(when)s تک واجب ہے۔"
+
+msgid "Overdue: “%(task)s”"
+msgstr "تاخیر شدہ: “%(task)s”"
+
+msgid "This task is past its due date and still open."
+msgstr "اس کام کی آخری تاریخ گزر چکی ہے اور یہ ابھی کھلا ہے۔"
+
+msgid "Task overdue"
+msgstr "کام میں تاخیر"
+
+msgid "Morning digest (email)"
+msgstr "صبح کا خلاصہ (ای میل)"
+
+msgid "1 hour before"
+msgstr "ایک گھنٹہ پہلے"
+
+msgid "1 day before"
+msgstr "ایک دن پہلے"
+
+msgid "Off"
+msgstr "بند"
+
+msgid "Daily"
+msgstr "روزانہ"
+
+msgid "Weekly"
+msgstr "ہفتہ وار"
+
+msgid "Monthly"
+msgstr "ماہانہ"
+
+msgid "repeating task"
+msgstr "دہرایا جانے والا کام"
+
+msgid "repeating tasks"
+msgstr "دہرائے جانے والے کام"
+
+msgid "Due soon"
+msgstr "جلد واجب"
+
+msgid "Choose at least one day of the week."
+msgstr "ہفتے کا کم از کم ایک دن منتخب کریں۔"
+
+msgid "Choose which weekday of the month."
+msgstr "مہینے کا کون سا دن منتخب کریں۔"
+
+msgid "A repeating task needs a due date (its first occurrence)."
+msgstr "دہرائے جانے والے کام کے لیے آخری تاریخ ضروری ہے (اس کی پہلی باری)۔"
+
+msgid "The end date is before the first occurrence."
+msgstr "اختتامی تاریخ پہلی باری سے پہلے ہے۔"
+
+msgid "%(n)s task due today"
+msgid_plural "%(n)s tasks due today"
+msgstr[0] "آج %(n)s کام واجب"
+msgstr[1] "آج %(n)s کام واجب"
+
+msgid "%(n)s overdue"
+msgid_plural "%(n)s overdue"
+msgstr[0] "%(n)s تاخیر شدہ"
+msgstr[1] "%(n)s تاخیر شدہ"
+
+msgid "%(n)s client follow-up"
+msgid_plural "%(n)s client follow-ups"
+msgstr[0] "%(n)s کلائنٹ فالو اپ"
+msgstr[1] "%(n)s کلائنٹ فالو اپ"
+
+msgid "Your day: %(summary)s"
+msgstr "آپ کا دن: %(summary)s"

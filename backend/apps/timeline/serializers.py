@@ -115,6 +115,8 @@ def entry_data(entry, user) -> dict:
         "details": entry.details,
         "occurred_at": entry.occurred_at,
         "follow_up_on": entry.follow_up_on,
+        # A task made from this follow-up ("Create task from follow-up"), if any.
+        "follow_up_task": next(iter(t.pk for t in entry.follow_up_tasks.all()), None),
         "created_by_name": entry.created_by.full_name if entry.created_by else None,
         "created_at": entry.created_at,
         "updated_at": entry.updated_at,

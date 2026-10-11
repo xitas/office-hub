@@ -219,7 +219,15 @@
     "confirmWithPassword": "اپنے پاس ورڈ سے تصدیق کریں",
     "prefType": "مجھے مطلع کریں",
     "inApp": "ایپ میں",
-    "emailChannel": "ای میل"
+    "emailChannel": "ای میل",
+    "reminderLead": "کام کی آخری تاریخ سے پہلے یاد دہانی",
+    "reminderLeadHint": "آپ کو تفویض کیے گئے کاموں کے لیے “جلد واجب” اطلاع۔",
+    "leads": {
+      "1h": "ایک گھنٹہ پہلے",
+      "1d": "ایک دن پہلے",
+      "off": "بند"
+    },
+    "emailOnly": "صرف ای میل"
   },
   "admin": {
     "users": {
@@ -328,7 +336,7 @@
     "task_assigned": "مجھے کام تفویض ہوا",
     "task_status": "کام کی حیثیت تبدیل ہوئی",
     "task_comment": "میرے کام پر نیا تبصرہ",
-    "task_deadline": "کام کی آخری تاریخ قریب",
+    "task_deadline": "کام جلد واجب",
     "mention": "کسی تبصرے یا چیٹ میں ذکر",
     "direct_message": "نیا براہ راست پیغام",
     "follow_up": "کلائنٹ فالو اپ کا وقت",
@@ -337,7 +345,9 @@
     "announcement": "نیا اعلان",
     "booking": "بکنگ کی اپ ڈیٹس",
     "visit": "فیلڈ دورے کی اپ ڈیٹس",
-    "system": "سسٹم اور سیکیورٹی"
+    "system": "سسٹم اور سیکیورٹی",
+    "task_overdue": "کام میں تاخیر",
+    "daily_digest": "صبح کا خلاصہ (ای میل)"
   },
   "companies": {
     "title": "کمپنیاں",
@@ -853,6 +863,69 @@
         "attachment_added": "<b>{{actor}}</b> نے <q>{{text}}</q> منسلک کی",
         "attachment_removed": "<b>{{actor}}</b> نے فائل <q>{{text}}</q> حذف کی"
       }
+    },
+    "repeat": {
+      "label": "دہرائیں",
+      "needsDueDate": "پہلے آخری تاریخ مقرر کریں: وہی پہلی باری ہے۔",
+      "every": "ہر",
+      "units": {
+        "daily_one": "دن",
+        "daily_other": "دن",
+        "weekly_one": "ہفتہ",
+        "weekly_other": "ہفتے",
+        "monthly_one": "مہینہ",
+        "monthly_other": "مہینے"
+      },
+      "onDays": "ان دنوں",
+      "monthlyOn": "مہینے کا دن",
+      "onDay": "تاریخ",
+      "dayOfMonth": "مہینے کی تاریخ",
+      "onThe": "مہینے کا",
+      "ordinals": {
+        "1": "پہلا",
+        "2": "دوسرا",
+        "3": "تیسرا",
+        "4": "چوتھا",
+        "last": "آخری"
+      },
+      "monthEndHint": "29 سے 31 تاریخ چھوٹے مہینوں میں آخری دن پر آتی ہے۔",
+      "ends": "اختتام",
+      "endOptions": {
+        "never": "کبھی نہیں",
+        "date": "کسی تاریخ کو",
+        "count": "اتنی بار کے بعد"
+      },
+      "endDate": "اختتامی تاریخ",
+      "occurrences": "کتنی بار",
+      "timesLabel": "بار",
+      "pickDays": "کم از کم ایک دن منتخب کریں۔",
+      "rule": {
+        "daily_one": "ہر روز",
+        "daily_other": "ہر {{count}} دن بعد",
+        "weekly_one": "ہر {{days}}",
+        "weekly_other": "ہر {{count}} ہفتے بعد {{days}} کو",
+        "monthlyDay_one": "ہر مہینے کی {{day}} تاریخ",
+        "monthlyDay_other": "ہر {{count}} مہینے بعد {{day}} تاریخ",
+        "monthlyWeekday_one": "ہر مہینے کا {{which}} {{day}}",
+        "monthlyWeekday_other": "ہر {{count}} مہینے بعد {{which}} {{day}}",
+        "until": "، {{date}} تک",
+        "times_one": "، ایک بار",
+        "times_other": "، {{count}} بار"
+      },
+      "scopeTitle": "دہرائے جانے والے کام میں تبدیلی",
+      "scopeHint": "تبدیلیاں صرف اس کام پر لاگو کریں، یا اس کے بعد آنے والے کاموں پر بھی؟",
+      "scopeThis": "صرف یہ کام",
+      "scopeFuture": "یہ اور آئندہ کام",
+      "stop": "دہرانا بند کریں",
+      "stopTitle": "اس کام کو دہرانا بند کریں؟",
+      "stopHint": "موجودہ کام جوں کے توں رہیں گے؛ نئے کام نہیں بنیں گے۔",
+      "stopped": "یہ کام اب نہیں دہرایا جائے گا"
+    },
+    "followUp": {
+      "create": "کام بنائیں",
+      "created": "کام بن گیا",
+      "dialogTitle": "فالو اپ سے کام",
+      "title": "{{name}} سے فالو اپ"
     }
   }
 }

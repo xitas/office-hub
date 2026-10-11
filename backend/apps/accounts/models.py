@@ -62,6 +62,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     phone = models.CharField(max_length=30, blank=True)
     # Digits-only international form of `phone`, kept in sync on save (search by phone in any format).
     phone_digits = models.CharField(max_length=30, blank=True, db_index=True, editable=False)
+
+    class ReminderLead(models.TextChoices):
+        HOUR = "1h", _("1 hour before")
+        DAY = "1d", _("1 day before")
+        OFF = "off", _("Off")
+
+    # When "due soon" task reminders go out.
+    task_reminder_lead = models.CharField(max_length=3, choices=ReminderLead.choices, default=ReminderLead.DAY)
     job_title = models.CharField(max_length=100, blank=True)
     role = models.CharField(max_length=10, choices=Role.choices, default=Role.STAFF, db_index=True)
     department = models.ForeignKey(Department, null=True, blank=True, on_delete=models.SET_NULL, related_name="members")

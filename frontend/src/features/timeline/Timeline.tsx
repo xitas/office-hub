@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { EmptyState, ErrorState, SimpleSelect } from '@/components/common'
+import { FollowUpTaskButton } from '@/features/tasks/FollowUpTaskButton'
 import { StatusBadge } from '@/components/common/StatusBadge'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -298,6 +299,7 @@ function Body({ item }: { item: TimelineItem }) {
               {t('timeline.followUpOn', { date: fmt.date(item.follow_up_on) })}
             </Badge>
           )}
+          <FollowUpTaskButton item={item} />
         </div>
       )}
     </div>

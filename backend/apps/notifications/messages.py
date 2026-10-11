@@ -48,7 +48,40 @@ def _task_mention(params: dict) -> tuple[str, str]:
     )
 
 
+def _task_assigned(params: dict) -> tuple[str, str]:
+    return (
+        _("New task: “%(task)s”") % {"task": params.get("task", "")},
+        _("%(actor)s assigned you a task.") % {"actor": params.get("actor") or _("Someone")},
+    )
+
+
+def _task_due_soon(params: dict) -> tuple[str, str]:
+    from django.utils.dateparse import parse_datetime
+
+    from apps.core.office_time import office_tz
+
+    due = parse_datetime(params.get("due", "") or "")
+    when = ""
+    if due:
+        local = due.astimezone(office_tz())
+        when = local.strftime("%d/%m/%Y %H:%M") if params.get("has_time") else local.strftime("%d/%m/%Y")
+    return (
+        _("Due soon: “%(task)s”") % {"task": params.get("task", "")},
+        _("This task is due %(when)s.") % {"when": when},
+    )
+
+
+def _task_overdue(params: dict) -> tuple[str, str]:
+    return (
+        _("Overdue: “%(task)s”") % {"task": params.get("task", "")},
+        _("This task is past its due date and still open."),
+    )
+
+
 RENDERERS = {
+    "task_assigned": _task_assigned,
+    "task_due_soon": _task_due_soon,
+    "task_overdue": _task_overdue,
     "account_updated": _account_updated,
     "login_failures": _login_failures,
     "task_comment": _task_comment,

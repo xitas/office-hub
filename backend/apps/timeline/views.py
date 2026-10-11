@@ -80,7 +80,7 @@ class TimelineViewSet(
         kinds = {k for k in params.get("type", "").split(",") if k}
         stored = TimelineEntry.objects.filter(
             Q(contact_id__in=contact_ids) | Q(company_id__in=company_ids)
-        ).select_related("contact", "company", "created_by__department")
+        ).select_related("contact", "company", "created_by__department").prefetch_related("follow_up_tasks")
         if kinds:
             stored = stored.filter(kind__in=kinds)
         entries = [entry_data(e, user) for e in stored]

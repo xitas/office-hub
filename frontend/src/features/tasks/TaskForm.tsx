@@ -1,39 +1,67 @@
 import { Building2, Link2, UserRound, X } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { FormField, SimpleSelect, TextField } from '@/components/common'
+import { FormDialog, FormField, SimpleSelect, TextField } from '@/components/common'
 import { RecordPicker, type Picked } from '@/components/common/RecordPicker'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { api, apiError } from '@/lib/api'
 import { useMe } from '@/lib/auth'
-import { shortTime, TASK_PRIORITIES, TASK_STATUSES, type Task, type TaskInput, type TaskPriority, type TaskStatus } from '@/lib/tasks'
+import {
+  shortTime,
+  TASK_PRIORITIES,
+  TASK_STATUSES,
+  type RecurrenceInput,
+  type Task,
+  type TaskInput,
+  type TaskPriority,
+  type TaskStatus,
+} from '@/lib/tasks'
 import { AssigneePicker } from './AssigneePicker'
+import { RepeatEditor } from './RepeatEditor'
 
-interface Linked {
+export interface Linked {
   type: 'contact' | 'company'
   id: number
   name: string
+}
+
+/** Pre-filled values for a new task (e.g. "Create task from follow-up"). */
+export interface TaskDefaults {
+  title?: string
+  description?: string
+  linked?: Linked
+  followUpOf?: number
+}
+
+type Scope = 'this' | 'future'
+
+function ruleOf(task?: Task): RecurrenceInput | null {
+  if (!task?.repeat?.active) return null
+  const { frequency, interval, weekdays, monthly_mode, month_day, month_week, month_weekday, end_date, count } = task.repeat
+  return { frequency, interval, weekdays, monthly_mode, month_day, month_week, month_weekday, end_date, count }
 }
 
 /** Create or edit a task. New tasks are assigned to you unless you pick other people. */
 export function TaskForm({
   task,
   defaultDueDate,
+  defaults,
   onSaved,
   onCancel,
 }: {
   task?: Task
   /** New tasks: pre-fill the due date (e.g. the day clicked in the calendar). */
   defaultDueDate?: string
+  defaults?: TaskDefaults
   onSaved: (task: Task) => void
   onCancel: () => void
 }) {
   const { t } = useTranslation()
   const me = useMe()
-  const [title, setTitle] = useState(task?.title ?? '')
-  const [description, setDescription] = useState(task?.description ?? '')
+  const [title, setTitle] = useState(task?.title ?? defaults?.title ?? '')
+  const [description, setDescription] = useState(task?.description ?? defaults?.description ?? '')
   const [assignees, setAssignees] = useState<number[]>(task?.assignees ?? [me.id])
   const [dueDate, setDueDate] = useState(task?.due_date ?? defaultDueDate ?? '')
   const [dueTime, setDueTime] = useState(shortTime(task?.due_time ?? null))
@@ -44,8 +72,12 @@ export function TaskForm({
       ? { type: 'contact', id: task.contact, name: task.contact_name ?? '' }
       : task?.company
         ? { type: 'company', id: task.company, name: task.company_name ?? '' }
-        : null,
+        : (defaults?.linked ?? null),
   )
+  const originalRule = useMemo(() => ruleOf(task), [task])
+  const [rule, setRule] = useState<RecurrenceInput | null>(originalRule)
+  // Saving a change to a repeating task first asks: this one, or this and the ones after it?
+  const [askScope, setAskScope] = useState<TaskInput | null>(null)
   const [picking, setPicking] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [message, setMessage] = useState('')
@@ -56,19 +88,10 @@ export function TaskForm({
     setPicking(false)
   }
 
-  const submit = async (e: FormEvent) => {
-    e.preventDefault()
-    const body: TaskInput = {
-      title,
-      description,
-      assignees,
-      due_date: dueDate || null,
-      due_time: dueDate && dueTime ? dueTime : null,
-      priority,
-      status,
-      contact: linked?.type === 'contact' ? linked.id : null,
-      company: linked?.type === 'company' ? linked.id : null,
-    }
+  const ruleChanged = JSON.stringify(rule) !== JSON.stringify(originalRule)
+
+  const save = async (body: TaskInput & { recurrence?: RecurrenceInput | null; scope?: Scope; follow_up_of?: number }) => {
+    setAskScope(null)
     setSaving(true)
     setErrors({})
     setMessage('')
@@ -82,6 +105,32 @@ export function TaskForm({
     } finally {
       setSaving(false)
     }
+  }
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault()
+    const body: TaskInput & { recurrence?: RecurrenceInput | null; scope?: Scope; follow_up_of?: number } = {
+      title,
+      description,
+      assignees,
+      due_date: dueDate || null,
+      due_time: dueDate && dueTime ? dueTime : null,
+      priority,
+      status,
+      contact: linked?.type === 'contact' ? linked.id : null,
+      company: linked?.type === 'company' ? linked.id : null,
+    }
+    if (!task) {
+      if (rule) body.recurrence = rule
+      if (defaults?.followUpOf) body.follow_up_of = defaults.followUpOf
+      return save(body)
+    }
+    if (ruleChanged) {
+      // A new or changed rule applies from this occurrence on; switching it off stops the series.
+      return save({ ...body, recurrence: rule, scope: 'future' })
+    }
+    if (task.repeat?.active) return setAskScope(body)
+    return save(body)
   }
 
   return (
@@ -118,6 +167,8 @@ export function TaskForm({
         </FormField>
       </div>
 
+      <RepeatEditor value={rule} onChange={setRule} dueDate={dueDate} idPrefix="task-repeat" error={errors.recurrence ?? errors.weekdays} />
+
       <FormField id="task-link" label={t('tasks.fields.relatedTo')} error={errors.contact ?? errors.company}>
         {linked ? (
           <div className="flex items-center gap-2 rounded-lg border bg-muted/30 px-2.5 py-2 text-sm">
@@ -151,6 +202,18 @@ export function TaskForm({
           {saving ? t('common.saving') : task ? t('common.save') : t('tasks.create')}
         </Button>
       </div>
+      {askScope && (
+        <FormDialog open onOpenChange={(o) => !o && setAskScope(null)} title={t('tasks.repeat.scopeTitle')} description={t('tasks.repeat.scopeHint')}>
+          <div className="grid gap-2">
+            <Button type="button" variant="outline" className="justify-start" onClick={() => void save({ ...askScope, scope: 'this' })}>
+              {t('tasks.repeat.scopeThis')}
+            </Button>
+            <Button type="button" className="justify-start" onClick={() => void save({ ...askScope, scope: 'future' })}>
+              {t('tasks.repeat.scopeFuture')}
+            </Button>
+          </div>
+        </FormDialog>
+      )}
     </form>
   )
 }
