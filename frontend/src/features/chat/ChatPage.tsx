@@ -1,11 +1,11 @@
-import { Hash, Lock, MessageSquarePlus, MessagesSquare, Plus, Search } from 'lucide-react'
+import { BellOff, Hash, Lock, MessageSquarePlus, MessagesSquare, Plus, Search } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { EmptyState, ErrorState, UserAvatar } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { conversationTitle, useConversations, type Conversation } from '@/lib/chat'
+import { conversationTitle, useConversations, useOnline, type Conversation } from '@/lib/chat'
 import { useFormat } from '@/lib/format'
 import { usePermission } from '@/lib/permissions'
 import { useIsPhone } from '@/lib/useIsPhone'
@@ -125,6 +125,15 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
+/** Green dot on an avatar when the colleague has the app open (announced as "online" to screen readers). */
+export function PresenceDot({ online }: { online: boolean }) {
+  const { t } = useTranslation()
+  if (!online) return null
+  return (
+    <span className="absolute -end-0.5 -bottom-0.5 size-3 rounded-full border-2 border-card bg-success" role="img" aria-label={t('chat.online')} />
+  )
+}
+
 export function ChannelIcon({ conversation, className }: { conversation: Pick<Conversation, 'is_private'>; className?: string }) {
   const Icon = conversation.is_private ? Lock : Hash
   return <Icon className={cn('size-4 shrink-0 text-muted-foreground', className)} />
@@ -133,6 +142,7 @@ export function ChannelIcon({ conversation, className }: { conversation: Pick<Co
 function ConversationRow({ conversation: c, active }: { conversation: Conversation; active: boolean }) {
   const { t } = useTranslation()
   const fmt = useFormat()
+  const online = useOnline()
   const title = conversationTitle(c, t)
   const preview = c.last_message
     ? c.last_message.deleted
@@ -151,7 +161,10 @@ function ConversationRow({ conversation: c, active }: { conversation: Conversati
         )}
       >
         {c.kind === 'direct' ? (
-          <UserAvatar name={title} src={c.other_person?.avatar} className="size-8" />
+          <span className="relative shrink-0">
+            <UserAvatar name={title} src={c.other_person?.avatar} className="size-8" />
+            <PresenceDot online={!!c.other_person && online.has(c.other_person.id)} />
+          </span>
         ) : (
           <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted">
             <ChannelIcon conversation={c} />
@@ -159,7 +172,8 @@ function ConversationRow({ conversation: c, active }: { conversation: Conversati
         )}
         <span className="min-w-0 flex-1">
           <span className="flex items-baseline gap-2">
-            <bdi className={cn('min-w-0 flex-1 truncate text-sm', unread && 'font-semibold')}>{title}</bdi>
+            <bdi className={cn('min-w-0 flex-1 truncate text-sm', unread && !c.muted && 'font-semibold')}>{title}</bdi>
+            {c.muted && <BellOff className="size-3 shrink-0 text-muted-foreground" aria-label={t('chat.muted')} />}
             {c.last_message_at && <span className="shrink-0 text-[11px] text-muted-foreground">{fmt.relative(c.last_message_at)}</span>}
           </span>
           <span className="flex items-center gap-2">
@@ -167,8 +181,9 @@ function ConversationRow({ conversation: c, active }: { conversation: Conversati
               {preview}
             </span>
             {unread && (
-              <span className="min-w-5 shrink-0 rounded-full bg-primary px-1.5 text-center text-[11px] leading-5 text-primary-foreground font-latin">
-                {c.unread_count > 99 ? '99+' : c.unread_count}
+              <span className={cn('min-w-5 shrink-0 rounded-full px-1.5', c.muted ? 'bg-muted-foreground/30 text-foreground' : 'bg-primary text-primary-foreground')}>
+                <span className="sr-only">{t('chat.unreadCount', { count: c.unread_count })}</span>
+                <span aria-hidden className="block text-center text-[11px] leading-5 font-latin">{c.unread_count > 99 ? '99+' : c.unread_count}</span>
               </span>
             )}
           </span>

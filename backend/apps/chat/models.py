@@ -5,11 +5,21 @@
 - A direct message is a conversation of `kind=direct` between two people, found by `dm_key`.
   Group DMs can be added later as another kind with any number of members.
 - Each member's read position (`Membership.last_read_id`) gives unread counts.
+- Messages can quote another message (`reply_to`), carry reactions from a small fixed set, and
+  have file attachments stored privately (same rules as task files).
 """
+import uuid
+
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+
+from apps.tasks.models import private_storage
+
+# Reactions people can add (fixed, so they look the same everywhere and need no picker).
+REACTIONS = ["👍", "❤️", "😂", "🎉", "😮", "🙏"]
 
 
 class Conversation(models.Model):
@@ -72,6 +82,10 @@ class Membership(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="chat_memberships")
     # Id of the newest message this member has read (0 = none). Unread = newer messages by others.
     last_read_id = models.PositiveBigIntegerField(default=0)
+    # Muted: no notifications or emails, and not counted in the total unread badge.
+    muted = models.BooleanField(default=False)
+    # Newest message already covered by an "unread direct messages" email (never emailed twice).
+    last_emailed_id = models.PositiveBigIntegerField(default=0)
     joined_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -106,3 +120,44 @@ class Message(models.Model):
     @property
     def is_deleted(self) -> bool:
         return self.deleted_at is not None
+
+
+class Reaction(models.Model):
+    message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name="reactions")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="+")
+    emoji = models.CharField(max_length=16)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at", "id"]
+        constraints = [models.UniqueConstraint(fields=["message", "user", "emoji"], name="chat_one_reaction_per_emoji")]
+        verbose_name = _("reaction")
+        verbose_name_plural = _("reactions")
+
+
+def chat_file_path(instance, filename):
+    # Random names: nothing about the original name can be guessed from the path.
+    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else "bin"
+    return f"chat/{timezone.now():%Y/%m}/{uuid.uuid4().hex}.{ext}"
+
+
+class MessageAttachment(models.Model):
+    """A file sent in a message: private storage, downloaded only by people who can read the conversation."""
+
+    message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name="attachments")
+    file = models.FileField(upload_to=chat_file_path, storage=private_storage, max_length=200)
+    thumbnail = models.FileField(upload_to=chat_file_path, storage=private_storage, max_length=200, blank=True)
+    original_name = models.CharField(max_length=255)
+    size = models.PositiveIntegerField()
+    content_type = models.CharField(max_length=100)
+    kind = models.CharField(max_length=10)  # image | pdf | office | text | zip (see apps.tasks.files)
+    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="+")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["id"]
+        verbose_name = _("message attachment")
+        verbose_name_plural = _("message attachments")
+
+    def __str__(self):
+        return self.original_name

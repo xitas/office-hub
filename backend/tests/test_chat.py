@@ -338,12 +338,17 @@ async def test_websocket_delivers_messages_to_members_only(make_user):
     member_ws, outsider_ws = await connect(member), await connect(outsider)
     await database_sync_to_async(services.send_message)(sales, sender, "Sales only")
     event = await member_ws.receive_json_from(timeout=2)
+    while event.get("event") == "presence":  # colleagues coming online are announced too
+        event = await member_ws.receive_json_from(timeout=2)
     assert event["event"] == "message.new" and event["message"]["body"] == "Sales only" and event["unread"] == 1
-    assert await outsider_ws.receive_nothing(timeout=0.3)
+    while not await outsider_ws.receive_nothing(timeout=0.3):
+        assert (await outsider_ws.receive_json_from())["event"] != "message.new"
 
     # Read on one device: the user's other open sessions hear about it.
     await database_sync_to_async(services.mark_read)(sales, member)
-    assert (await member_ws.receive_json_from(timeout=2))["event"] == "read"
+    event = await member_ws.receive_json_from(timeout=2)
+    while event.get("event") != "read":  # skips presence changes and the in-app notification
+        event = await member_ws.receive_json_from(timeout=2)
     await member_ws.disconnect()
     await outsider_ws.disconnect()
 

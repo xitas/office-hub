@@ -78,7 +78,20 @@ def _task_overdue(params: dict) -> tuple[str, str]:
     )
 
 
+def _chat_direct(params: dict) -> tuple[str, str]:
+    return _("Message from %(actor)s") % {"actor": params.get("actor", "")}, params.get("preview", "")
+
+
+def _chat_channel(params: dict) -> tuple[str, str]:
+    return (
+        _("New message in #%(channel)s") % {"channel": _("General") if params.get("general") else params.get("channel", "")},
+        "%s: %s" % (params.get("actor", ""), params.get("preview", "")),
+    )
+
+
 RENDERERS = {
+    "chat_direct": _chat_direct,
+    "chat_channel": _chat_channel,
     "task_assigned": _task_assigned,
     "task_due_soon": _task_due_soon,
     "task_overdue": _task_overdue,

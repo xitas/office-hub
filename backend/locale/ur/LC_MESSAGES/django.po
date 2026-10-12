@@ -962,3 +962,153 @@ msgstr[1] "%(n)s کلائنٹ فالو اپ"
 
 msgid "Your day: %(summary)s"
 msgstr "آپ کا دن: %(summary)s"
+
+msgid "Channel"
+msgstr "چینل"
+
+msgid "Direct message"
+msgstr "براہِ راست پیغام"
+
+msgid "General"
+msgstr "عمومی"
+
+msgid "Department"
+msgstr "شعبہ"
+
+msgid "Project"
+msgstr "منصوبہ"
+
+msgid "conversation"
+msgstr "گفتگو"
+
+msgid "conversations"
+msgstr "گفتگوئیں"
+
+msgid "conversation member"
+msgstr "گفتگو کا رکن"
+
+msgid "conversation members"
+msgstr "گفتگو کے اراکین"
+
+msgid "message"
+msgstr "پیغام"
+
+msgid "messages"
+msgstr "پیغامات"
+
+msgid "reaction"
+msgstr "ردِعمل"
+
+msgid "reactions"
+msgstr "ردِعمل"
+
+msgid "message attachment"
+msgstr "پیغام کی فائل"
+
+msgid "message attachments"
+msgstr "پیغام کی فائلیں"
+
+msgid "Only admins can create general channels."
+msgstr "عمومی چینل صرف ایڈمن بنا سکتے ہیں۔"
+
+msgid "You can only create channels for your own department."
+msgstr "آپ صرف اپنے شعبے کے لیے چینل بنا سکتے ہیں۔"
+
+msgid "This can't be changed on a default channel."
+msgstr "یہ بنیادی چینل میں تبدیل نہیں کیا جا سکتا۔"
+
+msgid "Only admins can move a channel to another department."
+msgstr "چینل کو دوسرے شعبے میں صرف ایڈمن منتقل کر سکتے ہیں۔"
+
+msgid "Write a message first."
+msgstr "پہلے پیغام لکھیں۔"
+
+msgid "Messages can be up to %(n)s characters."
+msgstr "پیغام زیادہ سے زیادہ %(n)s حروف کا ہو سکتا ہے۔"
+
+msgid "You can only reply to a message in this conversation."
+msgstr "آپ صرف اسی گفتگو کے پیغام کا جواب دے سکتے ہیں۔"
+
+msgid "Send up to %(n)s files at a time."
+msgstr "ایک وقت میں زیادہ سے زیادہ %(n)s فائلیں بھیجیں۔"
+
+msgid "Choose one of the available reactions."
+msgstr "دستیاب ردِعمل میں سے ایک منتخب کریں۔"
+
+msgid "A colleague"
+msgstr "ایک ساتھی"
+
+msgid "You have unread messages from %(name)s:"
+msgstr "آپ کے پاس %(name)s کے نہ پڑھے گئے پیغامات ہیں:"
+
+msgid "…and %(n)s more"
+msgstr "…اور %(n)s مزید"
+
+msgid "Reply in the CRM: %(link)s"
+msgstr "CRM میں جواب دیں: %(link)s"
+
+msgid "You get this email because direct-message emails are on in your notification settings."
+msgstr "آپ کو یہ ای میل اس لیے ملی کیونکہ اطلاعات کی ترتیبات میں براہِ راست پیغامات کی ای میل آن ہے۔"
+
+msgid "Unread messages from %(name)s"
+msgstr "%(name)s کے نہ پڑھے گئے پیغامات"
+
+msgid "You can't change this channel."
+msgstr "آپ اس چینل میں تبدیلی نہیں کر سکتے۔"
+
+msgid "Default channels can't be archived."
+msgstr "بنیادی چینل محفوظ (آرکائیو) نہیں کیے جا سکتے۔"
+
+msgid "Members of default channels follow the organization automatically."
+msgstr "بنیادی چینلز کے اراکین ادارے کے مطابق خود بخود طے ہوتے ہیں۔"
+
+msgid "Give a list of people."
+msgstr "افراد کی فہرست دیں۔"
+
+msgid "You can only join open, public channels."
+msgstr "آپ صرف کھلے، عوامی چینلز میں شامل ہو سکتے ہیں۔"
+
+msgid "You can't leave a direct message."
+msgstr "آپ براہِ راست پیغام کی گفتگو نہیں چھوڑ سکتے۔"
+
+msgid "Everyone stays in default channels."
+msgstr "بنیادی چینلز میں سب شامل رہتے ہیں۔"
+
+msgid "Choose a colleague."
+msgstr "ایک ساتھی منتخب کریں۔"
+
+msgid "Only members can read this conversation."
+msgstr "یہ گفتگو صرف اراکین پڑھ سکتے ہیں۔"
+
+msgid "Join this conversation to write in it."
+msgstr "لکھنے کے لیے اس گفتگو میں شامل ہوں۔"
+
+msgid "This channel is archived."
+msgstr "یہ چینل محفوظ (آرکائیو) شدہ ہے۔"
+
+msgid "Only members can mute a conversation."
+msgstr "گفتگو کو صرف اراکین خاموش کر سکتے ہیں۔"
+
+msgid "Give a message id."
+msgstr "پیغام کی شناخت دیں۔"
+
+msgid "You can only change your own messages."
+msgstr "آپ صرف اپنے پیغامات میں تبدیلی کر سکتے ہیں۔"
+
+msgid "This message was deleted."
+msgstr "یہ پیغام حذف ہو چکا ہے۔"
+
+msgid "Join this conversation to react."
+msgstr "ردِعمل کے لیے اس گفتگو میں شامل ہوں۔"
+
+msgid "Messages can be edited for 15 minutes after sending."
+msgstr "پیغام بھیجنے کے بعد 15 منٹ تک ترمیم کی جا سکتی ہے۔"
+
+msgid "Message from %(actor)s"
+msgstr "%(actor)s کا پیغام"
+
+msgid "New message in #%(channel)s"
+msgstr "#%(channel)s میں نیا پیغام"
+
+msgid "New message in my channels"
+msgstr "میرے چینلز میں نیا پیغام"

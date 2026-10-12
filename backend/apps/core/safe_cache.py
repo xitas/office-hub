@@ -39,6 +39,9 @@ class SafeCache:
     def get(self, key, default=None):
         return self._call("get", key, default)
 
+    def get_many(self, keys):
+        return self._call("get_many", keys)
+
     def set(self, key, value, timeout=None):
         return self._call("set", key, value, timeout)
 

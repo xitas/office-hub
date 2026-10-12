@@ -27,6 +27,17 @@ class ChatConfig(AppConfig):
 
             Conversation.objects.filter(is_default=True, department=instance).update(archived_at=timezone.now(), is_default=False)
 
+        from .models import MessageAttachment
+
+        def remove_files(sender, instance, **kwargs):
+            # Also runs when a message or conversation is deleted (cascade), so no file is left behind.
+            for f in (instance.file, instance.thumbnail):
+                if f:
+                    f.storage.delete(f.name)
+
+        from django.db.models.signals import post_delete
+
+        post_delete.connect(remove_files, sender=MessageAttachment, dispatch_uid="chat.attachment.files")
         post_save.connect(user_saved, sender=User, dispatch_uid="chat.user_saved")
         post_save.connect(department_saved, sender=Department, dispatch_uid="chat.department_saved")
         pre_delete.connect(department_deleted, sender=Department, dispatch_uid="chat.department_deleted")

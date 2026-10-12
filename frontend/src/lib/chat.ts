@@ -1,4 +1,5 @@
 import { useQuery, type InfiniteData, type QueryClient } from '@tanstack/react-query'
+import { useSyncExternalStore } from 'react'
 import { api } from './api'
 import { useMe } from './auth'
 
@@ -8,12 +9,31 @@ export interface ChatPerson {
   avatar: string | null
 }
 
+export interface ChatAttachment {
+  id: number
+  original_name: string
+  size: number
+  content_type: string
+  kind: 'image' | 'pdf' | 'office' | 'text' | 'zip'
+  download_url: string
+  thumbnail_url: string | null
+}
+
+export interface ChatReaction {
+  emoji: string
+  count: number
+  users: { id: number; full_name: string }[]
+}
+
 export interface ChatMessage {
   id: number
   conversation: number
   author: ChatPerson | null
   body: string
   reply_to: number | null
+  reply: { id: number; author: ChatPerson | null; body: string; deleted: boolean } | null
+  reactions: ChatReaction[]
+  attachments: ChatAttachment[]
   created_at: string
   edited_at: string | null
   deleted: boolean
@@ -32,6 +52,8 @@ export interface Conversation {
   department_name: string | null
   archived: boolean
   is_member: boolean
+  muted: boolean
+  last_read_id: number
   member_count: number
   unread_count: number
   last_message: { id: number; author: ChatPerson | null; body: string; deleted: boolean; created_at: string } | null
@@ -47,14 +69,22 @@ export interface MessagePage {
   results: ChatMessage[]
 }
 
+/** Reactions anyone can add (the same fixed set as the server). */
+export const REACTIONS = ['👍', '❤️', '😂', '🎉', '😮', '🙏'] as const
+export const MAX_MESSAGE = 4000
+export const MAX_FILES = 5
+
 /** Live events pushed over the shared WebSocket (only to members). */
 export type ChatEvent =
   | { type: 'chat'; event: 'message.new' | 'message.updated'; conversation: number; message: ChatMessage; unread: number }
   | { type: 'chat'; event: 'read'; conversation: number; unread: number }
   | { type: 'chat'; event: 'conversation.changed'; conversation: number }
+  | { type: 'chat'; event: 'typing'; conversation: number; user: { id: number; full_name: string } }
+  | { type: 'chat'; event: 'presence'; user: number; online: boolean }
 
 export const CONVERSATIONS_KEY = ['chat', 'conversations'] as const
 export const CHAT_UNREAD_KEY = ['chat', 'unread'] as const
+export const PRESENCE_KEY = ['chat', 'presence'] as const
 export const messagesKey = (id: number) => ['chat', 'messages', id] as const
 
 /** The conversations you belong to, newest activity first (kept current by live events). */
@@ -77,14 +107,108 @@ export function useChatUnread() {
   return allowed ? (data?.count ?? 0) : 0
 }
 
+/** Colleagues online now. Live events keep it current; a refetch every minute covers connections that vanished. */
+export function useOnline() {
+  const me = useMe()
+  const { data } = useQuery({
+    queryKey: PRESENCE_KEY,
+    queryFn: async () => new Set((await api.get<{ online: number[] }>('/chat/conversations/presence/')).data.online),
+    enabled: me.permissions.includes('chat.view'),
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+  })
+  return data ?? new Set<number>()
+}
+
+// ---------------------------------------------------------------- typing ("Sana is typing…")
+
+const TYPING_SHOWN_MS = 5000
+type Typist = { id: number; full_name: string; until: number }
+let typing: Record<number, Typist[]> = {}
+const typingListeners = new Set<() => void>()
+const emitTyping = () => typingListeners.forEach((fn) => fn())
+
+function addTypist(conversation: number, user: { id: number; full_name: string }) {
+  const now = Date.now()
+  const others = (typing[conversation] ?? []).filter((t) => t.id !== user.id && t.until > now)
+  typing = { ...typing, [conversation]: [...others, { ...user, until: now + TYPING_SHOWN_MS }] }
+  emitTyping()
+  window.setTimeout(() => {
+    const left = (typing[conversation] ?? []).filter((t) => t.until > Date.now())
+    typing = { ...typing, [conversation]: left }
+    emitTyping()
+  }, TYPING_SHOWN_MS + 50)
+}
+
+function removeTypist(conversation: number, userId: number) {
+  if (!typing[conversation]?.some((t) => t.id === userId)) return
+  typing = { ...typing, [conversation]: typing[conversation].filter((t) => t.id !== userId) }
+  emitTyping()
+}
+
+const EMPTY: Typist[] = []
+/** People typing in a conversation right now (cleared after 5 s without a new signal, or when their message arrives). */
+export function useTyping(conversation: number) {
+  return useSyncExternalStore(
+    (fn) => {
+      typingListeners.add(fn)
+      return () => typingListeners.delete(fn)
+    },
+    () => typing[conversation] ?? EMPTY,
+  )
+}
+
+// ---------------------------------------------------------------- drafts (kept per conversation while switching)
+
+const drafts = new Map<number, string>()
+export const getDraft = (conversation: number) => drafts.get(conversation) ?? ''
+export const setDraft = (conversation: number, text: string) => {
+  if (text) drafts.set(conversation, text)
+  else drafts.delete(conversation)
+}
+
 /** The `cursor` value from a pagination link (links point at the API host, so only the cursor is reused). */
 export function cursorOf(link: string | null) {
   if (!link) return undefined
   return new URL(link, window.location.origin).searchParams.get('cursor') ?? undefined
 }
 
-/** Apply a live chat event to the cached conversation list, unread badge and open message history. */
+/** Replace one message in the cached history (edits, reactions, deletions). */
+export function replaceMessage(queryClient: QueryClient, message: ChatMessage) {
+  queryClient.setQueryData<InfiniteData<MessagePage>>(messagesKey(message.conversation), (data) =>
+    data && { ...data, pages: data.pages.map((p) => ({ ...p, results: p.results.map((m) => (m.id === message.id ? message : m)) })) },
+  )
+}
+
+/** Add a new message to the cached history (ignored if already there, e.g. our own send and its live echo). */
+export function addMessage(queryClient: QueryClient, message: ChatMessage) {
+  queryClient.setQueryData<InfiniteData<MessagePage>>(messagesKey(message.conversation), (data) => {
+    if (!data || data.pages.some((p) => p.results.some((m) => m.id === message.id))) return data
+    const [first, ...rest] = data.pages
+    return { ...data, pages: [{ ...first, results: [message, ...first.results] }, ...rest] }
+  })
+}
+
+export function previewOf(m: Pick<ChatMessage, 'body' | 'attachments'>) {
+  if (m.body) return m.body.slice(0, 120)
+  return m.attachments.length ? `📎 ${m.attachments.map((a) => a.original_name).join(', ')}`.slice(0, 120) : ''
+}
+
+/** Apply a live chat event to the cached conversation list, unread badge, presence, typing and open history. */
 export function applyChatEvent(queryClient: QueryClient, event: ChatEvent) {
+  if (event.event === 'presence') {
+    queryClient.setQueryData<Set<number>>(PRESENCE_KEY, (old) => {
+      const next = new Set(old)
+      if (event.online) next.add(event.user)
+      else next.delete(event.user)
+      return next
+    })
+    return
+  }
+  if (event.event === 'typing') {
+    addTypist(event.conversation, event.user)
+    return
+  }
   if (event.event === 'conversation.changed') {
     void queryClient.invalidateQueries({ queryKey: CONVERSATIONS_KEY })
     void queryClient.invalidateQueries({ queryKey: CHAT_UNREAD_KEY })
@@ -101,10 +225,10 @@ export function applyChatEvent(queryClient: QueryClient, event: ChatEvent) {
         const updated = { ...c, unread_count: event.unread }
         if (event.event === 'message.new') {
           const m = event.message
-          updated.last_message = { id: m.id, author: m.author, body: m.body.slice(0, 120), deleted: m.deleted, created_at: m.created_at }
+          updated.last_message = { id: m.id, author: m.author, body: previewOf(m), deleted: m.deleted, created_at: m.created_at }
           updated.last_message_at = m.created_at
         } else if (event.event === 'message.updated' && c.last_message?.id === event.message.id) {
-          updated.last_message = { ...c.last_message, body: event.message.body.slice(0, 120), deleted: event.message.deleted }
+          updated.last_message = { ...c.last_message, body: previewOf(event.message), deleted: event.message.deleted }
         }
         return updated
       })
@@ -114,20 +238,12 @@ export function applyChatEvent(queryClient: QueryClient, event: ChatEvent) {
   void queryClient.invalidateQueries({ queryKey: CHAT_UNREAD_KEY })
 
   if (event.event === 'read') return
-  // Newest page first; pages are newest-first lists.
-  queryClient.setQueryData<InfiniteData<MessagePage>>(messagesKey(event.conversation), (data) => {
-    if (!data) return data
-    const message = event.message
-    if (event.event === 'message.updated') {
-      return {
-        ...data,
-        pages: data.pages.map((p) => ({ ...p, results: p.results.map((m) => (m.id === message.id ? message : m)) })),
-      }
-    }
-    if (data.pages.some((p) => p.results.some((m) => m.id === message.id))) return data
-    const [first, ...rest] = data.pages
-    return { ...data, pages: [{ ...first, results: [message, ...first.results] }, ...rest] }
-  })
+  if (event.event === 'message.updated') {
+    replaceMessage(queryClient, event.message)
+  } else {
+    if (event.message.author) removeTypist(event.conversation, event.message.author.id)
+    addMessage(queryClient, event.message)
+  }
 }
 
 export function conversationTitle(c: Pick<Conversation, 'kind' | 'name' | 'other_person' | 'is_default' | 'channel_type'>, t: (k: string) => string) {

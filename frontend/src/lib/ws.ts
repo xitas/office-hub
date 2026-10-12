@@ -14,10 +14,26 @@ type ServerEvent =
   | { type: 'pong' }
   | ChatEvent
 
+// The open socket of this tab, and the conversation the tab shows (re-sent after a reconnect).
+let current: WebSocket | null = null
+let viewing: number | null = null
+
+/** Send a message over this tab's WebSocket if it is open (typing, viewing). Dropped otherwise. */
+export function sendRealtime(data: Record<string, unknown>) {
+  if (current?.readyState === WebSocket.OPEN) current.send(JSON.stringify(data))
+}
+
+/** Tell the server which conversation this tab shows (no notifications for it). null when none or hidden. */
+export function setViewing(conversation: number | null) {
+  viewing = conversation
+  sendRealtime({ type: 'chat.viewing', conversation: document.visibilityState === 'visible' ? viewing : null })
+}
+
 /**
  * Keeps one WebSocket open per signed-in tab and reconnects with backoff.
  * Each connection uses a fresh single-use ticket from /auth/ws-ticket/ (the api
- * client refreshes the access token for that call if needed).
+ * client refreshes the access token for that call if needed). A ping every 30 s
+ * keeps the user's online status alive.
  */
 export function useRealtime() {
   const { status } = useAuth()
@@ -31,6 +47,9 @@ export function useRealtime() {
     let retryTimer: number | undefined
     let pingTimer: number | undefined
 
+    const onVisibility = () => setViewing(viewing)
+    document.addEventListener('visibilitychange', onVisibility)
+
     const connect = async () => {
       // A fresh single-use ticket per connection; the access token never goes in the URL.
       let ticket: string
@@ -43,10 +62,14 @@ export function useRealtime() {
       if (stopped) return
       const proto = window.location.protocol === 'https:' ? 'wss' : 'ws'
       socket = new WebSocket(`${proto}://${window.location.host}/ws/notifications/?ticket=${encodeURIComponent(ticket)}`)
+      current = socket
 
       socket.onopen = () => {
         attempts = 0
         pingTimer = window.setInterval(() => socket?.send(JSON.stringify({ type: 'ping' })), 30_000)
+        setViewing(viewing)
+        // Presence and messages may have changed while disconnected.
+        void queryClient.invalidateQueries({ queryKey: ['chat'] })
       }
       socket.onmessage = (msg) => {
         const event = JSON.parse(msg.data) as ServerEvent
@@ -63,6 +86,7 @@ export function useRealtime() {
       }
       socket.onclose = () => {
         window.clearInterval(pingTimer)
+        if (current === socket) current = null
         if (stopped) return
         const delay = Math.min(30_000, 1000 * 2 ** attempts++)
         retryTimer = window.setTimeout(connect, delay)
@@ -72,6 +96,7 @@ export function useRealtime() {
     void connect()
     return () => {
       stopped = true
+      document.removeEventListener('visibilitychange', onVisibility)
       window.clearTimeout(retryTimer)
       window.clearInterval(pingTimer)
       socket?.close()

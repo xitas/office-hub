@@ -1,5 +1,6 @@
 from django.db.models import Count, Exists, F, IntegerField, Max, OuterRef, Prefetch, Subquery
 from django.db.models.functions import Coalesce
+from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -17,8 +18,8 @@ from apps.core.models import AuditLog
 from apps.core.permissions import ModulePermission
 from apps.core.safe_cache import safe_cache
 
-from . import rules, services
-from .models import Conversation, Membership, Message
+from . import presence, rules, services
+from .models import REACTIONS, Conversation, Membership, Message, MessageAttachment
 from .serializers import ChannelWriteSerializer, ConversationSerializer, MessageSerializer
 
 
@@ -44,6 +45,14 @@ class UserIdsSerializer(serializers.Serializer):
 
 class DirectSerializer(serializers.Serializer):
     user = serializers.IntegerField()
+
+
+class MuteSerializer(serializers.Serializer):
+    muted = serializers.BooleanField()
+
+
+class ReactSerializer(serializers.Serializer):
+    emoji = serializers.ChoiceField(choices=REACTIONS)
 
 
 class ReadSerializer(serializers.Serializer):
@@ -91,6 +100,8 @@ class ConversationViewSet(
             .select_related("department")
             .annotate(
                 is_member=Exists(mine),
+                muted=Coalesce(Subquery(mine.values("muted")[:1]), False),
+                last_read_id=Coalesce(Subquery(mine.values("last_read_id")[:1]), 0),
                 unread_count=Coalesce(Subquery(mine.annotate(n=services.unread_count_expr()).values("n")[:1], output_field=IntegerField()), 0),
                 member_count=Coalesce(
                     Subquery(
@@ -288,21 +299,47 @@ class ConversationViewSet(
     )
     @action(detail=True, methods=["get", "post"])
     def messages(self, request, pk=None):
-        """GET: history, newest first (follow `next` for older). POST {"body", "reply_to"?}: send."""
+        """GET: history, newest first (follow `next` for older).
+
+        POST: send `body` and/or up to 5 `files` (multipart; 10 MB each, same types as task files),
+        optionally `reply_to` a message in this conversation.
+        """
         conversation = self.get_object()
         if request.method == "GET":
             if not rules.readable_conversations(request.user).filter(pk=conversation.pk).exists():
                 raise PermissionDenied(_("Only members can read this conversation."))
-            qs = Message.objects.filter(conversation=conversation).select_related("author")
+            qs = services.with_details(Message.objects.filter(conversation=conversation))
             paginator = MessageHistoryPagination()
             page = paginator.paginate_queryset(qs, request, view=self)
             return paginator.get_paginated_response([services.message_data(m) for m in page])
         if not rules.can_post(request.user, conversation):
             raise PermissionDenied(_("Join this conversation to write in it.") if not conversation.archived else _("This channel is archived."))
-        serializer = MessageSerializer(data=request.data, context={**self.get_serializer_context(), "conversation": conversation})
+        files = request.FILES.getlist("files")
+        context = {**self.get_serializer_context(), "conversation": conversation, "has_files": bool(files)}
+        serializer = MessageSerializer(data=request.data, context=context)
         serializer.is_valid(raise_exception=True)
-        message = services.send_message(conversation, request.user, serializer.validated_data["body"], serializer.validated_data.get("reply_to"))
-        return Response(services.message_data(message), status=status.HTTP_201_CREATED)
+        message = services.send_message(
+            conversation, request.user, serializer.validated_data["body"], serializer.validated_data.get("reply_to"), files
+        )
+        fresh = services.with_details(Message.objects.filter(pk=message.pk)).get()
+        return Response(services.message_data(fresh), status=status.HTTP_201_CREATED)
+
+    @extend_schema(request=MuteSerializer, responses={200: ConversationSerializer})
+    @action(detail=True, methods=["post"])
+    def mute(self, request, pk=None):
+        """{"muted": true|false}: no notifications or emails while muted; not counted in the badge."""
+        conversation = self.get_object()
+        if not rules.is_member(request.user, conversation):
+            raise PermissionDenied(_("Only members can mute a conversation."))
+        muted = request.data.get("muted", True)
+        services.set_muted(conversation, request.user, muted not in (False, "false", "0", 0))
+        return Response(self._reload(conversation))
+
+    @extend_schema(responses={200: dict})
+    @action(detail=False, methods=["get"])
+    def presence(self, request):
+        """Colleagues online now (people who share a conversation with you)."""
+        return Response({"online": sorted(presence.online_ids(services.colleague_ids(request.user)))})
 
     @extend_schema(request=ReadSerializer, responses={200: dict})
     @action(detail=True, methods=["post"])
@@ -325,7 +362,7 @@ class MessageViewSet(mixins.UpdateModelMixin, mixins.DestroyModelMixin, viewsets
     module = "chat"
     permission_classes = [ModulePermission]
     serializer_class = MessageSerializer
-    http_method_names = ["patch", "delete", "head", "options"]
+    http_method_names = ["post", "patch", "delete", "head", "options"]
 
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
@@ -344,14 +381,70 @@ class MessageViewSet(mixins.UpdateModelMixin, mixins.DestroyModelMixin, viewsets
             raise PermissionDenied(_("This channel is archived."))
         return message
 
+    @extend_schema(request=ReactSerializer, responses={200: dict})
+    @action(detail=True, methods=["post"])
+    def react(self, request, pk=None):
+        """{"emoji": "👍"}: add your reaction, or remove it if you already gave it. Members only."""
+        message = self.get_object()
+        if message.is_deleted:
+            raise ValidationError({"detail": _("This message was deleted.")})
+        if not rules.can_post(request.user, message.conversation):
+            raise PermissionDenied(_("Join this conversation to react."))
+        on = services.toggle_reaction(message, request.user, request.data.get("emoji", ""))
+        fresh = services.with_details(Message.objects.filter(pk=message.pk)).get()
+        return Response({"reacted": on, "message": services.message_data(fresh)})
+
     def partial_update(self, request, pk=None):
         message = self._own()
         if timezone.now() > message.created_at + services.EDIT_WINDOW:
             raise PermissionDenied(_("Messages can be edited for 15 minutes after sending."))
         serializer = MessageSerializer(message, data={"body": request.data.get("body", "")}, partial=True)
         serializer.is_valid(raise_exception=True)
-        return Response(services.message_data(services.edit_message(message, serializer.validated_data["body"])))
+        services.edit_message(message, serializer.validated_data["body"])
+        return Response(services.message_data(services.with_details(Message.objects.filter(pk=message.pk)).get()))
 
     def destroy(self, request, pk=None):
         services.delete_message(self._own())
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class AttachmentFileViewSet(viewsets.GenericViewSet):
+    """Download a message's file, or its image thumbnail. Only people who can read the conversation."""
+
+    module = "chat"
+    permission_classes = [ModulePermission]
+    serializer_class = serializers.Serializer
+
+    def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return MessageAttachment.objects.none()
+        return MessageAttachment.objects.filter(
+            message__conversation__in=rules.readable_conversations(self.request.user), message__deleted_at__isnull=True
+        )
+
+    def _serve(self, field, name, content_type, inline):
+        if not field:
+            raise Http404
+        try:
+            handle = field.open("rb")
+        except FileNotFoundError:
+            raise Http404
+        response = FileResponse(handle, content_type=content_type, as_attachment=not inline, filename=name)
+        response["X-Content-Type-Options"] = "nosniff"
+        response["Content-Security-Policy"] = "default-src 'none'; sandbox"
+        response["Cache-Control"] = "private, max-age=3600"
+        return response
+
+    @extend_schema(responses={(200, "application/octet-stream"): bytes})
+    @action(detail=True, methods=["get"])
+    def download(self, request, pk=None):
+        a = self.get_object()
+        # Images and PDFs can open in the browser; everything else downloads.
+        inline = a.kind in ("image", "pdf") and request.query_params.get("inline") == "1"
+        return self._serve(a.file, a.original_name, a.content_type, inline)
+
+    @extend_schema(responses={(200, "image/webp"): bytes})
+    @action(detail=True, methods=["get"])
+    def thumbnail(self, request, pk=None):
+        a = self.get_object()
+        return self._serve(a.thumbnail, "thumbnail.webp", "image/webp", True)

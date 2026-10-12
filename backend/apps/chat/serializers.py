@@ -13,6 +13,8 @@ class ConversationSerializer(serializers.ModelSerializer):
     """A channel or direct message as seen by the current user (annotated by the view)."""
 
     is_member = serializers.BooleanField(read_only=True, default=False)
+    muted = serializers.BooleanField(read_only=True, default=False)
+    last_read_id = serializers.IntegerField(read_only=True, default=0, help_text="Your read position (for the unread divider).")
     unread_count = serializers.IntegerField(read_only=True, default=0)
     member_count = serializers.IntegerField(read_only=True, default=0)
     archived = serializers.BooleanField(read_only=True)
@@ -26,7 +28,7 @@ class ConversationSerializer(serializers.ModelSerializer):
         model = Conversation
         fields = [
             "id", "kind", "name", "description", "channel_type", "is_private", "is_default", "department",
-            "department_name", "archived", "is_member", "member_count", "unread_count", "last_message",
+            "department_name", "archived", "is_member", "muted", "last_read_id", "member_count", "unread_count", "last_message",
             "last_message_at", "other_person", "can_manage", "can_post", "created_at",
         ]
         read_only_fields = fields
@@ -93,6 +95,10 @@ class ChannelWriteSerializer(serializers.ModelSerializer):
 
 
 class MessageSerializer(serializers.ModelSerializer):
+    """Send: text and/or files (multipart `files`), optionally replying to a message. Edit: text only."""
+
+    body = serializers.CharField(required=False, allow_blank=True, trim_whitespace=False, default="")
+
     class Meta:
         model = Message
         fields = ["id", "body", "reply_to"]
@@ -102,7 +108,7 @@ class MessageSerializer(serializers.ModelSerializer):
 
     def validate_body(self, value):
         value = value.strip()
-        if not value:
+        if not value and not self.context.get("has_files"):
             raise serializers.ValidationError(_("Write a message first."))
         if len(value) > MAX_BODY:
             raise serializers.ValidationError(_("Messages can be up to %(n)s characters.") % {"n": MAX_BODY})

@@ -56,12 +56,13 @@ def push(user_id, message: dict):
         logger.exception("Failed to push WebSocket event to user %s", user_id)
 
 
-def notify(recipients, type, title="", body="", link="", actor=None, *, message=None, params=None) -> list[Notification]:
+def notify(recipients, type, title="", body="", link="", actor=None, *, message=None, params=None, email=True) -> list[Notification]:
     """Create in-app notifications and send emails according to each recipient's preferences.
 
     Prefer ``message`` (a key in apps.notifications.messages) + ``params`` so the text
     follows each reader's language; plain ``title``/``body`` are shown as-is.
-    The actor is never notified about their own action.
+    The actor is never notified about their own action. ``email=False`` sends in-app only
+    (for types whose email goes out separately, e.g. the delayed direct-message email).
     """
     if hasattr(recipients, "pk"):  # a single user
         recipients = [recipients]
@@ -86,7 +87,7 @@ def notify(recipients, type, title="", body="", link="", actor=None, *, message=
                 )
                 created.append(notification)
                 push(user.pk, {"type": "notification.new", "notification": serialize(notification)})
-            if prefs["email"] and user.email:
+            if email and prefs["email"] and user.email:
                 url = f"{settings.FRONTEND_URL}{link}" if link else settings.FRONTEND_URL
                 queue_email(user_title, f"{user_body}\n\n{url}".strip(), [user.email])
     return created

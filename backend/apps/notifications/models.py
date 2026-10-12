@@ -12,6 +12,7 @@ class NotificationType(models.TextChoices):
     DAILY_DIGEST = "daily_digest", _("Morning digest (email)")
     MENTION = "mention", _("Mentioned in a comment or chat")
     DIRECT_MESSAGE = "direct_message", _("New direct message")
+    CHANNEL_MESSAGE = "channel_message", _("New message in my channels")
     FOLLOW_UP = "follow_up", _("Client follow-up due")
     APPROVAL_REQUEST = "approval_request", _("Approval requested")
     APPROVAL_RESULT = "approval_result", _("My request approved/rejected")
@@ -26,6 +27,8 @@ DEFAULT_PREFERENCES = {
     t.value: {"in_app": True, "email": t.value in {"task_assigned", "approval_request", "approval_result", "system"}}
     for t in NotificationType
 }
+# Direct messages: email only when one is left unread for a while (see apps.chat.tasks); channel messages never email.
+DEFAULT_PREFERENCES["direct_message"] = {"in_app": True, "email": True}
 # The digest is an email only.
 DEFAULT_PREFERENCES["daily_digest"] = {"in_app": False, "email": True}
 
