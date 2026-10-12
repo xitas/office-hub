@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import {
+  AtSign,
   Bell,
   Building2,
   CalendarDays,
@@ -105,6 +106,9 @@ function StatsRow({ data, loading }: { data?: DashboardData; loading: boolean })
   const stats: { label: string; value: number | null | undefined; icon: LucideIcon; to?: string }[] = [
     { label: t('dashboard.unreadNotifications'), value: data?.unread_notifications, icon: Bell, to: '/notifications' },
   ]
+  if (data?.chat_mentions) {
+    stats.push({ label: t('dashboard.mentions'), value: data.chat_mentions.unread, icon: AtSign, to: '/chat/mentions' })
+  }
   if (data?.stats) {
     stats.push(
       { label: t('dashboard.activeUsers'), value: data.stats.active_users, icon: Users, to: '/team' },
@@ -115,7 +119,7 @@ function StatsRow({ data, loading }: { data?: DashboardData; loading: boolean })
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-5">
       {loading
         ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-[88px] rounded-xl" />)
         : stats.map((s) => {

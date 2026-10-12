@@ -21,8 +21,8 @@ from apps.notifications.models import Notification, NotificationType
 from apps.notifications.services import get_preferences, notify, push
 from apps.tasks.files import FileRejected, check_upload, make_thumbnail
 
-from . import presence
-from .models import REACTIONS, Conversation, Membership, Message, MessageAttachment, Reaction
+from . import mentions, presence
+from .models import REACTIONS, Conversation, Membership, Message, MessageAttachment, MessageMention, Reaction
 
 EDIT_WINDOW = timedelta(minutes=15)
 PREVIEW_LENGTH = 120
@@ -127,8 +127,10 @@ def message_data(message) -> dict:
 
 
 def preview_text(message) -> str:
+    from .mentions import plain_text
+
     if message.body:
-        return message.body[:PREVIEW_LENGTH]
+        return plain_text(message.body)[:PREVIEW_LENGTH]
     names = [a.original_name for a in message.attachments.all()]
     return f"📎 {', '.join(names)}"[:PREVIEW_LENGTH] if names else ""
 
@@ -227,6 +229,7 @@ def send_message(conversation, author, body: str, reply_to=None, files=()) -> Me
         message = Message.objects.create(conversation=conversation, author=author, body=body, reply_to=reply_to)
         if files:
             save_attachments(message, author, files)
+        mentions.record(message)
         Conversation.objects.filter(pk=conversation.pk).update(last_message_at=message.created_at)
         # Your own message is read by you.
         Membership.objects.filter(conversation=conversation, user=author).update(last_read_id=message.pk)
@@ -236,10 +239,14 @@ def send_message(conversation, author, body: str, reply_to=None, files=()) -> Me
 
 
 def edit_message(message, body: str) -> Message:
-    message.body = body
-    message.edited_at = timezone.now()
-    message.save(update_fields=["body", "edited_at"])
-    broadcast_message(message, "message.updated")
+    with transaction.atomic():
+        message.body = body
+        message.edited_at = timezone.now()
+        message.save(update_fields=["body", "edited_at"])
+        added = mentions.record(message)  # only people newly mentioned by the edit are notified
+        broadcast_message(message, "message.updated")
+        if added:
+            transaction.on_commit(lambda: notify_mentions(message.pk, added))
     return message
 
 
@@ -252,6 +259,7 @@ def delete_message(message) -> Message:
         for attachment in message.attachments.all():
             attachment.delete()  # the post_delete signal removes the files
         message.reactions.all().delete()
+        message.mention_links.all().delete()
         broadcast_message(message, "message.updated")
     return message
 
@@ -280,9 +288,9 @@ def mark_read(conversation, user, up_to: int | None = None) -> int:
     events = [(user.pk, {"type": "chat", "event": "read", "conversation": conversation.pk, "unread": count})]
     if count == 0:
         cleared = Notification.objects.filter(
-            recipient=user, is_read=False, link=f"/chat/{conversation.pk}",
-            type__in=[NotificationType.DIRECT_MESSAGE, NotificationType.CHANNEL_MESSAGE],
-        ).update(is_read=True)
+            recipient=user, is_read=False, link__startswith=f"/chat/{conversation.pk}",
+            type__in=[NotificationType.DIRECT_MESSAGE, NotificationType.CHANNEL_MESSAGE, NotificationType.CHAT_MENTION],
+        ).filter(Q(link=f"/chat/{conversation.pk}") | Q(link__startswith=f"/chat/{conversation.pk}?")).update(is_read=True)
         if cleared:
             remaining = Notification.objects.filter(recipient=user, is_read=False).count()
             events.append((user.pk, {"type": "unread_count", "count": remaining}))
@@ -299,28 +307,59 @@ def set_muted(conversation, user, muted: bool):
 # ================================================================ notifications
 
 
-def notify_new_message(message_id):
-    """In-app notification for each member who isn't looking at the conversation and hasn't muted it.
-
-    Direct messages are emailed later, only if still unread (send_unread_dm_emails), never right away.
-    """
-    message = with_details(Message.objects.filter(pk=message_id).select_related("conversation")).first()
-    if message is None or message.is_deleted:
-        return
+def _notification_params(message) -> dict:
     conversation = message.conversation
-    direct = conversation.kind == Conversation.Kind.DIRECT
-    recipients = User.objects.filter(
-        chat_memberships__conversation=conversation, chat_memberships__muted=False, is_active=True
-    ).exclude(pk=message.author_id)
     params = {
         "actor": message.author.full_name if message.author else "",
         "preview": preview_text(message),
         "conversation": conversation.pk,
         "message": message.pk,
     }
-    if not direct:
+    if conversation.kind != Conversation.Kind.DIRECT:
         params["channel"] = conversation.name
         params["general"] = conversation.is_default and conversation.channel_type == Conversation.ChannelType.GENERAL
+    return params
+
+
+def notify_mentions(message_id, user_ids) -> set[int]:
+    """"<name> mentioned you": even in a muted conversation, but not while you're looking at it.
+
+    Emailed later only if still unread (send_unread_dm_emails). Returns who was notified.
+    """
+    message = with_details(Message.objects.filter(pk=message_id).select_related("conversation")).first()
+    if message is None or message.is_deleted or not user_ids:
+        return set()
+    params = _notification_params(message)
+    kinds = dict(MessageMention.objects.filter(message=message, user_id__in=user_ids).values_list("user_id", "kind"))
+    done = set()
+    for user in User.objects.filter(pk__in=kinds, is_active=True):
+        done.add(user.pk)
+        if presence.is_viewing(user.pk, message.conversation_id):
+            continue
+        notify(
+            user, NotificationType.CHAT_MENTION, link=f"/chat/{message.conversation_id}?message={message.pk}", actor=message.author,
+            message="chat_mention", params={**params, "kind": kinds[user.pk]}, email=False,
+        )
+    return done
+
+
+def notify_new_message(message_id):
+    """In-app notifications for a new message.
+
+    People it mentions get "mentioned you" (even if they muted the conversation). Every other member
+    who isn't looking at the conversation and hasn't muted it gets "new message". Direct messages and
+    mentions are emailed later, only if still unread (send_unread_dm_emails), never right away.
+    """
+    message = with_details(Message.objects.filter(pk=message_id).select_related("conversation")).first()
+    if message is None or message.is_deleted:
+        return
+    conversation = message.conversation
+    direct = conversation.kind == Conversation.Kind.DIRECT
+    mentioned = notify_mentions(message.pk, list(MessageMention.objects.filter(message=message).values_list("user_id", flat=True)))
+    recipients = User.objects.filter(
+        chat_memberships__conversation=conversation, chat_memberships__muted=False, is_active=True
+    ).exclude(pk=message.author_id).exclude(pk__in=mentioned)
+    params = _notification_params(message)
     for user in recipients:
         if presence.is_viewing(user.pk, conversation.pk):
             continue
@@ -336,7 +375,9 @@ def notify_new_message(message_id):
 
 
 def send_unread_dm_emails(now=None) -> int:
-    """Email each person their direct messages left unread for DM_EMAIL_DELAY (one email per conversation).
+    """Email what was left unread for DM_EMAIL_DELAY: direct messages (unless muted) and mentions
+    (even in muted conversations). One email per conversation, following the person's settings
+    (direct-message and mention emails).
 
     Each membership remembers the newest message already emailed, and the update is conditional,
     so a message is never emailed twice, even when two runs overlap.
@@ -347,53 +388,66 @@ def send_unread_dm_emails(now=None) -> int:
         Message.objects.filter(window, conversation=OuterRef("conversation"), id__gt=OuterRef("last_read_id"))
         .filter(id__gt=OuterRef("last_emailed_id"))
         .exclude(author_id=OuterRef("user"))
+        .filter(Q(conversation__kind=Conversation.Kind.DIRECT) | Q(mention_links__user=OuterRef("user")))
     )
     memberships = (
-        Membership.objects.filter(conversation__kind=Conversation.Kind.DIRECT, muted=False, user__is_active=True)
+        Membership.objects.filter(user__is_active=True)
         .exclude(user__email="")
         .filter(Exists(pending))
-        .select_related("user")
+        .select_related("user", "conversation")
     )
     sent = 0
     for membership in memberships:
         user = membership.user
-        if not get_preferences(user).get(NotificationType.DIRECT_MESSAGE, {}).get("email"):
-            continue
+        prefs = get_preferences(user)
+        dm_email = prefs.get(NotificationType.DIRECT_MESSAGE, {}).get("email") and not membership.muted
+        mention_email = prefs.get(NotificationType.CHAT_MENTION, {}).get("email")
+        direct = membership.conversation.kind == Conversation.Kind.DIRECT
         messages = list(
             Message.objects.filter(window, conversation_id=membership.conversation_id)
             .filter(id__gt=max(membership.last_read_id, membership.last_emailed_id))
             .exclude(author=user)
             .select_related("author")
-            .prefetch_related("attachments")
+            .prefetch_related("attachments", "mention_links")
             .order_by("id")
         )
-        if not messages:
+        mentioning = {m.pk for m in messages if any(link.user_id == user.pk for link in m.mention_links.all())}
+        wanted = [m for m in messages if (direct and dm_email) or (m.pk in mentioning and mention_email)]
+        if not wanted:
             continue
         claimed = Membership.objects.filter(pk=membership.pk, last_emailed_id=membership.last_emailed_id).update(
             last_emailed_id=messages[-1].pk
         )
         if not claimed:
             continue  # another run got there first
-        subject, body = render_dm_email(user, membership.conversation_id, messages)
+        subject, body = render_dm_email(user, membership.conversation, wanted)
         queue_email(subject, body, [user.email])
         sent += 1
     return sent
 
 
-def render_dm_email(user, conversation_id, messages) -> tuple[str, str]:
+def render_dm_email(user, conversation, messages) -> tuple[str, str]:
     from apps.core.office_time import office_tz
 
     sender = messages[-1].author.full_name if messages[-1].author else _("A colleague")
-    link = f"{settings.FRONTEND_URL.rstrip('/')}/chat/{conversation_id}"
+    link = f"{settings.FRONTEND_URL.rstrip('/')}/chat/{conversation.pk}?message={messages[0].pk}"
+    direct = conversation.kind == Conversation.Kind.DIRECT
     with translation.override(user.language or settings.LANGUAGE_CODE):
-        lines = [_("You have unread messages from %(name)s:") % {"name": sender}, ""]
+        if direct:
+            lines = [_("You have unread messages from %(name)s:") % {"name": sender}, ""]
+        else:
+            channel = _("General") if conversation.is_default and conversation.channel_type == Conversation.ChannelType.GENERAL else conversation.name
+            lines = [_("You were mentioned in #%(channel)s:") % {"channel": channel}, ""]
         for m in messages[-10:]:
-            lines.append(f"  {m.created_at.astimezone(office_tz()):%H:%M}  {preview_text(m)}")
+            who = "" if direct else f"{m.author.full_name if m.author else ''}: "
+            lines.append(f"  {m.created_at.astimezone(office_tz()):%H:%M}  {who}{preview_text(m)}")
         if len(messages) > 10:
             lines.append("  " + _("…and %(n)s more") % {"n": len(messages) - 10})
         lines += ["", _("Reply in the CRM: %(link)s") % {"link": link}, "",
-                  _("You get this email because direct-message emails are on in your notification settings.")]
-        subject = _("Unread messages from %(name)s") % {"name": sender}
+                  _("You get this email because direct-message emails are on in your notification settings.") if direct
+                  else _("You get this email because mention emails are on in your notification settings.")]
+        subject = (_("Unread messages from %(name)s") % {"name": sender}) if direct else (
+            _("%(name)s mentioned you in #%(channel)s") % {"name": sender, "channel": channel})
     return subject, "\n".join(lines)
 
 

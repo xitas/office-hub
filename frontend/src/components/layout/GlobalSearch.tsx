@@ -112,6 +112,12 @@ export function GlobalSearch() {
                         {hit.task_status && <TaskStatusBadge status={hit.task_status} className="shrink-0" />}
                       </CommandItem>
                     ))}
+                    {group === 'messages' && (
+                      <CommandItem value="messages-all" onSelect={() => go(`/chat/search?q=${encodeURIComponent(debounced)}`)}>
+                        <Search className="size-4" />
+                        <span className="text-primary">{t('search.allMessages')}</span>
+                      </CommandItem>
+                    )}
                   </CommandGroup>
                 )
               })}

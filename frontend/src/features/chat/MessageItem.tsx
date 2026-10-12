@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Download, FileText, Loader2, Pencil, Reply, SmilePlus, Trash2 } from 'lucide-react'
-import { Fragment, useState, type ReactNode } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { FormDialog, UserAvatar } from '@/components/common'
@@ -12,35 +12,12 @@ import { useMe } from '@/lib/auth'
 import { REACTIONS, replaceMessage, type ChatAttachment, type ChatMessage } from '@/lib/chat'
 import { useConfirm } from '@/lib/confirm'
 import { useFormat } from '@/lib/format'
+import { bodyToEditable, editableToBody } from '@/lib/tasks'
 import { downloadFile } from '@/lib/transfer'
 import { useAuthedBlobUrl } from '@/lib/useAuthedBlob'
 import { cn } from '@/lib/utils'
-import { BIDI_TEXT } from './text'
-
-const LINK = /\b((?:https?:\/\/|www\.)[^\s<>"']+)/gi
-
-/** Text with web links made clickable (new tab, no referrer or opener). No previews of external sites. */
-export function Linkified({ text }: { text: string }) {
-  const parts: ReactNode[] = []
-  let last = 0
-  for (const match of text.matchAll(LINK)) {
-    let url = match[0]
-    // Trailing punctuation belongs to the sentence, not the link.
-    const trail = url.match(/[.,;:!?)\]]+$/)?.[0] ?? ''
-    url = url.slice(0, url.length - trail.length)
-    const start = match.index ?? 0
-    parts.push(text.slice(last, start))
-    const href = url.toLowerCase().startsWith('www.') ? `https://${url}` : url
-    parts.push(
-      <a key={start} href={href} target="_blank" rel="noopener noreferrer nofollow" className="break-all text-primary underline underline-offset-2">
-        {url}
-      </a>,
-    )
-    last = start + url.length
-  }
-  parts.push(text.slice(last))
-  return <>{parts.map((p, i) => (typeof p === 'string' ? <Fragment key={`t${i}`}>{p}</Fragment> : p))}</>
-}
+import { MessageText, RecordCards } from './MessageBody'
+import { BIDI_TEXT, plainText } from './text'
 
 export function MessageItem({
   message: m,
@@ -105,7 +82,7 @@ export function MessageItem({
           >
             <Reply className="size-3 shrink-0 text-muted-foreground rtl:-scale-x-100" />
             <bdi className="shrink-0 font-medium">{m.reply.author?.full_name ?? t('chat.someone')}</bdi>
-            <span className={cn('min-w-0 truncate text-muted-foreground', BIDI_TEXT)}>{m.reply.deleted ? t('chat.deleted') : m.reply.body || '📎'}</span>
+            <span className={cn('min-w-0 truncate text-muted-foreground', BIDI_TEXT)}>{m.reply.deleted ? t('chat.deleted') : plainText(m.reply.body) || '📎'}</span>
           </button>
         )}
         {editing ? (
@@ -118,11 +95,12 @@ export function MessageItem({
         ) : (
           m.body && (
             <p className={cn('text-sm break-words whitespace-pre-wrap', BIDI_TEXT)}>
-              <Linkified text={m.body} />
+              <MessageText body={m.body} />
               {m.edited_at && <span className="ms-1.5 text-[11px] text-muted-foreground">({t('chat.edited')})</span>}
             </p>
           )
         )}
+        {!m.deleted && m.body && <RecordCards body={m.body} />}
         {!m.deleted && m.attachments.length > 0 && (
           <ul className="mt-1 flex flex-wrap gap-2">
             {m.attachments.map((a) => (
@@ -275,9 +253,12 @@ function ImagePreview({ attachment, onClose, onDownload }: { attachment: ChatAtt
 
 function EditBox({ message, onDone }: { message: ChatMessage; onDone: (updated?: ChatMessage) => void }) {
   const { t } = useTranslation()
-  const [body, setBody] = useState(message.body)
+  // Mentions read as "@Full Name" while editing and turn back into mentions when saved.
+  const [original] = useState(() => bodyToEditable(message.body))
+  const [body, setBody] = useState(original.text)
   const save = useMutation({
-    mutationFn: async () => (await api.patch<ChatMessage>(`/chat/messages/${message.id}/`, { body })).data,
+    mutationFn: async () =>
+      (await api.patch<ChatMessage>(`/chat/messages/${message.id}/`, { body: editableToBody(body, original.mentions) })).data,
     onSuccess: (updated) => onDone(updated),
     onError: (e) => toast.error(apiError(e).message),
   })

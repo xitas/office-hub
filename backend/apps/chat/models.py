@@ -161,3 +161,22 @@ class MessageAttachment(models.Model):
 
     def __str__(self):
         return self.original_name
+
+
+class MessageMention(models.Model):
+    """Someone a message notifies: named with @, or reached by @channel / @here (resolved when sent)."""
+
+    class Kind(models.TextChoices):
+        DIRECT = "direct", _("Mentioned by name")
+        CHANNEL = "channel", _("@channel")
+        HERE = "here", _("@here")
+
+    message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name="mention_links")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="chat_mentions")
+    kind = models.CharField(max_length=10, choices=Kind.choices, default=Kind.DIRECT)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["message", "user"], name="chat_one_mention_per_person")]
+        indexes = [models.Index(fields=["user", "-message"], name="chat_mention_inbox_idx")]
+        verbose_name = _("mention")
+        verbose_name_plural = _("mentions")

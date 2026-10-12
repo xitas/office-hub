@@ -167,7 +167,8 @@
     "completion": "اس ہفتے کے کام",
     "completionDone": "مکمل",
     "completionCreated": "نئے",
-    "completionDay": "{{done}} مکمل، {{created}} نئے"
+    "completionDay": "{{done}} مکمل، {{created}} نئے",
+    "mentions": "نہ پڑھے گئے ذکر"
   },
   "notifications": {
     "title": "اطلاعات",
@@ -189,7 +190,8 @@
       "messages": "پیغامات",
       "files": "فائلیں",
       "companies": "کمپنیاں"
-    }
+    },
+    "allMessages": "تمام پیغامات میں تلاش کریں"
   },
   "team": {
     "title": "ٹیم ڈائریکٹری",
@@ -361,7 +363,7 @@
     "task_status": "کام کی حیثیت تبدیل ہوئی",
     "task_comment": "میرے کام پر نیا تبصرہ",
     "task_deadline": "کام جلد واجب",
-    "mention": "کسی تبصرے یا چیٹ میں ذکر",
+    "mention": "کام کے تبصرے میں ذکر",
     "direct_message": "نیا براہ راست پیغام",
     "follow_up": "کلائنٹ فالو اپ کا وقت",
     "approval_request": "منظوری کی درخواست",
@@ -372,7 +374,8 @@
     "system": "سسٹم اور سیکیورٹی",
     "task_overdue": "کام میں تاخیر",
     "daily_digest": "صبح کا خلاصہ (ای میل)",
-    "channel_message": "میرے چینلز میں نیا پیغام"
+    "channel_message": "میرے چینلز میں نیا پیغام",
+    "chat_mention": "چیٹ میں ذکر"
   },
   "companies": {
     "title": "کمپنیاں",
@@ -1064,6 +1067,43 @@
     "newMessages_other": "{{count}} نئے پیغامات",
     "typingOne": "{{name}} لکھ رہے ہیں…",
     "typingTwo": "{{a}} اور {{b}} لکھ رہے ہیں…",
-    "typingMany": "کئی لوگ لکھ رہے ہیں…"
+    "typingMany": "کئی لوگ لکھ رہے ہیں…",
+    "mentionSomeone": "کسی کا ذکر کریں",
+    "broadcast": {
+      "channel": "اس چینل میں سب کو اطلاع دیں",
+      "here": "ابھی آن لائن اراکین کو اطلاع دیں"
+    },
+    "broadcastTitle": "سب کو اطلاع دیں؟",
+    "broadcastConfirm_one": "یہ پیغام {{count}} فرد کو اطلاع دے گا۔",
+    "broadcastConfirm_other": "یہ پیغام {{count}} افراد کو اطلاع دے گا۔",
+    "broadcastSend": "بھیجیں اور اطلاع دیں",
+    "recordCard": "{{type}}: {{title}}",
+    "recordTypes": {
+      "task": "کام",
+      "contact": "رابطہ",
+      "company": "کمپنی"
+    },
+    "inContext": "آپ ایک پرانا پیغام اس کے سیاق میں دیکھ رہے ہیں۔",
+    "backToLatest": "تازہ ترین پر واپس",
+    "messageGone": "یہ پیغام اب دستیاب نہیں۔",
+    "mentions": "ذکر",
+    "unreadMentions_one": "{{count}} نہ پڑھا گیا ذکر",
+    "unreadMentions_other": "{{count}} نہ پڑھے گئے ذکر",
+    "noMentions": "ابھی کوئی ذکر نہیں",
+    "noMentionsHint": "جب کوئی @ کے ساتھ آپ کا ذکر کرے گا تو وہ یہاں نظر آئے گا۔",
+    "searchMessages": "پیغامات تلاش کریں",
+    "searchPlaceholder": "تلاش کے الفاظ…",
+    "searchIn": "میں",
+    "everywhere": "تمام گفتگو",
+    "searchFrom": "بھیجنے والا",
+    "anyone": "کوئی بھی",
+    "searchAfter": "تاریخ سے",
+    "searchBefore": "تاریخ تک",
+    "searchStart": "اپنی گفتگو میں تلاش کریں",
+    "searchHint": "کم از کم 2 حروف لکھیں۔ صرف وہ گفتگو تلاش ہوتی ہے جو آپ پڑھ سکتے ہیں۔",
+    "noResults": "کچھ نہیں ملا",
+    "noResultsHint": "دوسرے الفاظ یا کم فلٹر آزمائیں۔",
+    "loadMore": "مزید دکھائیں",
+    "openInContext": "{{where}} میں {{name}} کا پیغام کھولیں"
   }
 }

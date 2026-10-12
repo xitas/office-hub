@@ -167,7 +167,8 @@
     "completion": "Tasks this week",
     "completionDone": "done",
     "completionCreated": "created",
-    "completionDay": "{{done}} done, {{created}} created"
+    "completionDay": "{{done}} done, {{created}} created",
+    "mentions": "Unread mentions"
   },
   "notifications": {
     "title": "Notifications",
@@ -189,7 +190,8 @@
       "messages": "Messages",
       "files": "Files",
       "companies": "Companies"
-    }
+    },
+    "allMessages": "Search all messages"
   },
   "team": {
     "title": "Team directory",
@@ -361,7 +363,7 @@
     "task_status": "Task status changed",
     "task_comment": "New comment on my task",
     "task_deadline": "Task due soon",
-    "mention": "Mentioned in a comment or chat",
+    "mention": "Mentioned in a task comment",
     "direct_message": "New direct message",
     "follow_up": "Client follow-up due",
     "approval_request": "Approval requested",
@@ -372,7 +374,8 @@
     "system": "System and security",
     "task_overdue": "Task overdue",
     "daily_digest": "Morning digest (email)",
-    "channel_message": "New message in my channels"
+    "channel_message": "New message in my channels",
+    "chat_mention": "Mentioned in chat"
   },
   "companies": {
     "title": "Companies",
@@ -1064,6 +1067,43 @@
     "newMessages_other": "{{count}} new messages",
     "typingOne": "{{name}} is typing…",
     "typingTwo": "{{a}} and {{b}} are typing…",
-    "typingMany": "Several people are typing…"
+    "typingMany": "Several people are typing…",
+    "mentionSomeone": "Mention someone",
+    "broadcast": {
+      "channel": "Notify everyone in this channel",
+      "here": "Notify members who are online now"
+    },
+    "broadcastTitle": "Notify everyone?",
+    "broadcastConfirm_one": "This message will notify {{count}} person.",
+    "broadcastConfirm_other": "This message will notify {{count}} people.",
+    "broadcastSend": "Send and notify",
+    "recordCard": "{{type}}: {{title}}",
+    "recordTypes": {
+      "task": "Task",
+      "contact": "Contact",
+      "company": "Company"
+    },
+    "inContext": "You are viewing an earlier message in context.",
+    "backToLatest": "Back to latest",
+    "messageGone": "That message is no longer available.",
+    "mentions": "Mentions",
+    "unreadMentions_one": "{{count}} unread mention",
+    "unreadMentions_other": "{{count}} unread mentions",
+    "noMentions": "No mentions yet",
+    "noMentionsHint": "When someone mentions you with @, it shows up here.",
+    "searchMessages": "Search messages",
+    "searchPlaceholder": "Words to find…",
+    "searchIn": "In",
+    "everywhere": "All conversations",
+    "searchFrom": "From",
+    "anyone": "Anyone",
+    "searchAfter": "From date",
+    "searchBefore": "To date",
+    "searchStart": "Search your conversations",
+    "searchHint": "Type at least 2 characters. Only conversations you can read are searched.",
+    "noResults": "Nothing found",
+    "noResultsHint": "Try other words or fewer filters.",
+    "loadMore": "Show more",
+    "openInContext": "Open the message from {{name}} in {{where}}"
   }
 }

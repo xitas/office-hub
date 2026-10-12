@@ -10,7 +10,8 @@ class NotificationType(models.TextChoices):
     TASK_DEADLINE = "task_deadline", _("Task deadline approaching")
     TASK_OVERDUE = "task_overdue", _("Task overdue")
     DAILY_DIGEST = "daily_digest", _("Morning digest (email)")
-    MENTION = "mention", _("Mentioned in a comment or chat")
+    MENTION = "mention", _("Mentioned in a task comment")
+    CHAT_MENTION = "chat_mention", _("Mentioned in chat")
     DIRECT_MESSAGE = "direct_message", _("New direct message")
     CHANNEL_MESSAGE = "channel_message", _("New message in my channels")
     FOLLOW_UP = "follow_up", _("Client follow-up due")
@@ -29,6 +30,8 @@ DEFAULT_PREFERENCES = {
 }
 # Direct messages: email only when one is left unread for a while (see apps.chat.tasks); channel messages never email.
 DEFAULT_PREFERENCES["direct_message"] = {"in_app": True, "email": True}
+# Chat mentions: emailed only if left unread for a while (see apps.chat.tasks).
+DEFAULT_PREFERENCES["chat_mention"] = {"in_app": True, "email": True}
 # The digest is an email only.
 DEFAULT_PREFERENCES["daily_digest"] = {"in_app": False, "email": True}
 

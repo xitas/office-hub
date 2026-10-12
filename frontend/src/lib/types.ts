@@ -137,6 +137,8 @@ export interface DashboardData {
   /** Managers and admins only. */
   team_workload: WorkloadRow[] | null
   task_completion: TaskCompletion | null
+  /** Mentions of me not read yet (Phase 3). */
+  chat_mentions: { unread: number } | null
 }
 
 export interface DashboardListItem {

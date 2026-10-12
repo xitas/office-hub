@@ -1,5 +1,7 @@
 import { previewOf, type ChatMessage } from '@/lib/chat'
 
+export { plainText } from '@/lib/chat'
+
 // Mixed English/Urdu text: each paragraph finds its own direction, but lines up with the page.
 export const BIDI_TEXT = '[unicode-bidi:plaintext] ltr:text-left rtl:text-right'
 

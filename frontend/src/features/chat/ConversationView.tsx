@@ -1,8 +1,8 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Archive, ArrowDown, ArrowLeft, ArrowUp, Bell, BellOff, Upload, Users } from 'lucide-react'
+import { Archive, ArrowDown, ArrowLeft, ArrowUp, Bell, BellOff, History, Upload, Users } from 'lucide-react'
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { ErrorState, UserAvatar } from '@/components/common'
 import { Button } from '@/components/ui/button'
@@ -12,11 +12,13 @@ import { useMe } from '@/lib/auth'
 import {
   CHAT_UNREAD_KEY,
   CONVERSATIONS_KEY,
+  aroundKey,
   conversationTitle,
   cursorOf,
   messagesKey,
   useOnline,
   useTyping,
+  type AroundPage,
   type ChatMessage,
   type Conversation,
   type MessagePage,
@@ -29,8 +31,6 @@ import { Composer, type ComposerHandle } from './Composer'
 import { MessageItem } from './MessageItem'
 import { announce } from './text'
 
-const MAX_JUMP_PAGES = 10 // how far back "jump to" loads older messages
-
 export function ConversationView({ id, className }: { id: number; className?: string }) {
   const { t } = useTranslation()
   const me = useMe()
@@ -39,6 +39,9 @@ export function ConversationView({ id, className }: { id: number; className?: st
   const composer = useRef<ComposerHandle>(null)
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null)
   const [dragging, setDragging] = useState(false)
+  // ?message=ID opens that message "in context" (from search, Mentions, a reply quote or a notification).
+  const [params, setParams] = useSearchParams()
+  const focusParam = Number(params.get('message')) || null
 
   const conversation = useQuery({
     queryKey: [...CONVERSATIONS_KEY, 'detail', id],
@@ -53,6 +56,19 @@ export function ConversationView({ id, className }: { id: number; className?: st
     enabled: conversation.isSuccess,
   })
   const c = conversation.data
+  const around = useQuery({
+    queryKey: aroundKey(id, focusParam ?? 0),
+    queryFn: async () =>
+      (await api.get<AroundPage>(`/chat/conversations/${id}/messages/`, { params: { around: focusParam } })).data,
+    enabled: conversation.isSuccess && focusParam !== null,
+    retry: false,
+  })
+  const inContext = focusParam !== null && !around.isError
+  const backToLatest = () =>
+    setParams((p) => {
+      p.delete('message')
+      return p
+    })
 
   // This tab shows the conversation: no notifications for it while it's open and visible.
   useEffect(() => {
@@ -85,23 +101,12 @@ export function ConversationView({ id, className }: { id: number; className?: st
     })
   }, [c?.is_member, newestId, id, queryClient])
 
-  /** Scroll to a message, loading older pages if it isn't loaded yet. */
-  const jumpTo = async (messageId: number) => {
-    for (let i = 0; i <= MAX_JUMP_PAGES; i++) {
-      const el = document.getElementById(`message-${messageId}`)
-      if (el) {
-        el.scrollIntoView({ block: 'center', behavior: 'smooth' })
-        el.focus({ preventScroll: true })
-        el.classList.add('bg-primary/10')
-        window.setTimeout(() => el.classList.remove('bg-primary/10'), 1600)
-        return
-      }
-      const pages = queryClient.getQueryData<{ pages: MessagePage[] }>(messagesKey(id))?.pages
-      if (!pages?.at(-1)?.next) break
-      await history.fetchNextPage()
-      await new Promise((r) => requestAnimationFrame(r))
-    }
-    toast.info(t('chat.tooOld'))
+  /** Scroll to a message on screen, or open it "in context" (the messages around it) if it isn't loaded. */
+  const jumpTo = (messageId: number) => {
+    if (!highlight(messageId)) setParams((p) => {
+      p.set('message', String(messageId))
+      return p
+    })
   }
 
   const mute = useMutation({
@@ -186,19 +191,49 @@ export function ConversationView({ id, className }: { id: number; className?: st
         )}
       </header>
 
-      <MessageList
-        conversationId={id}
-        messages={messages}
-        loading={history.isLoading}
-        hasOlder={!!history.hasNextPage}
-        loadingOlder={history.isFetchingNextPage}
-        onLoadOlder={() => void history.fetchNextPage()}
-        canChange={c.can_post}
-        firstUnreadId={unread[0]?.id}
-        unreadCount={unread.length}
-        onReply={setReplyTo}
-        onJump={(mid) => void jumpTo(mid)}
-      />
+      {inContext && (
+        <div className="flex items-center gap-2 border-b bg-muted/60 px-3 py-1.5 text-xs">
+          <History className="size-3.5 shrink-0 text-muted-foreground" />
+          <span className="min-w-0 flex-1 truncate">{t('chat.inContext')}</span>
+          <Button size="xs" variant="outline" onClick={backToLatest}>
+            {t('chat.backToLatest')}
+          </Button>
+        </div>
+      )}
+      {around.isError && focusParam !== null && (
+        <p className="border-b bg-muted/60 px-3 py-1.5 text-xs text-muted-foreground">{t('chat.messageGone')}</p>
+      )}
+      {inContext ? (
+        <MessageList
+          key={`around-${focusParam}`}
+          conversationId={id}
+          messages={(around.data?.results ?? []).slice().reverse()}
+          loading={around.isLoading}
+          hasOlder={false}
+          loadingOlder={false}
+          onLoadOlder={() => {}}
+          canChange={c.can_post}
+          unreadCount={0}
+          focusId={focusParam ?? undefined}
+          onReply={setReplyTo}
+          onJump={jumpTo}
+        />
+      ) : (
+        <MessageList
+          key="live"
+          conversationId={id}
+          messages={messages}
+          loading={history.isLoading}
+          hasOlder={!!history.hasNextPage}
+          loadingOlder={history.isFetchingNextPage}
+          onLoadOlder={() => void history.fetchNextPage()}
+          canChange={c.can_post}
+          firstUnreadId={unread[0]?.id}
+          unreadCount={unread.length}
+          onReply={setReplyTo}
+          onJump={jumpTo}
+        />
+      )}
 
       <TypingLine conversationId={id} />
 
@@ -210,7 +245,7 @@ export function ConversationView({ id, className }: { id: number; className?: st
       ) : c.can_post ? (
         <Composer
           ref={composer}
-          conversationId={id}
+          conversation={c}
           placeholder={t('chat.writeTo', { name: title })}
           replyTo={replyTo}
           onCancelReply={() => setReplyTo(null)}
@@ -255,6 +290,7 @@ function MessageList({
   canChange,
   firstUnreadId,
   unreadCount,
+  focusId,
   onReply,
   onJump,
 }: {
@@ -267,6 +303,8 @@ function MessageList({
   canChange: boolean
   firstUnreadId?: number
   unreadCount: number
+  /** Opened "in context": scroll to and highlight this message. */
+  focusId?: number
   onReply: (m: ChatMessage) => void
   onJump: (id: number) => void
 }) {
@@ -309,7 +347,9 @@ function MessageList({
       opened.current = true
       prevNewest.current = newest.id
       const divider = scroller.current?.querySelector('[data-unread-divider]')
-      if (divider) {
+      if (focusId !== undefined && highlight(focusId, false)) {
+        followRef.current = false
+      } else if (divider) {
         divider.scrollIntoView({ block: 'start' })
         const el = scroller.current!
         followRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80 // everything fits: keep following
@@ -322,7 +362,7 @@ function MessageList({
     prevNewest.current = newest.id
     // A new message: follow it only if the reader was already at the bottom (or sent it); otherwise the button shows.
     if (newest.author?.id === me.id || followRef.current) toBottom()
-  }, [loading, newest, me.id])
+  }, [loading, newest, me.id, focusId])
 
   // Images load after the text: stay pinned to the bottom while their height arrives.
   const list = useRef<HTMLOListElement>(null)
@@ -436,6 +476,17 @@ function MessageList({
       </p>
     </div>
   )
+}
+
+/** Scroll a message into view and flash it. False if it isn't on screen. */
+function highlight(messageId: number, smooth = true) {
+  const el = document.getElementById(`message-${messageId}`)
+  if (!el) return false
+  el.scrollIntoView({ block: 'center', behavior: smooth ? 'smooth' : 'auto' })
+  el.focus({ preventScroll: true })
+  el.classList.add('bg-primary/10')
+  window.setTimeout(() => el.classList.remove('bg-primary/10'), 2000)
+  return true
 }
 
 /** Consecutive messages by the same person within 5 minutes share one header. */

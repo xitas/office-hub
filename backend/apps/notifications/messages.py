@@ -89,7 +89,21 @@ def _chat_channel(params: dict) -> tuple[str, str]:
     )
 
 
+def _chat_mention(params: dict) -> tuple[str, str]:
+    actor = params.get("actor", "")
+    if "channel" not in params:
+        title = _("%(actor)s mentioned you") % {"actor": actor}
+    else:
+        channel = _("General") if params.get("general") else params.get("channel", "")
+        title = (
+            _("%(actor)s mentioned you in #%(channel)s") if params.get("kind", "direct") == "direct"
+            else _("%(actor)s notified everyone in #%(channel)s")
+        ) % {"actor": actor, "channel": channel}
+    return title, params.get("preview", "")
+
+
 RENDERERS = {
+    "chat_mention": _chat_mention,
     "chat_direct": _chat_direct,
     "chat_channel": _chat_channel,
     "task_assigned": _task_assigned,

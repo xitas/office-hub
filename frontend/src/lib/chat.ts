@@ -160,12 +160,59 @@ export function useTyping(conversation: number) {
 
 // ---------------------------------------------------------------- drafts (kept per conversation while switching)
 
-const drafts = new Map<number, string>()
-export const getDraft = (conversation: number) => drafts.get(conversation) ?? ''
-export const setDraft = (conversation: number, text: string) => {
-  if (text) drafts.set(conversation, text)
+export interface Draft {
+  text: string
+  /** People picked from the @ suggestions (their "@Full Name" becomes a mention token when sent). */
+  mentions: ChatPerson[]
+}
+const drafts = new Map<number, Draft>()
+export const getDraft = (conversation: number): Draft => drafts.get(conversation) ?? { text: '', mentions: [] }
+export const setDraft = (conversation: number, draft: Draft) => {
+  if (draft.text) drafts.set(conversation, draft)
   else drafts.delete(conversation)
 }
+
+// ---------------------------------------------------------------- mentions, search
+
+/** A message found by search or in "Mentions", with where it was said. */
+export interface FoundMessage extends ChatMessage {
+  conversation_title: string
+  conversation_kind: 'channel' | 'direct'
+}
+
+export interface FoundPage {
+  next: string | null
+  previous: string | null
+  results: FoundMessage[]
+  /** Mentions: how many are still unread. */
+  unread?: number
+  /** Search: the words to highlight. */
+  terms?: string[]
+}
+
+export const MENTIONS_KEY = ['chat', 'mentions'] as const
+
+/** Mentions of me not read yet (for the "Mentions" entry and the dashboard). */
+export function useUnreadMentions() {
+  const me = useMe()
+  const { data } = useQuery({
+    queryKey: [...MENTIONS_KEY, 'unread'],
+    queryFn: async () => (await api.get<FoundPage>('/chat/mentions/')).data.unread ?? 0,
+    enabled: me.permissions.includes('chat.view'),
+    staleTime: 30_000,
+  })
+  return data ?? 0
+}
+
+/** People to suggest after "@" (and whether @channel / @here may be offered). */
+export interface MentionSuggestions {
+  people: ChatPerson[]
+  can_broadcast: boolean
+}
+
+/** Large channels ask before @channel / @here notifies everyone (same number as the server). */
+export const BROADCAST_CONFIRM_ABOVE = 10
+export const BROADCAST_RE = /(?<![\w@[])@(channel|here)\b/
 
 /** The `cursor` value from a pagination link (links point at the API host, so only the cursor is reused). */
 export function cursorOf(link: string | null) {
@@ -173,10 +220,22 @@ export function cursorOf(link: string | null) {
   return new URL(link, window.location.origin).searchParams.get('cursor') ?? undefined
 }
 
-/** Replace one message in the cached history (edits, reactions, deletions). */
+/** A message opened "in context" (from search or Mentions): the messages around it. */
+export interface AroundPage {
+  results: ChatMessage[]
+  has_newer: boolean
+  has_older: boolean
+}
+export const aroundKey = (conversation: number, message: number) => ['chat', 'around', conversation, message] as const
+
+/** Replace one message wherever it is cached (history and "in context" views): edits, reactions, deletions. */
 export function replaceMessage(queryClient: QueryClient, message: ChatMessage) {
+  const swap = (m: ChatMessage) => (m.id === message.id ? message : m)
   queryClient.setQueryData<InfiniteData<MessagePage>>(messagesKey(message.conversation), (data) =>
-    data && { ...data, pages: data.pages.map((p) => ({ ...p, results: p.results.map((m) => (m.id === message.id ? message : m)) })) },
+    data && { ...data, pages: data.pages.map((p) => ({ ...p, results: p.results.map(swap) })) },
+  )
+  queryClient.setQueriesData<AroundPage>({ queryKey: ['chat', 'around', message.conversation] }, (data) =>
+    data && { ...data, results: data.results.map(swap) },
   )
 }
 
@@ -189,8 +248,16 @@ export function addMessage(queryClient: QueryClient, message: ChatMessage) {
   })
 }
 
+/** Mention tokens written by the picker: @[Full Name](user:12). */
+export const MENTION_TOKEN = /@\[([^\]\n]{1,150})\]\(user:(\d+)\)/g
+
+/** The text as people read it: mention tokens become "@Full Name". */
+export function plainText(body: string) {
+  return body.replace(MENTION_TOKEN, (_m, name: string) => `@${name}`)
+}
+
 export function previewOf(m: Pick<ChatMessage, 'body' | 'attachments'>) {
-  if (m.body) return m.body.slice(0, 120)
+  if (m.body) return plainText(m.body).slice(0, 120)
   return m.attachments.length ? `📎 ${m.attachments.map((a) => a.original_name).join(', ')}`.slice(0, 120) : ''
 }
 
@@ -243,6 +310,9 @@ export function applyChatEvent(queryClient: QueryClient, event: ChatEvent) {
   } else {
     if (event.message.author) removeTypist(event.conversation, event.message.author.id)
     addMessage(queryClient, event.message)
+    if (BROADCAST_RE.test(event.message.body) || event.message.body.includes('](user:')) {
+      void queryClient.invalidateQueries({ queryKey: MENTIONS_KEY }) // it may mention me
+    }
   }
 }
 

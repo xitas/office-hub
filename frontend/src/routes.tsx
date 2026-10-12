@@ -61,6 +61,14 @@ export const router = createBrowserRouter([
             lazy: () => import('@/features/chat/ChatPage').then((m) => ({ Component: m.ChatPage })),
           },
           {
+            path: 'chat/mentions',
+            lazy: () => import('@/features/chat/ChatPage').then((m) => ({ Component: m.ChatPage })),
+          },
+          {
+            path: 'chat/search',
+            lazy: () => import('@/features/chat/ChatPage').then((m) => ({ Component: m.ChatPage })),
+          },
+          {
             path: 'chat/:id',
             lazy: () => import('@/features/chat/ChatPage').then((m) => ({ Component: m.ChatPage })),
           },

@@ -1112,3 +1112,45 @@ msgstr "#%(channel)s میں نیا پیغام"
 
 msgid "New message in my channels"
 msgstr "میرے چینلز میں نیا پیغام"
+
+msgid "Mentioned by name"
+msgstr "نام سے ذکر"
+
+msgid "@channel"
+msgstr "@channel"
+
+msgid "@here"
+msgstr "@here"
+
+msgid "mention"
+msgstr "ذکر"
+
+msgid "mentions"
+msgstr "ذکر"
+
+msgid "You were mentioned in #%(channel)s:"
+msgstr "#%(channel)s میں آپ کا ذکر ہوا:"
+
+msgid "You get this email because mention emails are on in your notification settings."
+msgstr "آپ کو یہ ای میل اس لیے ملی کیونکہ اطلاعات کی ترتیبات میں ذکر کی ای میل آن ہے۔"
+
+msgid "%(name)s mentioned you in #%(channel)s"
+msgstr "%(name)s نے #%(channel)s میں آپ کا ذکر کیا"
+
+msgid "Only the channel's manager or an admin can use @channel and @here."
+msgstr "@channel اور @here صرف چینل کا مینیجر یا ایڈمن استعمال کر سکتا ہے۔"
+
+msgid "This notifies %(n)s people. Confirm to send."
+msgstr "یہ %(n)s افراد کو اطلاع دے گا۔ بھیجنے کی تصدیق کریں۔"
+
+msgid "Give a number."
+msgstr "ایک عدد دیں۔"
+
+msgid "%(actor)s mentioned you in #%(channel)s"
+msgstr "%(actor)s نے #%(channel)s میں آپ کا ذکر کیا"
+
+msgid "%(actor)s notified everyone in #%(channel)s"
+msgstr "%(actor)s نے #%(channel)s میں سب کو اطلاع دی"
+
+msgid "Mentioned in a task comment"
+msgstr "کام کے تبصرے میں ذکر"

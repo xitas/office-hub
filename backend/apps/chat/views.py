@@ -7,7 +7,8 @@ from django.utils.translation import gettext as _
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, serializers, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
+from rest_framework.views import APIView
 from rest_framework.pagination import CursorPagination
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
@@ -18,7 +19,8 @@ from apps.core.models import AuditLog
 from apps.core.permissions import ModulePermission
 from apps.core.safe_cache import safe_cache
 
-from . import presence, rules, services
+from . import integration, mentions, presence, rules, services
+from .search import MIN_QUERY, search_messages, terms
 from .models import REACTIONS, Conversation, Membership, Message, MessageAttachment
 from .serializers import ChannelWriteSerializer, ConversationSerializer, MessageSerializer
 
@@ -57,6 +59,38 @@ class ReactSerializer(serializers.Serializer):
 
 class ReadSerializer(serializers.Serializer):
     message = serializers.IntegerField(required=False, help_text="Default: the newest message")
+
+
+AROUND = 15  # messages shown on each side of a message opened "in context"
+
+
+def check_broadcast(request, conversation, body: str):
+    """@channel / @here: channel managers and admins only; a large channel needs `confirm_broadcast`."""
+    kind = mentions.broadcast_kind(body, conversation)
+    if not kind:
+        return
+    if not mentions.can_broadcast(request.user, conversation):
+        raise ValidationError({"body": [_("Only the channel's manager or an admin can use @channel and @here.")]})
+    members = Membership.objects.filter(conversation=conversation).count()
+    confirmed = str(request.data.get("confirm_broadcast", "")).lower() in ("1", "true", "yes")
+    if members > mentions.BROADCAST_CONFIRM_ABOVE and not confirmed:
+        raise ValidationError({
+            "confirm_broadcast": [_("This notifies %(n)s people. Confirm to send.") % {"n": members}],
+            "members": members,
+        })
+
+
+def found_item(message, viewer, titles: dict) -> dict:
+    """A message in "Mentions" or search results, with where it was said."""
+    conversation = message.conversation
+    if conversation.pk not in titles:
+        titles[conversation.pk] = integration.conversation_title(conversation, viewer)
+    return {**services.message_data(message), "conversation_title": titles[conversation.pk], "conversation_kind": conversation.kind}
+
+
+class FoundPagination(CursorPagination):
+    ordering = "-id"
+    page_size = 20
 
 
 def _names(users) -> str:
@@ -309,6 +343,22 @@ class ConversationViewSet(
             if not rules.readable_conversations(request.user).filter(pk=conversation.pk).exists():
                 raise PermissionDenied(_("Only members can read this conversation."))
             qs = services.with_details(Message.objects.filter(conversation=conversation))
+            around = request.query_params.get("around")
+            if around:
+                # One message "in context": up to AROUND older and newer messages (newest first).
+                try:
+                    pivot = int(around)
+                except ValueError:
+                    raise ValidationError({"around": _("Give a message id.")})
+                older = list(qs.filter(id__lte=pivot).order_by("-id")[: AROUND + 2])
+                newer = list(qs.filter(id__gt=pivot).order_by("id")[: AROUND + 1])
+                if not older or older[0].pk != pivot:
+                    raise NotFound()
+                return Response({
+                    "results": [services.message_data(m) for m in reversed(newer[:AROUND])] + [services.message_data(m) for m in older[: AROUND + 1]],
+                    "has_newer": len(newer) > AROUND,
+                    "has_older": len(older) > AROUND + 1,
+                })
             paginator = MessageHistoryPagination()
             page = paginator.paginate_queryset(qs, request, view=self)
             return paginator.get_paginated_response([services.message_data(m) for m in page])
@@ -318,11 +368,26 @@ class ConversationViewSet(
         context = {**self.get_serializer_context(), "conversation": conversation, "has_files": bool(files)}
         serializer = MessageSerializer(data=request.data, context=context)
         serializer.is_valid(raise_exception=True)
+        check_broadcast(request, conversation, serializer.validated_data["body"])
         message = services.send_message(
             conversation, request.user, serializer.validated_data["body"], serializer.validated_data.get("reply_to"), files
         )
         fresh = services.with_details(Message.objects.filter(pk=message.pk)).get()
         return Response(services.message_data(fresh), status=status.HTTP_201_CREATED)
+
+    @extend_schema(parameters=[OpenApiParameter("q", str)], responses={200: dict})
+    @action(detail=True, methods=["get"])
+    def people(self, request, pk=None):
+        """People to suggest after "@": members (anyone, for a public channel), closest matches first.
+        `can_broadcast` says whether @channel and @here may be offered."""
+        conversation = self.get_object()
+        if not rules.readable_conversations(request.user).filter(pk=conversation.pk).exists():
+            raise PermissionDenied()
+        people = [p for p in mentions.suggestions(conversation, request.query_params.get("q", "")) if p.pk != request.user.pk]
+        return Response({
+            "people": [services.person(p) for p in people],
+            "can_broadcast": mentions.can_broadcast(request.user, conversation),
+        })
 
     @extend_schema(request=MuteSerializer, responses={200: ConversationSerializer})
     @action(detail=True, methods=["post"])
@@ -400,6 +465,8 @@ class MessageViewSet(mixins.UpdateModelMixin, mixins.DestroyModelMixin, viewsets
             raise PermissionDenied(_("Messages can be edited for 15 minutes after sending."))
         serializer = MessageSerializer(message, data={"body": request.data.get("body", "")}, partial=True)
         serializer.is_valid(raise_exception=True)
+        if mentions.broadcast_kind(serializer.validated_data["body"], message.conversation) and not mentions.broadcast_kind(message.body, message.conversation):
+            check_broadcast(request, message.conversation, serializer.validated_data["body"])
         services.edit_message(message, serializer.validated_data["body"])
         return Response(services.message_data(services.with_details(Message.objects.filter(pk=message.pk)).get()))
 
@@ -448,3 +515,88 @@ class AttachmentFileViewSet(viewsets.GenericViewSet):
     def thumbnail(self, request, pk=None):
         a = self.get_object()
         return self._serve(a.thumbnail, "thumbnail.webp", "image/webp", True)
+
+
+class MentionsView(APIView):
+    """Messages that mention me (by name, @channel or @here), newest first, in conversations I can still read.
+    `unread` counts those I haven't read yet."""
+
+    module = "chat"
+    permission_classes = [ModulePermission]
+
+    @extend_schema(parameters=[OpenApiParameter("cursor", str)], responses={200: dict})
+    def get(self, request):
+        qs = services.with_details(
+            Message.objects.filter(
+                mention_links__user=request.user, deleted_at__isnull=True,
+                conversation__in=rules.readable_conversations(request.user).filter(archived_at__isnull=True),
+            ).select_related("conversation")
+        )
+        paginator = FoundPagination()
+        page = paginator.paginate_queryset(qs, request, view=self)
+        titles: dict = {}
+        response = paginator.get_paginated_response([found_item(m, request.user, titles) for m in page])
+        response.data["unread"] = integration.unread_mentions_count(request.user)
+        return response
+
+
+class MessageSearchView(APIView):
+    """Search messages in conversations I can read (not archived ones). `q` (at least 2 characters),
+    optional `conversation`, `author`, `date_from`, `date_to` (YYYY-MM-DD). Newest first.
+    `terms` are the words to highlight."""
+
+    module = "chat"
+    permission_classes = [ModulePermission]
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("q", str, required=True), OpenApiParameter("conversation", int), OpenApiParameter("author", int),
+            OpenApiParameter("date_from", str), OpenApiParameter("date_to", str), OpenApiParameter("cursor", str),
+        ],
+        responses={200: dict},
+    )
+    def get(self, request):
+        from django.utils.dateparse import parse_date
+
+        params = request.query_params
+        q = params.get("q", "").strip()
+        if len(q) < MIN_QUERY:
+            return Response({"next": None, "previous": None, "results": [], "terms": []})
+
+        def number(name):
+            try:
+                return int(params[name]) if params.get(name) else None
+            except ValueError:
+                raise ValidationError({name: _("Give a number.")})
+
+        qs = search_messages(
+            request.user, q, conversation=number("conversation"), author=number("author"),
+            date_from=parse_date(params.get("date_from") or "") if params.get("date_from") else None,
+            date_to=parse_date(params.get("date_to") or "") if params.get("date_to") else None,
+        )
+        qs = services.with_details(qs.select_related("conversation"))
+        paginator = FoundPagination()
+        page = paginator.paginate_queryset(qs, request, view=self)
+        titles: dict = {}
+        response = paginator.get_paginated_response([found_item(m, request.user, titles) for m in page])
+        response.data["terms"] = terms(q)
+        return response
+
+
+class RecordCardView(APIView):
+    """A small card for a link to a task, contact or company pasted in a message: `type` and `id`.
+    404 unless the viewer can see that record (the message then shows a plain link)."""
+
+    module = "chat"
+    permission_classes = [ModulePermission]
+
+    @extend_schema(parameters=[OpenApiParameter("type", str, enum=["task", "contact", "company"]), OpenApiParameter("id", int)], responses={200: dict})
+    def get(self, request):
+        try:
+            pk = int(request.query_params.get("id", ""))
+        except ValueError:
+            raise NotFound()
+        card = integration.record_card(request.user, request.query_params.get("type", ""), pk)
+        if card is None:
+            raise NotFound()
+        return Response(card)

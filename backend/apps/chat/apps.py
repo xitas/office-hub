@@ -38,6 +38,9 @@ class ChatConfig(AppConfig):
         from django.db.models.signals import post_delete
 
         post_delete.connect(remove_files, sender=MessageAttachment, dispatch_uid="chat.attachment.files")
+        from . import integration
+
+        integration.register()  # dashboard widgets, messages in global search
         post_save.connect(user_saved, sender=User, dispatch_uid="chat.user_saved")
         post_save.connect(department_saved, sender=Department, dispatch_uid="chat.department_saved")
         pre_delete.connect(department_deleted, sender=Department, dispatch_uid="chat.department_deleted")

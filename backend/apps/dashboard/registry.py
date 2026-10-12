@@ -26,6 +26,7 @@ WIDGET_KEYS = [
     "client_activity",      # Phase 2A: latest notes, calls, meetings and status changes
     "team_workload",        # Phase 2B: open/overdue tasks per person (managers, admins)
     "task_completion",      # Phase 2B: tasks done vs created this week
+    "chat_mentions",        # Phase 3: {"unread": n} mentions of me not read yet
 ]
 
 _providers: dict[str, Callable] = {}

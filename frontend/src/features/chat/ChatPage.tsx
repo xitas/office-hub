@@ -1,33 +1,40 @@
-import { BellOff, Hash, Lock, MessageSquarePlus, MessagesSquare, Plus, Search } from 'lucide-react'
+import { AtSign, BellOff, Hash, Lock, MessageSquarePlus, MessagesSquare, Plus, Search, TextSearch } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, NavLink, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { EmptyState, ErrorState, UserAvatar } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { conversationTitle, useConversations, useOnline, type Conversation } from '@/lib/chat'
+import { conversationTitle, useConversations, useOnline, useUnreadMentions, type Conversation } from '@/lib/chat'
 import { useFormat } from '@/lib/format'
 import { usePermission } from '@/lib/permissions'
 import { useIsPhone } from '@/lib/useIsPhone'
 import { cn } from '@/lib/utils'
 import { BrowseChannelsDialog, NewChannelDialog, NewMessageDialog } from './ChatDialogs'
 import { ConversationView } from './ConversationView'
+import { MentionsPane, SearchPane } from './FoundViews'
 
 /** Chat: conversation list on the left, the open conversation on the right (one at a time on phones). */
 export function ChatPage() {
   const { t } = useTranslation()
   const { id } = useParams()
+  const { pathname } = useLocation()
   const isPhone = useIsPhone()
+  const pane = pathname.startsWith('/chat/mentions') ? 'mentions' : pathname.startsWith('/chat/search') ? 'search' : null
   const openId = id ? Number(id) : null
-  const showList = !isPhone || openId === null
-  const showConversation = !isPhone || openId !== null
+  const showList = !isPhone || (openId === null && pane === null)
+  const showConversation = !isPhone || openId !== null || pane !== null
 
   return (
     <div className="-mt-2 flex h-[calc(100dvh-12rem)] min-h-[26rem] overflow-hidden rounded-xl border bg-card shadow-sm md:h-[calc(100dvh-7.5rem)]">
       <h1 className="sr-only">{t('chat.title')}</h1>
       {showList && <ConversationList openId={openId} className={cn('w-full md:w-80 md:shrink-0 md:border-e')} />}
       {showConversation &&
-        (openId ? (
+        (pane === 'mentions' ? (
+          <MentionsPane className="min-w-0 flex-1" />
+        ) : pane === 'search' ? (
+          <SearchPane className="min-w-0 flex-1" />
+        ) : openId ? (
           <ConversationView key={openId} id={openId} className="min-w-0 flex-1" />
         ) : (
           <div className="hidden flex-1 items-center justify-center md:flex">
@@ -45,6 +52,7 @@ function ConversationList({ openId, className }: { openId: number | null; classN
   const { data, isLoading, isError, refetch } = useConversations()
   const [filter, setFilter] = useState('')
   const [dialog, setDialog] = useState<'dm' | 'browse' | 'channel' | null>(null)
+  const mentions = useUnreadMentions()
 
   const match = (c: Conversation) => conversationTitle(c, t).toLowerCase().includes(filter.trim().toLowerCase())
   const channels = (data ?? []).filter((c) => c.kind === 'channel' && match(c))
@@ -83,6 +91,10 @@ function ConversationList({ openId, className }: { openId: number | null; classN
         </label>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto py-2">
+        <ul className="mb-3">
+          <ToolRow to="/chat/mentions" icon={AtSign} label={t('chat.mentions')} count={mentions} />
+          <ToolRow to="/chat/search" icon={TextSearch} label={t('chat.searchMessages')} />
+        </ul>
         {isError ? (
           <ErrorState onRetry={() => void refetch()} />
         ) : isLoading ? (
@@ -113,6 +125,31 @@ function ConversationList({ openId, className }: { openId: number | null; classN
       {dialog === 'browse' && <BrowseChannelsDialog onClose={() => setDialog(null)} onOpened={opened} />}
       {dialog === 'channel' && <NewChannelDialog onClose={() => setDialog(null)} onOpened={opened} />}
     </aside>
+  )
+}
+
+function ToolRow({ to, icon: Icon, label, count = 0 }: { to: string; icon: typeof AtSign; label: string; count?: number }) {
+  const { t } = useTranslation()
+  return (
+    <li>
+      <NavLink
+        to={to}
+        className={({ isActive }) =>
+          cn('mx-2 flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm hover:bg-muted', isActive && 'bg-primary/10 font-medium hover:bg-primary/10')
+        }
+      >
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted">
+          <Icon className="size-4 text-muted-foreground" />
+        </span>
+        <span className="flex-1 truncate">{label}</span>
+        {count > 0 && (
+          <span className="min-w-5 rounded-full bg-amber-500 px-1.5 text-center text-[11px] leading-5 text-white font-latin">
+            <span className="sr-only">{t('chat.unreadMentions', { count })}</span>
+            <span aria-hidden>{count > 99 ? '99+' : count}</span>
+          </span>
+        )}
+      </NavLink>
+    </li>
   )
 }
 
