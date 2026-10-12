@@ -333,7 +333,7 @@ def test_seed_adds_timeline_once(db):
     call_command("seed_demo", stdout=io.StringIO())  # idempotent
     assert TimelineEntry.objects.count() == count
     assert TimelineEntry.objects.filter(company__isnull=False).exists()
-    assert set(TimelineEntry.objects.values_list("kind", flat=True)) == {"note", "call", "meeting"}
+    assert set(TimelineEntry.objects.values_list("kind", flat=True)) == {"note", "call", "meeting", "email", "whatsapp"}
     now = timezone.now()
     for entry in TimelineEntry.objects.select_related("contact", "company"):
         assert entry.target.created_at < entry.occurred_at < now

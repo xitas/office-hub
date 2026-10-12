@@ -258,7 +258,7 @@ def test_follow_up_turned_into_a_task_leaves_the_digest(client_for, people, dige
     res = client_for(digest_data).post(TASKS, {"title": "Follow up with Ali", "due_date": str(DAY), "follow_up_of": entry.pk, "contact": entry.contact_id}, format="json")
     assert res.status_code == 201 and res.data["follow_up_of"] == entry.pk
     timeline = client_for(digest_data).get("/api/v1/timeline/", {"contact": entry.contact_id, "type": "note"}).data["results"]
-    assert next(e for e in timeline if e["entry_id"] == entry.pk)["follow_up_task"] == res.data["id"]
+    assert next(e for e in timeline if e["entry_id"] == entry.pk)["follow_up_task"]["id"] == res.data["id"]
     with at_office(DAY, 9, 5), django_capture_on_commit_callbacks(execute=True):
         schedule.send_digests()
     assert "Ask about the order" not in mail.outbox[0].body

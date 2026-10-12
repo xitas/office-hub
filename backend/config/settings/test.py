@@ -3,6 +3,9 @@ from .base import *  # noqa: F401,F403
 from .base import env
 
 DATABASES = {"default": env.db("TEST_DATABASE_URL", default="sqlite://:memory:")}
+if DATABASES["default"]["ENGINE"].endswith("postgresql"):
+    # A stuck query fails its test after 30 s instead of hanging the whole run (in CI too).
+    DATABASES["default"].setdefault("OPTIONS", {})["options"] = "-c statement_timeout=30000"
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 # Fixed, test-only key (never use outside tests).
 FIELD_ENCRYPTION_KEYS = ["Q2FuYXJ5VGVzdEtleUZvckZpZWxkRW5jcnlwdGlvbjA="]

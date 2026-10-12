@@ -4,6 +4,7 @@ import { Outlet } from 'react-router-dom'
 import { useOrgSettings } from '@/lib/format'
 import { useApplyUserPreferences } from '@/lib/preferences'
 import { useRealtime } from '@/lib/ws'
+import { QuickLogPrompt } from '@/features/timeline/QuickLogPrompt'
 import { BottomNav } from './BottomNav'
 import { GlobalSearch } from './GlobalSearch'
 import { NotificationBell } from './NotificationBell'
@@ -45,6 +46,7 @@ export function AppShell() {
         </main>
       </div>
       <BottomNav />
+      <QuickLogPrompt />
     </div>
   )
 }

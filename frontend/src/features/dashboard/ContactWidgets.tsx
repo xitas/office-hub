@@ -119,6 +119,7 @@ export function ClientActivityWidget({
   const headline = (item: TimelineItem) => {
     if (item.kind === 'call') return t(`timeline.callTitle.${(item.details as CallDetails).direction ?? 'out'}`)
     if (item.kind === 'status') return t('timeline.statusChanged')
+    if (item.kind === 'email' || item.kind === 'whatsapp') return t(`timeline.${item.kind}Title.${(item.details as CallDetails).direction ?? 'out'}`)
     if (item.kind === 'note' || item.kind === 'meeting') return t(`timeline.kinds.${item.kind}`)
     return item.kind
   }

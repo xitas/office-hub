@@ -1154,3 +1154,57 @@ msgstr "%(actor)s نے #%(channel)s میں سب کو اطلاع دی"
 
 msgid "Mentioned in a task comment"
 msgstr "کام کے تبصرے میں ذکر"
+
+msgid "Follow up with %(name)s"
+msgstr "%(name)s سے فالو اپ"
+
+msgid "Give a date as YYYY-MM-DD."
+msgstr "تاریخ YYYY-MM-DD کی شکل میں دیں۔"
+
+msgid "Choose in or out."
+msgstr "آنے والا یا جانے والا منتخب کریں۔"
+
+msgid "Choose any, open, done or none."
+msgstr "any، open، done یا none منتخب کریں۔"
+
+msgid "Date"
+msgstr "تاریخ"
+
+msgid "Type"
+msgstr "قسم"
+
+msgid "Direction"
+msgstr "سمت"
+
+msgid "Contact"
+msgstr "رابطہ"
+
+msgid "Subject"
+msgstr "موضوع"
+
+msgid "Summary"
+msgstr "خلاصہ"
+
+msgid "Call outcome"
+msgstr "کال کا نتیجہ"
+
+msgid "Logged by"
+msgstr "درج کرنے والا"
+
+msgid "Follow-up date"
+msgstr "فالو اپ کی تاریخ"
+
+msgid "Follow-up"
+msgstr "فالو اپ"
+
+msgid "Follow-up task for"
+msgstr "فالو اپ کا کام برائے"
+
+msgid "No task"
+msgstr "کوئی کام نہیں"
+
+msgid "Open"
+msgstr "باقی"
+
+msgid "Exported the communication log to a CSV file"
+msgstr "رابطوں کا ریکارڈ CSV فائل میں برآمد کیا"

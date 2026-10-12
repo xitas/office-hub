@@ -27,6 +27,7 @@ WIDGET_KEYS = [
     "team_workload",        # Phase 2B: open/overdue tasks per person (managers, admins)
     "task_completion",      # Phase 2B: tasks done vs created this week
     "chat_mentions",        # Phase 3: {"unread": n} mentions of me not read yet
+    "follow_ups_due",       # Phase 3: my client follow-ups due in the next week (and overdue)
 ]
 
 _providers: dict[str, Callable] = {}

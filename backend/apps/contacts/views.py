@@ -19,6 +19,8 @@ from .serializers import (
     StatusChangeSerializer,
     TagSerializer,
 )
+from apps.timeline.log import with_last_contacted_companies, with_last_contacted_contacts
+
 from .transfer import export_companies, export_contacts
 from .visibility import DEPARTMENT_FIELD, OWNER_FIELDS
 
@@ -76,6 +78,9 @@ class CompanyViewSet(AuditedViewSetMixin, ScopedQuerysetMixin, viewsets.ModelVie
     ordering_fields = ["name", "city", "industry", "created_at", "updated_at"]
     action_permissions = {"facets": "view", "export": "export"}
 
+    def get_queryset(self):
+        return with_last_contacted_companies(super().get_queryset())
+
     @extend_schema(responses={(200, "text/csv"): str})
     @action(detail=False, methods=["get"])
     def export(self, request):
@@ -122,6 +127,9 @@ class ContactViewSet(AuditedViewSetMixin, ScopedQuerysetMixin, viewsets.ModelVie
     action_permissions = {
         "facets": "view", "duplicates": "view", "pipeline": "view", "status_history": "view", "export": "export",
     }
+
+    def get_queryset(self):
+        return with_last_contacted_contacts(super().get_queryset())
 
     def audit_snapshot(self, instance) -> dict:
         data = snapshot(instance)
@@ -191,7 +199,7 @@ class ContactViewSet(AuditedViewSetMixin, ScopedQuerysetMixin, viewsets.ModelVie
         except ValueError:
             limit = PIPELINE_LIMIT
         counts = dict(qs.order_by().values_list("status").annotate(n=Count("id", distinct=True)))
-        qs = with_task_summary(qs, request.user)
+        qs = with_last_contacted_contacts(with_task_summary(qs, request.user))
         columns = []
         for status, label in Contact.Status.choices:
             cards = qs.filter(status=status).order_by("-status_changed_at", "pk")[:limit]

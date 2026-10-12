@@ -11,7 +11,7 @@ from django.test.utils import CaptureQueriesContext
 from apps.accounts.models import User
 from apps.tasks.models import ChecklistItem, Task, TaskComment
 
-from .task_dataset import build
+from .task_dataset import analyze, build
 
 pytestmark = pytest.mark.django_db
 
@@ -21,7 +21,7 @@ LIMITS = {
     "board": 13,
     "calendar": 5,
     "workload": 1,
-    "dashboard": 16,
+    "dashboard": 18,
     "contact_tasks": 3,
     "company_tasks": 3,
     "contact_timeline": 6,
@@ -56,6 +56,7 @@ def grow(setup):
     Task.objects.filter(pk__in=newest[30:]).update(contact=None, company=company)
     ChecklistItem.objects.bulk_create([ChecklistItem(task=task, text=f"Item {i}", position=i) for i in range(20)])
     TaskComment.objects.bulk_create([TaskComment(task=task, author=team[i % 3], body=f"Note {i}") for i in range(20)])
+    analyze()  # statistics after the extra rows too
 
 
 def calls(setup, role):

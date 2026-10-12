@@ -24,7 +24,8 @@
     "expand": "Expand sidebar",
     "system": "System status",
     "companies": "Companies",
-    "pipeline": "Pipeline"
+    "pipeline": "Pipeline",
+    "log": "Communication log"
   },
   "common": {
     "save": "Save",
@@ -168,7 +169,11 @@
     "completionDone": "done",
     "completionCreated": "created",
     "completionDay": "{{done}} done, {{created}} created",
-    "mentions": "Unread mentions"
+    "mentions": "Unread mentions",
+    "followUps": "My follow-ups due",
+    "allFollowUps": "All follow-ups",
+    "noFollowUps": "No follow-ups due this week",
+    "hasTask": "Has a task"
   },
   "notifications": {
     "title": "Notifications",
@@ -515,7 +520,9 @@
     "kinds": {
       "note": "Note",
       "call": "Call",
-      "meeting": "Meeting"
+      "meeting": "Meeting",
+      "email": "Email",
+      "whatsapp": "WhatsApp"
     },
     "filters": {
       "note": "Notes",
@@ -524,12 +531,16 @@
       "status": "Status changes",
       "created": "Record created",
       "imported": "Imported",
-      "task": "Tasks"
+      "task": "Tasks",
+      "email": "Emails",
+      "whatsapp": "WhatsApp"
     },
     "placeholders": {
       "note": "Write a note…",
       "call": "What was discussed? (optional)",
-      "meeting": "What was agreed? (optional)"
+      "meeting": "What was agreed? (optional)",
+      "email": "What was it about?",
+      "whatsapp": "What was said?"
     },
     "note": "Note",
     "summary": "Summary",
@@ -581,7 +592,40 @@
       "created": "Task added",
       "completed": "Task completed",
       "reopened": "Task reopened"
-    }
+    },
+    "directionsFor": {
+      "call": {
+        "out": "Outgoing",
+        "in": "Incoming"
+      },
+      "email": {
+        "out": "Sent",
+        "in": "Received"
+      },
+      "whatsapp": {
+        "out": "Sent",
+        "in": "Received"
+      }
+    },
+    "subject": "Subject (optional)",
+    "emailTitle": {
+      "out": "Email sent",
+      "in": "Email received"
+    },
+    "whatsappTitle": {
+      "out": "WhatsApp sent",
+      "in": "WhatsApp received"
+    },
+    "followUpTaskHint": "A task is made for it automatically",
+    "followUpTask": "Follow-up task",
+    "followUpAssignee": "For",
+    "followUpSkip": "Don't make a task",
+    "me": "{{name}} (me)",
+    "followUpDone": "Followed up · {{date}}",
+    "followUpTaskFor": "Task for {{names}}",
+    "followUpTaskLink": "Open the task",
+    "followUpNoTask": "No task",
+    "entrySaved": "Logged for {{name}}"
   },
   "transfer": {
     "import": "Import",
@@ -1105,5 +1149,48 @@
     "noResultsHint": "Try other words or fewer filters.",
     "loadMore": "Show more",
     "openInContext": "Open the message from {{name}} in {{where}}"
+  },
+  "log": {
+    "title": "Communication log",
+    "subtitle": "Every call, meeting, email, WhatsApp message and note with your clients.",
+    "add": "Log",
+    "addHint": "Pick a contact or company, then log what happened.",
+    "exportHint": "Download this list (with its filters) as a CSV file for Excel",
+    "empty": "Nothing logged yet",
+    "emptyHint": "Calls, emails and messages you log on contacts and companies show up here.",
+    "noMatches": "Nothing matches these filters",
+    "noMatchesHint": "Try fewer filters or another date range.",
+    "count_one": "{{count}} entry",
+    "count_other": "{{count}} entries",
+    "types": "Types",
+    "search": "Search what was said…",
+    "anyDirection": "In and out",
+    "directions": {
+      "out": "Outgoing / sent",
+      "in": "Incoming / received"
+    },
+    "loggedBy": "Logged by",
+    "anyone": "Anyone",
+    "followUps": {
+      "all": "All",
+      "any": "Has a follow-up",
+      "open": "Follow-up open",
+      "done": "Follow-up done",
+      "none": "No follow-up"
+    },
+    "dateFrom": "From date",
+    "dateTo": "To date",
+    "record": "Contact or company",
+    "anyRecord": "Any contact or company",
+    "clearRecord": "Show all contacts and companies",
+    "promptCall": "Log your call with {{name}}?",
+    "promptWhatsapp": "Log your WhatsApp with {{name}}?",
+    "promptHint": "Note how it went while it’s fresh. You can close this if there’s nothing to log.",
+    "lastContacted": "Last contacted {{when}}",
+    "lastContactedTitle": "Last contacted {{date}}",
+    "neverContacted": "Not contacted yet",
+    "staleHint": "No call, meeting, email or WhatsApp logged for a while",
+    "noContactIn_one": "No contact in {{count}} day",
+    "noContactIn_other": "No contact in {{count}} days"
   }
 }

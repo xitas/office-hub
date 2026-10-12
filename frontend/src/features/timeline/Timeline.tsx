@@ -1,13 +1,11 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { BellRing, History, MapPin, MoreHorizontal, Pencil, Trash2, UsersRound } from 'lucide-react'
+import { History, MapPin, MoreHorizontal, Pencil, Trash2, UsersRound } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { EmptyState, ErrorState, SimpleSelect } from '@/components/common'
-import { FollowUpTaskButton } from '@/features/tasks/FollowUpTaskButton'
 import { StatusBadge } from '@/components/common/StatusBadge'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -27,7 +25,6 @@ import {
   KIND_ICONS,
   KIND_STYLES,
   TIMELINE_FILTERS,
-  type CallDetails,
   type CreatedDetails,
   useAddEntry,
   type EntryInput,
@@ -38,6 +35,7 @@ import {
 } from '@/lib/timeline'
 import type { Paginated } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { EntryTitle, FollowUpStatus } from './EntryBits'
 import { EntryForm } from './EntryForm'
 
 /** Activity on a contact or company: logged notes/calls/meetings plus automatic entries, newest first.
@@ -216,18 +214,6 @@ function TimelineRow({ item, showContact, last }: { item: TimelineItem; showCont
 
 function Headline({ item }: { item: TimelineItem }) {
   const { t } = useTranslation()
-  if (item.kind === 'call') {
-    const d = item.details as CallDetails
-    return (
-      <span className="font-medium">
-        {t(`timeline.callTitle.${d.direction ?? 'out'}`)}
-        {d.outcome && <span className="font-normal text-muted-foreground"> · {t(`timeline.outcomes.${d.outcome}`)}</span>}
-        {d.duration_minutes != null && (
-          <span className="font-normal text-muted-foreground"> · {t('timeline.minutes', { count: d.duration_minutes })}</span>
-        )}
-      </span>
-    )
-  }
   if (item.kind === 'status') {
     const d = item.details as unknown as StatusDetails
     return (
@@ -273,13 +259,10 @@ function Headline({ item }: { item: TimelineItem }) {
       </span>
     )
   }
-  const known = ['note', 'meeting'].includes(item.kind)
-  return <span className="font-medium">{known ? t(`timeline.kinds.${item.kind}`) : item.kind}</span>
+  return <EntryTitle item={item} />
 }
 
 function Body({ item }: { item: TimelineItem }) {
-  const { t } = useTranslation()
-  const fmt = useFormat()
   const meeting = item.kind === 'meeting' ? (item.details as MeetingDetails) : null
   const hasExtras = !!(meeting?.location || meeting?.attendees || item.follow_up_on)
   // An import's file name is already in the headline.
@@ -288,7 +271,7 @@ function Body({ item }: { item: TimelineItem }) {
   return (
     <div className="mt-1.5 grid gap-1.5">
       {item.summary && (
-        <p dir="auto" className={cn('text-sm whitespace-pre-wrap break-words', item.kind === 'status' && 'text-muted-foreground italic')}>
+        <p className={cn('text-sm whitespace-pre-wrap break-words [unicode-bidi:plaintext] ltr:text-left rtl:text-right', item.kind === 'status' && 'text-muted-foreground italic')}>
           {item.summary}
         </p>
       )}
@@ -306,13 +289,7 @@ function Body({ item }: { item: TimelineItem }) {
               <bdi>{meeting.attendees}</bdi>
             </span>
           )}
-          {item.follow_up_on && (
-            <Badge variant="outline" className="gap-1 font-normal">
-              <BellRing className="size-3" />
-              {t('timeline.followUpOn', { date: fmt.date(item.follow_up_on) })}
-            </Badge>
-          )}
-          <FollowUpTaskButton item={item} />
+          <FollowUpStatus item={item} />
         </div>
       )}
     </div>

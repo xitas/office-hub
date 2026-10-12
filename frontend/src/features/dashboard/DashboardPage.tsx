@@ -26,6 +26,7 @@ import { useFormat } from '@/lib/format'
 import type { ActivityItem, DashboardData, DashboardListItem } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { ClientActivityWidget, ContactsByStatusWidget } from './ContactWidgets'
+import { FollowUpsWidget } from './FollowUpsWidget'
 import { CompletionWidget, MyTasksWidget, TeamWorkloadWidget } from './TaskWidgets'
 
 function greetingKey(hour: number) {
@@ -88,6 +89,7 @@ export function DashboardPage() {
             ))}
             <MyTasksWidget data={data} loading={isLoading} className="md:col-span-2 xl:col-span-2" />
             <CompletionWidget data={data?.task_completion} loading={isLoading} />
+            <FollowUpsWidget items={data?.follow_ups_due} loading={isLoading} />
             <TeamWorkloadWidget rows={data?.team_workload} loading={isLoading} className="md:col-span-2 xl:col-span-3" />
             <ContactsByStatusWidget data={data?.contacts_by_status} loading={isLoading} />
             <ClientActivityWidget items={data?.client_activity} loading={isLoading} className="xl:col-span-2" />

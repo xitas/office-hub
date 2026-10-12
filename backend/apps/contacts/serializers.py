@@ -48,12 +48,15 @@ class CompanySerializer(AssignmentMixin, serializers.ModelSerializer):
     created_by_name = serializers.CharField(source="created_by.full_name", default=None, read_only=True)
     updated_by_name = serializers.CharField(source="updated_by.full_name", default=None, read_only=True)
     assigned_to = serializers.PrimaryKeyRelatedField(queryset=_assignable_users(), required=False, allow_null=True)
+    # Latest call, meeting, email or WhatsApp on the company or its contacts (annotated by the view).
+    last_contacted_at = serializers.DateTimeField(read_only=True, default=None)
 
     class Meta:
         model = Company
         fields = [
             "id", "name", "industry", "industry_label", "phone", "email", "website", "address", "city", "notes",
             "assigned_to", "assigned_to_name", "created_by_name", "updated_by_name", "created_at", "updated_at",
+            "last_contacted_at",
         ]
         read_only_fields = ["created_at", "updated_at"]
 
@@ -101,6 +104,8 @@ class ContactSerializer(AssignmentMixin, serializers.ModelSerializer):
         max_length=500, required=False, allow_blank=True, write_only=True,
         help_text="Optional note stored in the status history when the status changes (e.g. why a lead was lost).",
     )
+    # Latest call, meeting, email or WhatsApp logged on the contact (annotated by the view).
+    last_contacted_at = serializers.DateTimeField(read_only=True, default=None)
 
     class Meta:
         model = Contact
@@ -109,6 +114,7 @@ class ContactSerializer(AssignmentMixin, serializers.ModelSerializer):
             "whatsapp", "email", "address", "city", "tags", "tag_names", "status", "status_label",
             "status_changed_at", "status_reason",
             "assigned_to", "assigned_to_name", "created_by_name", "updated_by_name", "created_at", "updated_at",
+            "last_contacted_at",
         ]
         read_only_fields = ["status_changed_at", "created_at", "updated_at"]
 
@@ -225,12 +231,13 @@ class PipelineCardSerializer(serializers.ModelSerializer):
     # Annotated by the pipeline view (tasks the viewer can see that are linked to this contact).
     open_tasks = serializers.IntegerField(read_only=True, default=0)
     next_due = serializers.DateField(read_only=True, default=None)
+    last_contacted_at = serializers.DateTimeField(read_only=True, default=None)
 
     class Meta:
         model = Contact
         fields = [
             "id", "full_name", "company", "company_name", "assigned_to", "assigned_to_name", "tags", "status",
-            "status_changed_at", "city", "open_tasks", "next_due",
+            "status_changed_at", "city", "open_tasks", "next_due", "last_contacted_at", "created_at",
         ]
 
     def get_tags(self, obj) -> list[str]:

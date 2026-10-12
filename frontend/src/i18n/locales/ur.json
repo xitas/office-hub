@@ -24,7 +24,8 @@
     "expand": "سائیڈ بار بڑا کریں",
     "system": "سسٹم کی حالت",
     "companies": "کمپنیاں",
-    "pipeline": "پائپ لائن"
+    "pipeline": "پائپ لائن",
+    "log": "رابطوں کا ریکارڈ"
   },
   "common": {
     "save": "محفوظ کریں",
@@ -168,7 +169,11 @@
     "completionDone": "مکمل",
     "completionCreated": "نئے",
     "completionDay": "{{done}} مکمل، {{created}} نئے",
-    "mentions": "نہ پڑھے گئے ذکر"
+    "mentions": "نہ پڑھے گئے ذکر",
+    "followUps": "میرے واجب فالو اپ",
+    "allFollowUps": "تمام فالو اپ",
+    "noFollowUps": "اس ہفتے کوئی فالو اپ واجب نہیں",
+    "hasTask": "اس کا کام بنا ہوا ہے"
   },
   "notifications": {
     "title": "اطلاعات",
@@ -515,7 +520,9 @@
     "kinds": {
       "note": "نوٹ",
       "call": "کال",
-      "meeting": "میٹنگ"
+      "meeting": "میٹنگ",
+      "email": "ای میل",
+      "whatsapp": "واٹس ایپ"
     },
     "filters": {
       "note": "نوٹس",
@@ -524,12 +531,16 @@
       "status": "حیثیت کی تبدیلیاں",
       "created": "ریکارڈ کا اندراج",
       "imported": "امپورٹ شدہ",
-      "task": "کام"
+      "task": "کام",
+      "email": "ای میلز",
+      "whatsapp": "واٹس ایپ"
     },
     "placeholders": {
       "note": "نوٹ لکھیں…",
       "call": "کیا بات ہوئی؟ (اختیاری)",
-      "meeting": "کیا طے پایا؟ (اختیاری)"
+      "meeting": "کیا طے پایا؟ (اختیاری)",
+      "email": "یہ کس بارے میں تھی؟",
+      "whatsapp": "کیا بات ہوئی؟"
     },
     "note": "نوٹ",
     "summary": "خلاصہ",
@@ -581,7 +592,40 @@
       "created": "کام شامل ہوا",
       "completed": "کام مکمل ہوا",
       "reopened": "کام دوبارہ کھلا"
-    }
+    },
+    "directionsFor": {
+      "call": {
+        "out": "باہر جانے والی",
+        "in": "آنے والی"
+      },
+      "email": {
+        "out": "بھیجی",
+        "in": "موصول"
+      },
+      "whatsapp": {
+        "out": "بھیجا",
+        "in": "موصول"
+      }
+    },
+    "subject": "موضوع (اختیاری)",
+    "emailTitle": {
+      "out": "ای میل بھیجی",
+      "in": "ای میل موصول ہوئی"
+    },
+    "whatsappTitle": {
+      "out": "واٹس ایپ بھیجا",
+      "in": "واٹس ایپ موصول ہوا"
+    },
+    "followUpTaskHint": "اس کے لیے خود بخود ایک کام بن جاتا ہے",
+    "followUpTask": "فالو اپ کا کام",
+    "followUpAssignee": "برائے",
+    "followUpSkip": "کام نہ بنائیں",
+    "me": "{{name}} (میں)",
+    "followUpDone": "فالو اپ ہو گیا · {{date}}",
+    "followUpTaskFor": "{{names}} کے لیے کام",
+    "followUpTaskLink": "کام کھولیں",
+    "followUpNoTask": "کوئی کام نہیں",
+    "entrySaved": "{{name}} کے لیے درج ہو گیا"
   },
   "transfer": {
     "import": "امپورٹ",
@@ -1105,5 +1149,48 @@
     "noResultsHint": "دوسرے الفاظ یا کم فلٹر آزمائیں۔",
     "loadMore": "مزید دکھائیں",
     "openInContext": "{{where}} میں {{name}} کا پیغام کھولیں"
+  },
+  "log": {
+    "title": "رابطوں کا ریکارڈ",
+    "subtitle": "گاہکوں کے ساتھ ہر کال، ملاقات، ای میل، واٹس ایپ پیغام اور نوٹ۔",
+    "add": "درج کریں",
+    "addHint": "رابطہ یا کمپنی چنیں، پھر جو ہوا وہ درج کریں۔",
+    "exportHint": "یہ فہرست (فلٹرز سمیت) ایکسل کے لیے CSV فائل میں ڈاؤن لوڈ کریں",
+    "empty": "ابھی کچھ درج نہیں",
+    "emptyHint": "رابطوں اور کمپنیوں پر درج کالز، ای میلز اور پیغامات یہاں نظر آتے ہیں۔",
+    "noMatches": "ان فلٹرز سے کچھ نہیں ملا",
+    "noMatchesHint": "کم فلٹر یا کوئی اور تاریخیں آزمائیں۔",
+    "count_one": "{{count}} اندراج",
+    "count_other": "{{count}} اندراجات",
+    "types": "اقسام",
+    "search": "جو کہا گیا اس میں تلاش کریں…",
+    "anyDirection": "آنے اور جانے والے",
+    "directions": {
+      "out": "باہر جانے والے / بھیجے گئے",
+      "in": "آنے والے / موصول"
+    },
+    "loggedBy": "درج کرنے والا",
+    "anyone": "کوئی بھی",
+    "followUps": {
+      "all": "سب",
+      "any": "فالو اپ والے",
+      "open": "فالو اپ باقی",
+      "done": "فالو اپ مکمل",
+      "none": "بغیر فالو اپ"
+    },
+    "dateFrom": "تاریخ سے",
+    "dateTo": "تاریخ تک",
+    "record": "رابطہ یا کمپنی",
+    "anyRecord": "کوئی بھی رابطہ یا کمپنی",
+    "clearRecord": "تمام رابطے اور کمپنیاں دکھائیں",
+    "promptCall": "{{name}} کے ساتھ اپنی کال درج کریں؟",
+    "promptWhatsapp": "{{name}} کے ساتھ اپنا واٹس ایپ درج کریں؟",
+    "promptHint": "ابھی یاد ہے تو لکھ لیں۔ درج کرنے کو کچھ نہ ہو تو بند کر دیں۔",
+    "lastContacted": "آخری رابطہ {{when}}",
+    "lastContactedTitle": "آخری رابطہ {{date}}",
+    "neverContacted": "ابھی رابطہ نہیں ہوا",
+    "staleHint": "کافی عرصے سے کوئی کال، ملاقات، ای میل یا واٹس ایپ درج نہیں ہوا",
+    "noContactIn_one": "{{count}} دن سے رابطہ نہیں",
+    "noContactIn_other": "{{count}} دن سے رابطہ نہیں"
   }
 }

@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
+from apps.accounts.models import User
 from apps.contacts.models import Company, Contact
 from apps.contacts.visibility import visible_companies, visible_contacts
 from apps.core.permissions import ADMIN, MANAGER
@@ -39,10 +40,19 @@ class TimelineEntrySerializer(serializers.ModelSerializer):
     company = serializers.PrimaryKeyRelatedField(queryset=Company.objects.none(), required=False, allow_null=True)
     summary = serializers.CharField(max_length=5000, required=False, allow_blank=True)
     details = serializers.JSONField(required=False)
+    # With a follow-up date a task is created for it: for whoever logged it, or `follow_up_assignee`;
+    # `follow_up_skip` makes no task.
+    follow_up_assignee = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.filter(is_active=True), required=False, allow_null=True, write_only=True
+    )
+    follow_up_skip = serializers.BooleanField(required=False, default=False, write_only=True)
 
     class Meta:
         model = TimelineEntry
-        fields = ["kind", "contact", "company", "summary", "details", "occurred_at", "follow_up_on"]
+        fields = [
+            "kind", "contact", "company", "summary", "details", "occurred_at", "follow_up_on", "follow_up_assignee",
+            "follow_up_skip",
+        ]
 
     def get_fields(self):
         fields = super().get_fields()
@@ -98,10 +108,28 @@ class TimelineEntrySerializer(serializers.ModelSerializer):
 
         if attrs.get("follow_up_on") and not entry_type.allows_follow_up:
             raise serializers.ValidationError({"follow_up_on": _("This type of entry has no follow-up date.")})
+        # Not model fields: kept for the view, which creates the follow-up task after saving.
+        assignee = attrs.pop("follow_up_assignee", None)
+        if assignee is not None:
+            from .follow_ups import check_assignee
+
+            check_assignee(self.context["request"].user, assignee)  # refused before anything is saved
+        self.follow_up_options = {"assignee": assignee, "skip": attrs.pop("follow_up_skip", False)}
         return attrs
 
     def to_representation(self, instance):
         return entry_data(instance, self.context["request"].user)
+
+
+def follow_up_task_data(entry) -> dict | None:
+    task = next(iter(sorted(entry.follow_up_tasks.all(), key=lambda t: -t.pk)), None)
+    if task is None:
+        return None
+    return {
+        "id": task.pk,
+        "status": task.status,
+        "assignees": sorted(u.full_name for u in task.assignees.all()),
+    }
 
 
 def entry_data(entry, user) -> dict:
@@ -115,8 +143,10 @@ def entry_data(entry, user) -> dict:
         "details": entry.details,
         "occurred_at": entry.occurred_at,
         "follow_up_on": entry.follow_up_on,
-        # A task made from this follow-up ("Create task from follow-up"), if any.
-        "follow_up_task": next(iter(t.pk for t in entry.follow_up_tasks.all()), None),
+        # The task made for this follow-up, if any, and where the follow-up stands.
+        "follow_up_task": follow_up_task_data(entry),
+        "follow_up_done": entry.follow_up_done_at is not None,
+        "follow_up_skipped": entry.follow_up_skipped,
         "created_by_name": entry.created_by.full_name if entry.created_by else None,
         "created_at": entry.created_at,
         "updated_at": entry.updated_at,

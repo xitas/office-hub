@@ -2,9 +2,14 @@ import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FormField, SimpleSelect } from '@/components/common'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { apiError } from '@/lib/api'
+import { useMe } from '@/lib/auth'
+import { usePermission } from '@/lib/permissions'
+import { useTaskAssignees } from '@/lib/tasks'
 import {
   CALL_DIRECTIONS,
   CALL_OUTCOMES,
@@ -12,6 +17,7 @@ import {
   KIND_ICONS,
   toLocalInput,
   type CallDetails,
+  type EmailDetails,
   type EntryInput,
   type EntryKind,
   type MeetingDetails,
@@ -23,6 +29,9 @@ interface Props {
   /** Entry being edited (its type can't change). */
   entry?: TimelineItem
   kinds?: readonly EntryKind[]
+  /** New entry: start on this type (e.g. "call" after tapping Call), going this way. */
+  initialKind?: EntryKind
+  initialDirection?: 'in' | 'out'
   onSubmit: (input: Partial<EntryInput>) => Promise<unknown>
   onCancel?: () => void
   /** Prefix for element ids, so two forms can sit on one page. */
@@ -30,34 +39,49 @@ interface Props {
   autoFocus?: boolean
 }
 
-/** Add/edit form for a note, call or meeting. Shows the extra fields of the chosen type. */
-export function EntryForm({ entry, kinds = ENTRY_KINDS, onSubmit, onCancel, idPrefix = 'entry', autoFocus }: Props) {
+/** Add/edit form for a note, call, meeting, email or WhatsApp message. Shows the extra fields of the
+ *  chosen type, and with a follow-up date who the follow-up task goes to (or no task). */
+export function EntryForm({ entry, kinds = ENTRY_KINDS, initialKind, initialDirection, onSubmit, onCancel, idPrefix = 'entry', autoFocus }: Props) {
   const { t } = useTranslation()
+  const me = useMe()
+  const canCreateTasks = usePermission('tasks.create')
+  const assignees = useTaskAssignees()
   const call = (entry?.details ?? {}) as CallDetails
   const meeting = (entry?.details ?? {}) as MeetingDetails
-  const [kind, setKind] = useState<EntryKind>((entry?.kind as EntryKind) ?? kinds[0])
+  const email = (entry?.details ?? {}) as EmailDetails
+  const [kind, setKind] = useState<EntryKind>((entry?.kind as EntryKind) ?? initialKind ?? kinds[0])
   const [summary, setSummary] = useState(entry?.summary ?? '')
-  const [direction, setDirection] = useState<string>(call.direction ?? 'out')
+  const [direction, setDirection] = useState<string>(call.direction ?? initialDirection ?? 'out')
   const [outcome, setOutcome] = useState<string>(call.outcome ?? 'connected')
   const [duration, setDuration] = useState(call.duration_minutes != null ? String(call.duration_minutes) : '')
   const [location, setLocation] = useState(meeting.location ?? '')
   const [attendees, setAttendees] = useState(meeting.attendees ?? '')
+  const [subject, setSubject] = useState(email.subject ?? '')
   // Blank "when" means "now" (filled in by the server when saving).
   const [when, setWhen] = useState(entry ? toLocalInput(entry.occurred_at) : '')
   const [followUp, setFollowUp] = useState(entry?.follow_up_on ?? '')
+  const [assignee, setAssignee] = useState(String(me.id))
+  const [skipTask, setSkipTask] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [message, setMessage] = useState('')
   const [saving, setSaving] = useState(false)
   const [now] = useState(() => toLocalInput(new Date()))
   const id = (name: string) => `${idPrefix}-${name}`
 
+  // A task is made when a follow-up date is set (new entry) or changed on an entry that has no task yet.
+  const makesTask =
+    canCreateTasks && !!followUp && (!entry || (!entry.follow_up_task && followUp !== (entry.follow_up_on ?? '')))
+
   const reset = () => {
     setSummary('')
     setDuration('')
     setLocation('')
     setAttendees('')
+    setSubject('')
     setWhen('')
     setFollowUp('')
+    setAssignee(String(me.id))
+    setSkipTask(false)
   }
 
   const submit = async (e: FormEvent) => {
@@ -67,7 +91,11 @@ export function EntryForm({ entry, kinds = ENTRY_KINDS, onSubmit, onCancel, idPr
         ? { direction, outcome, duration_minutes: duration === '' ? null : Number(duration) }
         : kind === 'meeting'
           ? { location: location.trim(), attendees: attendees.trim() }
-          : {}
+          : kind === 'email'
+            ? { direction, subject: subject.trim() }
+            : kind === 'whatsapp'
+              ? { direction }
+              : {}
     const input: Partial<EntryInput> = {
       summary: summary.trim(),
       details: details as EntryInput['details'],
@@ -75,6 +103,10 @@ export function EntryForm({ entry, kinds = ENTRY_KINDS, onSubmit, onCancel, idPr
     }
     if (!entry) input.kind = kind
     if (when) input.occurred_at = new Date(when).toISOString()
+    if (makesTask) {
+      input.follow_up_skip = skipTask
+      if (!skipTask && assignee !== String(me.id)) input.follow_up_assignee = Number(assignee)
+    }
     setSaving(true)
     setErrors({})
     setMessage('')
@@ -92,6 +124,16 @@ export function EntryForm({ entry, kinds = ENTRY_KINDS, onSubmit, onCancel, idPr
 
   const placeholder = t(`timeline.placeholders.${kind}`)
   const showKinds = !entry && kinds.length > 1
+  const directionField = (
+    <FormField id={id('direction')} label={t('timeline.direction')}>
+      <SimpleSelect
+        id={id('direction')}
+        value={direction}
+        onChange={setDirection}
+        options={CALL_DIRECTIONS.map((d) => ({ value: d, label: t(`timeline.directionsFor.${kind}.${d}`) }))}
+      />
+    </FormField>
+  )
 
   return (
     <form onSubmit={(e) => void submit(e)} className="grid gap-3">
@@ -124,14 +166,7 @@ export function EntryForm({ entry, kinds = ENTRY_KINDS, onSubmit, onCancel, idPr
 
       {kind === 'call' && (
         <div className="grid gap-3 sm:grid-cols-3">
-          <FormField id={id('direction')} label={t('timeline.direction')}>
-            <SimpleSelect
-              id={id('direction')}
-              value={direction}
-              onChange={setDirection}
-              options={CALL_DIRECTIONS.map((d) => ({ value: d, label: t(`timeline.directions.${d}`) }))}
-            />
-          </FormField>
+          {directionField}
           <FormField id={id('outcome')} label={t('timeline.outcome')}>
             <SimpleSelect
               id={id('outcome')}
@@ -154,6 +189,17 @@ export function EntryForm({ entry, kinds = ENTRY_KINDS, onSubmit, onCancel, idPr
           </FormField>
         </div>
       )}
+
+      {kind === 'email' && (
+        <div className="grid gap-3 sm:grid-cols-[12rem_1fr]">
+          {directionField}
+          <FormField id={id('subject')} label={t('timeline.subject')} error={errors.details}>
+            <Input id={id('subject')} value={subject} maxLength={200} dir="auto" onChange={(e) => setSubject(e.target.value)} />
+          </FormField>
+        </div>
+      )}
+
+      {kind === 'whatsapp' && <div className="grid gap-3 sm:grid-cols-[12rem_1fr]">{directionField}</div>}
 
       {kind === 'meeting' && (
         <div className="grid gap-3 sm:grid-cols-2">
@@ -178,6 +224,7 @@ export function EntryForm({ entry, kinds = ENTRY_KINDS, onSubmit, onCancel, idPr
           value={summary}
           maxLength={5000}
           rows={3}
+          dir="auto"
           placeholder={placeholder}
           autoFocus={autoFocus}
           aria-invalid={!!errors.summary}
@@ -186,7 +233,7 @@ export function EntryForm({ entry, kinds = ENTRY_KINDS, onSubmit, onCancel, idPr
         />
       </FormField>
 
-      <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+      <div className="grid gap-3 sm:grid-cols-2">
         <FormField id={id('when')} label={t('timeline.when')} error={errors.occurred_at} hint={entry ? undefined : t('timeline.whenHint')}>
           <Input
             id={id('when')}
@@ -197,7 +244,7 @@ export function EntryForm({ entry, kinds = ENTRY_KINDS, onSubmit, onCancel, idPr
             className="font-latin"
           />
         </FormField>
-        <FormField id={id('follow-up')} label={t('timeline.followUp')} error={errors.follow_up_on} hint={t('timeline.followUpHint')}>
+        <FormField id={id('follow-up')} label={t('timeline.followUp')} error={errors.follow_up_on} hint={t('timeline.followUpTaskHint')}>
           <Input
             id={id('follow-up')}
             type="date"
@@ -206,16 +253,41 @@ export function EntryForm({ entry, kinds = ENTRY_KINDS, onSubmit, onCancel, idPr
             className="font-latin"
           />
         </FormField>
-        <div className="flex gap-2 sm:mb-5 sm:justify-end">
-          {onCancel && (
-            <Button type="button" variant="ghost" onClick={onCancel}>
-              {t('common.cancel')}
-            </Button>
-          )}
-          <Button type="submit" disabled={saving}>
-            {saving ? t('common.saving') : entry ? t('common.save') : t('timeline.add')}
+      </div>
+
+      {makesTask && (
+        <fieldset className="grid gap-3 rounded-lg border bg-muted/30 p-3 sm:grid-cols-2 sm:items-end">
+          <legend className="px-1 text-xs font-medium text-muted-foreground">{t('timeline.followUpTask')}</legend>
+          <FormField id={id('assignee')} label={t('timeline.followUpAssignee')} error={errors.follow_up_assignee}>
+            <SimpleSelect
+              id={id('assignee')}
+              value={assignee}
+              disabled={skipTask}
+              onChange={setAssignee}
+              options={(assignees.length ? assignees : [{ id: me.id, full_name: me.full_name }]).map((u) => ({
+                value: String(u.id),
+                label: u.id === me.id ? t('timeline.me', { name: u.full_name }) : u.full_name,
+              }))}
+            />
+          </FormField>
+          <div className="flex items-center gap-2 sm:mb-2">
+            <Checkbox id={id('skip')} checked={skipTask} onCheckedChange={(v) => setSkipTask(v === true)} />
+            <Label htmlFor={id('skip')} className="font-normal">
+              {t('timeline.followUpSkip')}
+            </Label>
+          </div>
+        </fieldset>
+      )}
+
+      <div className="flex justify-end gap-2">
+        {onCancel && (
+          <Button type="button" variant="ghost" onClick={onCancel}>
+            {t('common.cancel')}
           </Button>
-        </div>
+        )}
+        <Button type="submit" disabled={saving}>
+          {saving ? t('common.saving') : entry ? t('common.save') : t('timeline.add')}
+        </Button>
       </div>
       {message && <p className="text-sm text-destructive">{message}</p>}
     </form>

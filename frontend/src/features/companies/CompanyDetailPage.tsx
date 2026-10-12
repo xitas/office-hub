@@ -6,6 +6,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { EmptyState, ErrorState } from '@/components/common'
 import { ContactButtons } from '@/components/common/ContactButtons'
+import { LastContacted } from '@/features/timeline/EntryBits'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -111,6 +112,7 @@ export function CompanyDetailPage() {
             <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
               {company.industry && <Badge variant="secondary">{t(`companies.industries.${company.industry}`)}</Badge>}
               {company.city && <span>{company.city}</span>}
+              <LastContacted at={company.last_contacted_at} />
             </div>
           </div>
         </div>
@@ -144,7 +146,12 @@ export function CompanyDetailPage() {
       ) : (
         <div className="grid gap-4">
           <div className="flex flex-wrap gap-2">
-            <ContactButtons phone={company.phone} email={company.email} className="contents" />
+            <ContactButtons
+              phone={company.phone}
+              email={company.email}
+              className="contents"
+              logFor={{ target: { company: company.id }, name: company.name, hint: company.city, type: 'company' }}
+            />
             {company.website && (
               <Button
                 variant="outline"

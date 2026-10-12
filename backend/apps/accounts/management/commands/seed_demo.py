@@ -230,6 +230,7 @@ class Command(BaseCommand):
         self._seed_contacts()
         self._seed_status_history()
         self._seed_timeline()
+        self._seed_messages_log()
         self._seed_tasks()
         self._seed_task_details()
         self._seed_repeating_tasks()
@@ -238,6 +239,40 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS("Demo data ready. All demo users share the password: " + DEMO_PASSWORD))
         for email, name, role, dept, _ in USERS:
             self.stdout.write(f"  {role:<8} {email:<28} {name} ({dept or 'All'})")
+
+    def _seed_messages_log(self):
+        """Emails and WhatsApp messages on a few demo contacts; two with follow-ups (and their tasks).
+
+        Skipped once any email or WhatsApp entry exists, so re-running never duplicates them.
+        """
+        from apps.core.office_time import office_today
+        from apps.timeline import follow_ups
+
+        if TimelineEntry.objects.filter(kind__in=["email", "whatsapp"]).exists():
+            return
+        contacts = list(Contact.objects.filter(assigned_to__isnull=False).select_related("assigned_to").order_by("pk")[:6])
+        if len(contacts) < 6:
+            return
+        now = timezone.now()
+        today = office_today()
+        rows = [
+            # contact, kind, direction, subject, summary, days ago, follow-up in days
+            (0, "email", "out", "Revised quotation", "Sent the revised quotation with the 5% volume discount.", 1, 2),
+            (0, "whatsapp", "in", "", "Asked whether delivery is possible before the 20th.", 0, None),
+            (1, "whatsapp", "out", "", "Shared the product catalogue PDF and price list.", 3, None),
+            (2, "email", "in", "Payment confirmation", "Confirmed the advance payment was transferred today.", 2, None),
+            (3, "email", "out", "Meeting follow-up", "Summarised the meeting and next steps; waiting for their sign-off.", 6, -1),
+            (4, "whatsapp", "in", "", "Wants a call back about bulk pricing next week.", 9, None),
+        ]
+        for index, kind, direction, subject, summary, days_ago, follow_up in rows:
+            contact = contacts[index]
+            details = {"direction": direction, **({"subject": subject} if subject else {})}
+            entry = TimelineEntry.objects.create(
+                kind=kind, contact=contact, summary=summary, details=details, created_by=contact.assigned_to,
+                occurred_at=now - timedelta(days=days_ago, hours=index),
+                follow_up_on=today + timedelta(days=follow_up) if follow_up is not None else None,
+            )
+            follow_ups.sync(entry, contact.assigned_to)
 
     def _seed_chat(self):
         """Default channels (General, one per department) and a few conversations, read up to an hour ago."""

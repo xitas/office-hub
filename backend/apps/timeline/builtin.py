@@ -1,4 +1,4 @@
-"""Built-in timeline types (note, call, meeting) and automatic entries (status changes, created)."""
+"""Built-in timeline types (note, call, meeting, email, WhatsApp) and automatic entries (status changes, created)."""
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
@@ -24,10 +24,27 @@ class MeetingDetailsSerializer(serializers.Serializer):
     attendees = serializers.CharField(max_length=500, required=False, allow_blank=True)
 
 
+class EmailDetailsSerializer(serializers.Serializer):
+    direction = serializers.ChoiceField(choices=CallDetailsSerializer.DIRECTIONS)
+    subject = serializers.CharField(max_length=200, required=False, allow_blank=True)
+
+
+class WhatsAppDetailsSerializer(serializers.Serializer):
+    direction = serializers.ChoiceField(choices=CallDetailsSerializer.DIRECTIONS)
+
+
+# Kinds that count as being in touch with the client ("Last contacted"); a note is internal.
+CONTACT_KINDS = ("call", "meeting", "email", "whatsapp")
+# Everything on the communication log.
+LOG_KINDS = ("note", *CONTACT_KINDS)
+
 register_type(EntryType("note", _("Note"), None, allows_follow_up=True))
 # A call or meeting can be logged with just its details ("no answer", "met at their office").
 register_type(EntryType("call", _("Call"), CallDetailsSerializer, allows_follow_up=True, requires_summary=False))
 register_type(EntryType("meeting", _("Meeting"), MeetingDetailsSerializer, allows_follow_up=True, requires_summary=False))
+# Emails and WhatsApp messages exchanged outside the app, logged by hand (in or out, what was said).
+register_type(EntryType("email", _("Email"), EmailDetailsSerializer, allows_follow_up=True))
+register_type(EntryType("whatsapp", _("WhatsApp"), WhatsAppDetailsSerializer, allows_follow_up=True))
 # Written by CSV imports (summary = file name, details = {"import": id}).
 register_type(EntryType("imported", _("Imported"), None, requires_summary=False, creatable=False))
 

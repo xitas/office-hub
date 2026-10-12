@@ -24,7 +24,11 @@ class TimelineEntry(models.Model):
     summary = models.TextField()
     details = models.JSONField(default=dict, blank=True)
     occurred_at = models.DateTimeField(default=timezone.now, db_index=True)
-    follow_up_on = models.DateField(null=True, blank=True, db_index=True)  # reminders come with Tasks
+    follow_up_on = models.DateField(null=True, blank=True, db_index=True)
+    # The follow-up is done (its task was completed). Cleared again if the task is reopened.
+    follow_up_done_at = models.DateTimeField(null=True, blank=True)
+    # The person chose not to make a task for this follow-up.
+    follow_up_skipped = models.BooleanField(default=False)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="timeline_entries"
     )

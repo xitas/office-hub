@@ -6,15 +6,34 @@ import { FormDialog, UserAvatar } from '@/components/common'
 import { CreatedPanel } from '@/components/common/CreatedPanel'
 import { RecordPicker, type Picked } from '@/components/common/RecordPicker'
 import { Button } from '@/components/ui/button'
-import { useAddEntry } from '@/lib/timeline'
+import { useAddEntry, type EntryKind } from '@/lib/timeline'
 import { EntryForm } from './EntryForm'
 
-
-/** Quick add → Note: pick a contact or company (only ones the user can see), then write the note. */
-export function QuickNoteDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+/** Quick add → Note (and "Log" on the communication log, and "Log this call" after calling):
+ *  pick a contact or company (only ones the user can see), or start with one, then log it. */
+export function QuickNoteDialog({
+  open,
+  onOpenChange,
+  kinds = ['note'],
+  record,
+  initialKind,
+  initialDirection,
+  title,
+  description,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  kinds?: readonly EntryKind[]
+  /** Start with this contact/company already chosen. */
+  record?: Picked
+  initialKind?: EntryKind
+  initialDirection?: 'in' | 'out'
+  title?: string
+  description?: string
+}) {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const [picked, setPicked] = useState<Picked | null>(null)
+  const [picked, setPicked] = useState<Picked | null>(record ?? null)
   const [saved, setSaved] = useState<Picked | null>(null)
   const add = useAddEntry()
 
@@ -27,10 +46,15 @@ export function QuickNoteDialog({ open, onOpenChange }: { open: boolean; onOpenC
   }
 
   return (
-    <FormDialog open={open} onOpenChange={close} title={t('timeline.quickNote')} description={t('timeline.quickNoteHint')}>
+    <FormDialog
+      open={open}
+      onOpenChange={close}
+      title={title ?? t('timeline.quickNote')}
+      description={description ?? t('timeline.quickNoteHint')}
+    >
       {saved ? (
         <CreatedPanel
-          message={t('timeline.noteSaved', { name: saved.name })}
+          message={t(kinds.length === 1 && kinds[0] === 'note' ? 'timeline.noteSaved' : 'timeline.entrySaved', { name: saved.name })}
           onOpen={() => {
             close(false)
             navigate('contact' in saved.target ? `/contacts/${saved.target.contact}` : `/companies/${saved.target.company}`)
@@ -61,7 +85,9 @@ export function QuickNoteDialog({ open, onOpenChange }: { open: boolean; onOpenC
           </div>
           <EntryForm
             idPrefix="quick-note"
-            kinds={['note']}
+            kinds={kinds}
+            initialKind={initialKind}
+            initialDirection={initialDirection}
             autoFocus
             onCancel={() => close(false)}
             onSubmit={async (input) => {

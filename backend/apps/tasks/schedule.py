@@ -243,7 +243,8 @@ def digest_for(user, today, now=None):
     overdue = list(mine.filter(late).order_by("due_date", "due_time", "title")[:20])
     follow_ups = list(
         TimelineEntry.objects.filter(
-            created_by=user, follow_up_on__lte=today, follow_up_on__gte=today - FOLLOW_UP_LOOKBACK, follow_up_tasks__isnull=True
+            created_by=user, follow_up_on__lte=today, follow_up_on__gte=today - FOLLOW_UP_LOOKBACK, follow_up_tasks__isnull=True,
+            follow_up_done_at__isnull=True,
         )
         .select_related("contact", "company")
         .order_by("follow_up_on")[:20]

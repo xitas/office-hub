@@ -139,6 +139,8 @@ export interface DashboardData {
   task_completion: TaskCompletion | null
   /** Mentions of me not read yet (Phase 3). */
   chat_mentions: { unread: number } | null
+  /** My client follow-ups due within a week, overdue first (Phase 3). */
+  follow_ups_due: FollowUpDue[] | null
 }
 
 export interface DashboardListItem {
@@ -206,6 +208,8 @@ export interface Company {
   updated_by_name: string | null
   created_at: string
   updated_at: string
+  /** Latest call, meeting, email or WhatsApp on the company or its contacts. */
+  last_contacted_at?: string | null
 }
 
 export type ContactStatus = 'new' | 'contacted' | 'in_discussion' | 'won' | 'lost'
@@ -234,6 +238,8 @@ export interface Contact {
   updated_by_name: string | null
   created_at: string
   updated_at: string
+  /** Latest call, meeting, email or WhatsApp logged on the contact. */
+  last_contacted_at?: string | null
 }
 
 /** Another contact sharing a phone/WhatsApp number or email (a warning, never blocking). */
@@ -252,6 +258,18 @@ export interface Tag {
   name: string
 }
 
+/** A client follow-up from a logged call, email, message or note. */
+export interface FollowUpDue {
+  id: number
+  kind: string
+  title: string
+  summary: string
+  due_date: string
+  is_overdue: boolean
+  url: string
+  task_id: number | null
+}
+
 export interface PipelineCard {
   id: number
   full_name: string
@@ -266,6 +284,8 @@ export interface PipelineCard {
   /** Open tasks linked to this contact (that you can see) and the nearest due date. */
   open_tasks?: number
   next_due?: string | null
+  last_contacted_at?: string | null
+  created_at?: string
 }
 
 export interface PipelineColumn {

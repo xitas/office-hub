@@ -6,6 +6,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { EmptyState, ErrorState, SimpleSelect, UserAvatar } from '@/components/common'
 import { ContactButtons } from '@/components/common/ContactButtons'
+import { LastContacted } from '@/features/timeline/EntryBits'
 import { StatusBadge } from '@/components/common/StatusBadge'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -128,8 +129,9 @@ export function ContactDetailPage() {
                 </Link>
               )}
             </p>
-            <div className="mt-2">
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
               <StatusBadge status={contact.status} />
+              <LastContacted at={contact.last_contacted_at} lead={contact} />
             </div>
           </div>
         </div>
@@ -179,7 +181,12 @@ export function ContactDetailPage() {
         </Card>
       ) : (
         <div className="grid gap-4">
-          <ContactButtons phone={contact.phone} whatsapp={contact.whatsapp} email={contact.email} />
+          <ContactButtons
+            phone={contact.phone}
+            whatsapp={contact.whatsapp}
+            email={contact.email}
+            logFor={{ target: { contact: contact.id }, name: contact.full_name, hint: contact.company_name ?? '', type: 'contact' }}
+          />
 
           <Card>
             <CardHeader>

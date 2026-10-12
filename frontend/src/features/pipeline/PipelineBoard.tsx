@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowRightLeft, Building, Check, CheckSquare, Clock, GripVertical } from 'lucide-react'
 import { useState, type DragEvent } from 'react'
 import { useTranslation } from 'react-i18next'
+import { LastContacted } from '@/features/timeline/EntryBits'
 import { Link } from 'react-router-dom'
 import { EmptyState, ErrorState, UserAvatar } from '@/components/common'
 import { TagList } from '@/components/common/TagList'
@@ -251,6 +252,7 @@ function BoardCard({
         </div>
       )}
       <OpenTasks count={card.open_tasks ?? 0} nextDue={card.next_due ?? null} />
+      <LastContacted at={card.last_contacted_at} lead={card} compact className="mt-1.5" />
       <div className="mt-2 flex items-center justify-between gap-2 text-xs text-muted-foreground">
         <span className="flex min-w-0 items-center gap-1.5">
           {card.assigned_to_name && <UserAvatar name={card.assigned_to_name} className="size-5 text-[9px]" />}

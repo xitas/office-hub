@@ -62,4 +62,18 @@ def build(people, n_tasks, *, seed=1, companies=5, contacts_per_company=4):
     ChecklistItem.objects.bulk_create(items, batch_size=1000)
     TaskComment.objects.bulk_create(comments, batch_size=1000)
     TaskActivity.objects.bulk_create(events, batch_size=1000)
+    analyze()
     return {"companies": comps, "contacts": conts}
+
+
+def analyze():
+    """Fresh planner statistics after a bulk insert (PostgreSQL), so later queries don't pick plans
+    made for empty tables. A stale plan once made a query run for minutes in the full suite."""
+    from django.db import connection
+
+    if connection.vendor != "postgresql":
+        return
+    with connection.cursor() as cursor:
+        for table in ("tasks_task", "tasks_task_assignees", "tasks_checklistitem", "tasks_taskcomment",
+                      "tasks_taskactivity", "contacts_contact", "contacts_company", "accounts_user"):
+            cursor.execute(f"ANALYZE {table}")
