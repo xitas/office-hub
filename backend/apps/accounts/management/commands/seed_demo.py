@@ -163,6 +163,35 @@ REPEATING = {
 }
 
 
+# Demo chat: (channel name or "dm", other person for a DM, [(author email, text, minutes ago)]).
+CHAT = [
+    ("General", None, [
+        ("admin@office.test", "Good morning everyone. The office will close at 4 pm on Friday for maintenance.", 26 * 60),
+        ("sales.manager@office.test", "Thanks Ayesha. Sales team, please plan client calls before 3:30 that day.", 25 * 60),
+        ("usman@office.test", "Noted. I'll finish the Gulberg site visits by Thursday.", 24 * 60),
+        ("zainab@office.test", "Reminder: please submit last month's expense receipts by tomorrow.", 90),
+    ]),
+    ("Sales", None, [
+        ("sales.manager@office.test", "Clifton Retail wants the revised quotation by Wednesday. Hamza, can you take it?", 5 * 60),
+        ("hamza@office.test", "Yes, on it. I'll share the draft here before sending.", 4 * 60 + 50),
+        ("fatima@office.test", "Saba Software asked for a demo next week. Tuesday or Thursday works for them.", 3 * 60),
+        ("sales.manager@office.test", "Let's do Thursday 11 am. I'll book the meeting room.", 2 * 60),
+    ]),
+    ("Operations", None, [
+        ("ops.manager@office.test", "The van is booked for Monday deliveries. Usman, please confirm the route.", 6 * 60),
+        ("usman@office.test", "Route confirmed: Saddar first, then DHA. Back by 2 pm.", 5 * 60 + 30),
+    ]),
+    ("dm", ("hamza@office.test", "fatima@office.test"), [
+        ("fatima@office.test", "Do you have the latest price list PDF?", 70),
+        ("hamza@office.test", "Yes, sending it now. It's also in the shared drive.", 65),
+        ("fatima@office.test", "Got it, thanks!", 60),
+    ]),
+    ("dm", ("sales.manager@office.test", "hamza@office.test"), [
+        ("sales.manager@office.test", "Good work on the tender reply. Let's review it together after lunch.", 40),
+    ]),
+]
+
+
 class Command(BaseCommand):
     help = "Create demo organization settings, departments, users, companies and contacts (idempotent)."
 
@@ -204,10 +233,40 @@ class Command(BaseCommand):
         self._seed_tasks()
         self._seed_task_details()
         self._seed_repeating_tasks()
+        self._seed_chat()
 
         self.stdout.write(self.style.SUCCESS("Demo data ready. All demo users share the password: " + DEMO_PASSWORD))
         for email, name, role, dept, _ in USERS:
             self.stdout.write(f"  {role:<8} {email:<28} {name} ({dept or 'All'})")
+
+    def _seed_chat(self):
+        """Default channels (General, one per department) and a few conversations, read up to an hour ago."""
+        from apps.chat import services as chat
+        from apps.chat.models import Conversation, Membership, Message
+
+        chat.ensure_default_channels()
+        if Message.objects.exists():
+            return
+        users = {u.email: u for u in User.objects.all()}
+        now = timezone.now()
+        for name, pair, lines in CHAT:
+            if name == "dm":
+                conversation, _ = chat.get_or_create_dm(users[pair[0]], users[pair[1]])
+            else:
+                conversation = Conversation.objects.get(is_default=True, name=name)
+            for email, text, minutes_ago in lines:
+                message = Message.objects.create(conversation=conversation, author=users[email], body=text)
+                Message.objects.filter(pk=message.pk).update(created_at=now - timedelta(minutes=minutes_ago))
+            Conversation.objects.filter(pk=conversation.pk).update(last_message_at=now - timedelta(minutes=lines[-1][2]))
+            # Everything older than an hour is read; newer messages show as unread.
+            read_up_to = (
+                Message.objects.filter(conversation=conversation, created_at__lte=now - timedelta(hours=1))
+                .order_by("-id").values_list("pk", flat=True).first() or 0
+            )
+            Membership.objects.filter(conversation=conversation).update(last_read_id=read_up_to)
+            for email, _, _ in lines:  # people have read up to their own messages
+                own = Message.objects.filter(conversation=conversation, author=users[email]).order_by("-id").first()
+                Membership.objects.filter(conversation=conversation, user=users[email], last_read_id__lt=own.pk).update(last_read_id=own.pk)
 
     def _seed_contacts(self):
         """40 contacts, 4 per company, with varied statuses, cities and tags (deterministic)."""

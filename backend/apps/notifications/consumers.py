@@ -26,6 +26,10 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
         if content.get("type") == "ping":
             await self.send_json({"type": "pong"})
 
+    async def chat_event(self, event):
+        # Chat messages, edits, deletions and read/unread changes (sent only to members, see apps.chat.services).
+        await self.send_json(event["data"])
+
     async def notification_new(self, event):
         await self.send_json({"type": "notification", "notification": event["notification"]})
 

@@ -356,6 +356,18 @@ async function rolePages(browser, role, vpName, vp, data) {
       await s('dialog-contact-new-task', { fullPage: false })
       await page.keyboard.press('Escape')
 
+      // Phase 3: chat (conversation list, a channel, new-message dialog)
+      await go('/chat')
+      await page.waitForSelector('aside[aria-label] li')
+      await s('chat')
+      await page.getByRole('button', { name: /^(New message|نیا پیغام)$/ }).click()
+      await page.waitForSelector('[role=dialog] li')
+      await s('dialog-chat-new-message', { fullPage: false })
+      await page.keyboard.press('Escape')
+      await page.locator('aside[aria-label] li a').first().click()
+      await page.waitForSelector('[role=log] li')
+      await s('chat-conversation')
+
       await go('/contacts/import')
       await page.waitForSelector('#import-file', { state: 'attached' })
       await s('import-upload')

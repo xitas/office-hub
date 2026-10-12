@@ -5,6 +5,7 @@ import { NavLink } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useMe } from '@/lib/auth'
+import { useChatUnread } from '@/lib/chat'
 import { useOrgSettings } from '@/lib/format'
 import { visibleNavItems, type NavItem } from '@/lib/modules'
 import { cn } from '@/lib/utils'
@@ -85,6 +86,7 @@ export function Sidebar() {
 
 function NavSection({ items, collapsed }: { items: NavItem[]; collapsed: boolean }) {
   const { t } = useTranslation()
+  const chatUnread = useChatUnread()
   return (
     <ul className="space-y-0.5">
       {items.map((item) => {
@@ -100,8 +102,18 @@ function NavSection({ items, collapsed }: { items: NavItem[]; collapsed: boolean
               )
             }
           >
-            <item.icon className="size-4 shrink-0" />
-            {!collapsed && <span className="truncate">{t(item.label)}</span>}
+            <span className="relative">
+              <item.icon className="size-4 shrink-0" />
+              {item.key === 'chat' && chatUnread > 0 && collapsed && (
+                <span className="absolute -end-1 -top-1 size-2 rounded-full bg-primary" aria-hidden />
+              )}
+            </span>
+            {!collapsed && <span className="flex-1 truncate">{t(item.label)}</span>}
+            {!collapsed && item.key === 'chat' && chatUnread > 0 && (
+              <span className="min-w-5 rounded-full bg-primary px-1.5 text-center text-[11px] leading-5 text-primary-foreground font-latin" aria-label={t('chat.unreadCount', { count: chatUnread })}>
+                {chatUnread > 99 ? '99+' : chatUnread}
+              </span>
+            )}
           </NavLink>
         )
         return (

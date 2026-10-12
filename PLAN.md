@@ -159,7 +159,7 @@ Phase 2 is split in two:
 
 ## Phase 3 — Communication hub (Module 4)
 
-**Status: next.** Planned slices (branch `phase-3-communication`):
+**Status: in progress** (branch `phase-3-communication`). Slices: 1 Chat foundations ✓, then 2–6:
 1. **Chat foundations:** Channel, ChannelMember and Message tables; direct messages and department channels (project channels when projects exist); visibility rules; live delivery over the existing WebSocket (tickets, Redis channel layer); unread counts per channel
 2. **Chat screens:** channel list and conversation view (desktop split view, phone full screen), live updates, edit/delete own messages, file attachments (reusing private task-file storage), read markers, English/Urdu, light/dark
 3. **Mentions, search and dashboard:** @mentions in chat with notifications (reusing the task mention picker), messages in global search (only conversations you belong to), "Unread messages" dashboard widget live, chat in the bottom nav
@@ -167,14 +167,15 @@ Phase 2 is split in two:
 5. **Message templates:** quotations, reminders and thank-you notes with placeholders (contact name, company, due amount); used from contact pages to copy, open WhatsApp or email; managed by admins and managers
 6. **Announcements and final review:** announcements board (pinned, audience by department, read receipts), then the same full review as Phase 2B (tests on both databases, query counts, real run, visual review)
 
-- [ ] Internal chat: direct messages (WebSocket)
-- [ ] Channels by department or project
+- [x] Internal chat: direct messages between any two colleagues, live over the existing WebSocket (slice 1; polished screens in slice 2)
+- [x] Channels by department or project: General for everyone and one per department with automatic membership (follows each person's department and active state), plus public or private project/department channels created by admins (any) and managers (their department); join/leave public channels, add/remove members, archive (read-only). Audited: channel creation, changes, membership and archiving (not individual messages) *(linking to projects comes with projects)*
+- [x] Messages: history newest first with cursor paging (load older), send (30 a minute per person), edit your own within 15 minutes (marked "edited"), delete your own ("message deleted", text removed); read position per person with unread counts per conversation and in total; new, edited and deleted messages and unread changes delivered live only to members (per-user WebSocket groups through Redis Channels)
 - [ ] @mentions with notifications
 - [~] Communication log: calls, meetings, messages with clients (date, type, summary, follow-up date) *(calls and meetings logged on the Phase 2 timeline; messages to come)*
 - [ ] Follow-up reminders auto-created from logged communications
 - [ ] Message templates (quotations, reminders, thank-you notes)
 - [ ] Announcements board (pinned, read receipts)
-- [ ] Dashboard: unread messages widget live
+- [~] Dashboard: unread messages widget live *(unread badge on Chat in the sidebar and bottom nav done; dashboard widget in slice 3)*
 - [ ] Messages added to global search
 - [x] Quick-add Note enabled *(done in Phase 2 slice 4, on the contact timeline)*
 
@@ -228,8 +229,8 @@ Phase 2 is split in two:
 | Tasks | 2 | [x] |
 | Subtasks | 2 | [x] *(ChecklistItem)* |
 | Comments | 2 | [x] *(TaskComment)* |
-| Messages | 3 | [ ] |
-| Channels | 3 | [ ] |
+| Messages | 3 | [x] *(Message)* |
+| Channels | 3 | [x] *(Conversation: channels and direct messages; Membership holds read state)* |
 | CommunicationLogs | 3 | [~] *(TimelineEntry, Phase 2: notes, calls, meetings)* |
 | Announcements | 3 | [ ] |
 | Resources | 4 | [ ] |
@@ -240,7 +241,7 @@ Phase 2 is split in two:
 | Expenses | 4 | [ ] |
 | Visits | 5 | [ ] |
 
-Tables added beyond the spec: OrganizationSettings, Notification and NotificationPreference (Phase 1, done); Tag, ContactStatusChange, TimelineEntry and ContactImport (Phase 2A); TaskAttachment, TaskActivity, TaskSeries, ReminderLog and DigestLog (Phase 2B).
+Tables added beyond the spec: OrganizationSettings, Notification and NotificationPreference (Phase 1, done); Tag, ContactStatusChange, TimelineEntry and ContactImport (Phase 2A); TaskAttachment, TaskActivity, TaskSeries, ReminderLog and DigestLog (Phase 2B); Membership (Phase 3, chat members and read state).
 
 ---
 
@@ -256,7 +257,7 @@ Tables added beyond the spec: OrganizationSettings, Notification and Notificatio
 - Task status-change notifications are not sent yet (assigned, due soon, overdue, comments and @mentions are). "By Project" filtering and linking wait for projects.
 - The calendar returns up to 1,000 tasks and the board up to 100 cards per column. Query counts stay fixed, but serializing that many takes about 0.4–0.9 s on a dev machine. If an office ever gets that busy, give the calendar a lighter serializer or load a week at a time.
 - Notification and digest emails are plain text. Urdu reads right to left only where the email app detects it; HTML emails with `dir="rtl"` would be better.
-- The morning digest lists a task due earlier today under "Due today" even when its time has passed (the dashboard does the same); a "late" mark there would be clearer.
+- ~~The morning digest lists a task due earlier today under "Due today" even when its time has passed.~~ **Fixed in Phase 3 slice 1:** such tasks are listed under "Overdue" with their time.
 - The contact/company activity loads every task event for linked tasks (no paging). Fine at current volumes; page it if a client collects hundreds of tasks.
 - Dev Mailpit uses ports 1026 (SMTP) and 8026 (inbox) because another local project already uses 1025/8025.
 - The visual review needs `LOGIN_THROTTLE_RATE=1000/min` on the backend; it can run beside a normal dev server on other ports (`VITE_BACKEND_URL`, `REVIEW_URL`, `CORS_ALLOWED_ORIGINS`).
@@ -264,6 +265,7 @@ Tables added beyond the spec: OrganizationSettings, Notification and Notificatio
 ---
 
 ## Changelog
+- **2026-10-12:** Phase 3 slice 1 — Chat foundations (branch `phase-3-communication`). New `chat` app: one Conversation table for channels and direct messages (group DMs can be added as another kind), Membership with each person's read position, Message with edit/delete times and a reply link for later threads. General and per-department channels created by migration and kept in step with users and departments by signals. Channel rules, cursor-paged history, send/edit/delete/read API, 30 messages a minute per person, live events only to members over the existing WebSocket (Redis channel layer), audit of channel changes. Simple Chat page (list, conversation, send box, edit/delete, browse/join channels, new message, new channel), Chat in the sidebar and bottom nav with unread badges, English and Urdu (mixed-language messages line up correctly in Urdu), light and dark. Demo chat seeded. Morning digest: tasks whose time has passed today now appear under "Overdue". Live check with Redis: two browsers see each other's messages, edits and deletions instantly; a non-member never receives them. 18 new tests (463 total).
 - **2026-10-11:** Phase 2B slice 6 — Final review; Phase 2B complete. No N+1 queries found in any task endpoint (checked at 2,000 tasks on SQLite and PostgreSQL); new tests lock the query count of 13 endpoints for all three roles. Faster task visibility: an id subquery replaces DISTINCT over joined rows (manager list SQL 159 → 25 ms, board 283 → 80 ms at 2,000 tasks on PostgreSQL). "Overdue" no longer reads the organization settings from the cache (Redis in production) once per task. New indexes on task completed-at and created-at. Real Celery worker + Beat run checked in Mailpit (due soon, overdue, mention, digest; English and Urdu; nothing sent twice) and a repeating task's next occurrence. Visual review script now covers the Tasks pages (844 screenshots, 0 layout issues); fixed the phone week-calendar title being cut off (now "5–11 Oct 2026"). 7 new tests (445 on SQLite, 446 on PostgreSQL + Redis).
 - **2026-10-11:** Phase 2B slice 5 — Connecting tasks to the CRM: Tasks section on contact and company pages (company roll-up of its contacts' tasks), task events on the contact/company activity via the timeline provider registry, open-task count and next due date on pipeline cards, real dashboard task widgets (My tasks, Team workload, Tasks this week) scoped per role, tasks in global search, `/tasks/workload/` and per-person counts on the Team page. Mailpit added to docker-compose (SMTP 127.0.0.1:1026, inbox http://localhost:8026; ports moved off 1025/8025 to avoid clashing with other local projects) and dev email now goes there. Fixed weekly completion counts merging tasks completed at the same moment. 14 new tests (438 total).
 - **2026-10-11:** Phase 2B slice 4 — Recurring tasks and reminders: TaskSeries, ReminderLog and DigestLog tables; Task.series and Task.follow_up_of; User.task_reminder_lead; three Beat schedules (data migration); new notification types (task overdue, morning digest); repeat editor, "this / this and future" choice, repeat marks on cards; reminder setting on the notifications page. A real Beat + worker run sent "due soon", "overdue" and 7 digests once each (console email). 49 new tests (423 total).

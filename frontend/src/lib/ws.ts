@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import { toast } from 'sonner'
 import { api } from './api'
 import { useAuth } from './auth'
+import { applyChatEvent, type ChatEvent } from './chat'
 import type { AppNotification } from './types'
 
 export const UNREAD_COUNT_KEY = ['notifications', 'unread-count'] as const
@@ -11,6 +12,7 @@ type ServerEvent =
   | { type: 'unread_count'; count: number }
   | { type: 'notification'; notification: AppNotification }
   | { type: 'pong' }
+  | ChatEvent
 
 /**
  * Keeps one WebSocket open per signed-in tab and reconnects with backoff.
@@ -50,6 +52,8 @@ export function useRealtime() {
         const event = JSON.parse(msg.data) as ServerEvent
         if (event.type === 'unread_count') {
           queryClient.setQueryData(UNREAD_COUNT_KEY, { count: event.count })
+        } else if (event.type === 'chat') {
+          applyChatEvent(queryClient, event)
         } else if (event.type === 'notification') {
           queryClient.setQueryData<{ count: number }>(UNREAD_COUNT_KEY, (old) => ({ count: (old?.count ?? 0) + 1 }))
           void queryClient.invalidateQueries({ queryKey: ['notifications', 'list'] })

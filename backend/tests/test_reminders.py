@@ -186,6 +186,18 @@ def test_digest_content(people, digest_data, django_capture_on_commit_callbacks)
     assert "/tasks/" in msg.body and "/contacts/" in msg.body
 
 
+def test_digest_moves_tasks_whose_time_has_passed_to_overdue(people, digest_data, django_capture_on_commit_callbacks):
+    make("Early meeting", [digest_data], due_date=DAY, due_time=time(8, 30))
+    make("All-day item", [digest_data], due_date=DAY)  # no time: due until the end of the day
+    with at_office(DAY, 9, 5), django_capture_on_commit_callbacks(execute=True):
+        assert schedule.send_digests() == 1
+    body = mail.outbox[0].body
+    assert mail.outbox[0].subject == "Your day: 2 tasks due today, 2 overdue, 1 client follow-up"
+    due_today, overdue = body.split("Overdue (2):")
+    assert "Today call 11:00" in due_today and "All-day item" in due_today and "Early meeting" not in due_today
+    assert "Early meeting (12/10/2026 08:30)" in overdue and "Late report (09/10/2026)" in overdue
+
+
 def test_digest_timing_and_no_duplicates(people, digest_data, django_capture_on_commit_callbacks):
     with django_capture_on_commit_callbacks(execute=True):
         with at_office(DAY, 8, 59):

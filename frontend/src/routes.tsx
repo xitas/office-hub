@@ -57,6 +57,14 @@ export const router = createBrowserRouter([
             lazy: () => import('@/features/tasks/TaskDetailPage').then((m) => ({ Component: m.TaskDetailPage })),
           },
           {
+            path: 'chat',
+            lazy: () => import('@/features/chat/ChatPage').then((m) => ({ Component: m.ChatPage })),
+          },
+          {
+            path: 'chat/:id',
+            lazy: () => import('@/features/chat/ChatPage').then((m) => ({ Component: m.ChatPage })),
+          },
+          {
             path: 'pipeline',
             lazy: () => import('@/features/pipeline/PipelinePage').then((m) => ({ Component: m.PipelinePage })),
           },

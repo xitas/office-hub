@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { useAuth, useMe } from '@/lib/auth'
 import { visibleNavItems } from '@/lib/modules'
 import { cn } from '@/lib/utils'
+import { useChatUnread } from '@/lib/chat'
 import { useUnreadCount } from './NotificationBell'
 
 const MAX_PRIMARY = 4
@@ -17,6 +18,7 @@ export function BottomNav() {
   const { logout } = useAuth()
   const [moreOpen, setMoreOpen] = useState(false)
   const unread = useUnreadCount()
+  const chatUnread = useChatUnread()
 
   const items = visibleNavItems(me.permissions)
   const primary = items.filter((i) => i.mobilePrimary).slice(0, MAX_PRIMARY)
@@ -36,6 +38,11 @@ export function BottomNav() {
             <NavLink key={item.key} to={item.path} end={item.path === '/'} className={tabClass}>
               <span className="relative">
                 <item.icon className="size-5" />
+                {item.key === 'chat' && chatUnread > 0 && (
+                  <span className="absolute -end-2 -top-1.5 min-w-4 rounded-full bg-primary px-1 text-center text-[10px] leading-4 text-primary-foreground font-latin">
+                    {chatUnread > 99 ? '99+' : chatUnread}
+                  </span>
+                )}
                 {item.key === 'notifications' && unread > 0 && (
                   <span className="absolute -end-2 -top-1.5 min-w-4 rounded-full bg-destructive px-1 text-center text-[10px] leading-4 text-white font-latin">
                     {unread > 99 ? '99+' : unread}

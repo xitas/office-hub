@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "apps.contacts",
     "apps.timeline",
     "apps.tasks",
+    "apps.chat",
 ]
 
 MIDDLEWARE = [
@@ -150,6 +151,7 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "login": env("LOGIN_THROTTLE_RATE", default="10/min"),
         "password_reset": env("PASSWORD_RESET_THROTTLE_RATE", default="5/hour"),
+        "chat_send": env("CHAT_SEND_RATE", default="30/min"),
     },
 }
 

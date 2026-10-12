@@ -13,6 +13,7 @@ api_v1 = [
     path("", include("apps.contacts.urls")),
     path("", include("apps.timeline.urls")),
     path("", include("apps.tasks.urls")),
+    path("", include("apps.chat.urls")),
 ]
 
 urlpatterns = [

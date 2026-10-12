@@ -39,7 +39,7 @@ export const NAV_ITEMS: NavItem[] = [
   { key: 'pipeline', path: '/pipeline', icon: SquareKanban, label: 'nav.pipeline', permission: 'contacts.view', enabled: true, section: 'main' },
   { key: 'companies', path: '/companies', icon: Building, label: 'nav.companies', permission: 'contacts.view', enabled: true, section: 'main' },
   { key: 'tasks', path: '/tasks', icon: CheckSquare, label: 'nav.tasks', permission: 'tasks.view', enabled: true, mobilePrimary: true, section: 'main' },
-  { key: 'chat', path: '/chat', icon: MessagesSquare, label: 'nav.chat', permission: 'chat.view', enabled: false, mobilePrimary: true, section: 'main' },
+  { key: 'chat', path: '/chat', icon: MessagesSquare, label: 'nav.chat', permission: 'chat.view', enabled: true, mobilePrimary: true, section: 'main' },
   { key: 'calendar', path: '/calendar', icon: CalendarDays, label: 'nav.calendar', permission: 'calendar.view', enabled: false, section: 'main' },
   { key: 'visits', path: '/visits', icon: MapPin, label: 'nav.visits', permission: 'visits.view', enabled: false, section: 'main' },
   { key: 'reports', path: '/reports', icon: BarChart3, label: 'nav.reports', permission: 'reports.view', enabled: false, section: 'main' },

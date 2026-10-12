@@ -24,7 +24,7 @@ from apps.accounts.models import User
 from apps.core.email import queue_email
 from apps.core.office_time import office_datetime, office_now, office_tz
 
-from .models import ChecklistItem, DigestLog, ReminderLog, Task, TaskActivity, TaskSeries
+from .models import ChecklistItem, DigestLog, ReminderLog, Task, TaskActivity, TaskSeries, overdue_q
 
 logger = logging.getLogger(__name__)
 
@@ -230,13 +230,17 @@ def send_overdue(now=None) -> int:
 # ================================================================ morning digest
 
 
-def digest_for(user, today):
-    """(due today, overdue, follow-ups) for one person on an office date."""
+def digest_for(user, today, now=None):
+    """(due today, overdue, follow-ups) for one person on an office date.
+
+    A task due earlier today whose time has already passed counts as overdue, not "due today".
+    """
     from apps.timeline.models import TimelineEntry
 
+    late = overdue_q(now)
     mine = Task.objects.filter(assignees=user).exclude(status=Task.Status.DONE)
-    due_today = list(mine.filter(due_date=today).order_by("due_time", "title"))
-    overdue = list(mine.filter(due_date__lt=today).order_by("due_date", "title")[:20])
+    due_today = list(mine.filter(due_date=today).exclude(late).order_by("due_time", "title"))
+    overdue = list(mine.filter(late).order_by("due_date", "due_time", "title")[:20])
     follow_ups = list(
         TimelineEntry.objects.filter(
             created_by=user, follow_up_on__lte=today, follow_up_on__gte=today - FOLLOW_UP_LOOKBACK, follow_up_tasks__isnull=True
@@ -260,7 +264,8 @@ def render_digest(user, today, due_today, overdue, follow_ups) -> tuple[str, str
         if overdue:
             lines.append(_("Overdue (%(count)s):") % {"count": len(overdue)})
             for t in overdue:
-                lines.append(f"  • {t.title} ({t.due_date:%d/%m/%Y}) — {base}/tasks/{t.pk}")
+                at = f" {t.due_time:%H:%M}" if t.due_time and t.due_date == today else ""
+                lines.append(f"  • {t.title} ({t.due_date:%d/%m/%Y}{at}) — {base}/tasks/{t.pk}")
             lines.append("")
         if follow_ups:
             lines.append(_("Client follow-ups (%(count)s):") % {"count": len(follow_ups)})
@@ -296,7 +301,7 @@ def send_digests(now=None) -> int:
     for user in User.objects.filter(is_active=True).exclude(pk__in=done).exclude(email=""):
         if not get_preferences(user).get("daily_digest", {}).get("email"):
             continue
-        due_today, overdue, follow_ups = digest_for(user, today)
+        due_today, overdue, follow_ups = digest_for(user, today, now)
         has_news = bool(due_today or overdue or follow_ups)
         try:
             with transaction.atomic():

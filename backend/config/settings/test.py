@@ -16,4 +16,4 @@ CELERY_TASK_ALWAYS_EAGER = True
 CELERY_TASK_EAGER_PROPAGATES = True
 # Opt-in Redis integration tests (shared rate limits): set TEST_REDIS_URL, e.g. redis://localhost:6379/15
 TEST_REDIS_URL = env("TEST_REDIS_URL", default="")
-REST_FRAMEWORK = {**REST_FRAMEWORK, "DEFAULT_THROTTLE_RATES": {"login": "1000/min", "password_reset": "1000/min"}}  # noqa: F405
+REST_FRAMEWORK = {**REST_FRAMEWORK, "DEFAULT_THROTTLE_RATES": {"login": "1000/min", "password_reset": "1000/min", "chat_send": "30/min"}}  # noqa: F405

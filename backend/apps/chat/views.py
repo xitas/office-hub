@@ -1,0 +1,357 @@
+from django.db.models import Count, Exists, F, IntegerField, Max, OuterRef, Prefetch, Subquery
+from django.db.models.functions import Coalesce
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from django.utils.translation import gettext as _
+from drf_spectacular.utils import OpenApiParameter, extend_schema
+from rest_framework import mixins, serializers, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.pagination import CursorPagination
+from rest_framework.response import Response
+from rest_framework.throttling import UserRateThrottle
+
+from apps.accounts.models import User
+from apps.core.audit import log_action
+from apps.core.models import AuditLog
+from apps.core.permissions import ModulePermission
+from apps.core.safe_cache import safe_cache
+
+from . import rules, services
+from .models import Conversation, Membership, Message
+from .serializers import ChannelWriteSerializer, ConversationSerializer, MessageSerializer
+
+
+class ChatSendThrottle(UserRateThrottle):
+    """Messages sent per user (default 30 a minute). Keeps working per process if Redis is down."""
+
+    scope = "chat_send"
+    cache = safe_cache
+
+
+class MessageHistoryPagination(CursorPagination):
+    """Newest first; follow `next` to load older messages. Stable while new messages arrive."""
+
+    ordering = "-id"
+    page_size = 30
+    page_size_query_param = "page_size"
+    max_page_size = 100
+
+
+class UserIdsSerializer(serializers.Serializer):
+    user_ids = serializers.ListField(child=serializers.IntegerField())
+
+
+class DirectSerializer(serializers.Serializer):
+    user = serializers.IntegerField()
+
+
+class ReadSerializer(serializers.Serializer):
+    message = serializers.IntegerField(required=False, help_text="Default: the newest message")
+
+
+def _names(users) -> str:
+    return ", ".join(sorted(u.full_name for u in users))
+
+
+class ConversationViewSet(
+    mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet
+):
+    """Channels and direct messages.
+
+    List: your conversations (newest activity first) with unread counts and the last message;
+    `?scope=browse` lists channels you can see but haven't joined. Create/update: channels
+    (admins any; managers their department's). Direct messages: POST /chat/conversations/direct/.
+    """
+
+    module = "chat"
+    permission_classes = [ModulePermission]
+    pagination_class = None  # a person's conversations are a short list
+    http_method_names = ["get", "post", "patch", "delete", "head", "options"]
+
+    def get_serializer_class(self):
+        if self.action in ("create", "partial_update", "update"):
+            return ChannelWriteSerializer
+        if self.action == "messages":
+            return MessageSerializer
+        return ConversationSerializer
+
+    def get_throttles(self):
+        if self.action == "messages" and self.request.method == "POST":
+            return [ChatSendThrottle()]
+        return super().get_throttles()
+
+    def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Conversation.objects.none()
+        user = self.request.user
+        mine = Membership.objects.filter(conversation=OuterRef("pk"), user=user)
+        return (
+            rules.visible_conversations(user)
+            .select_related("department")
+            .annotate(
+                is_member=Exists(mine),
+                unread_count=Coalesce(Subquery(mine.annotate(n=services.unread_count_expr()).values("n")[:1], output_field=IntegerField()), 0),
+                member_count=Coalesce(
+                    Subquery(
+                        Membership.objects.filter(conversation=OuterRef("pk")).order_by().values("conversation")
+                        .annotate(n=Count("pk")).values("n"),
+                        output_field=IntegerField(),
+                    ),
+                    0,
+                ),
+                last_message_id=Max("messages__id"),
+            )
+            .prefetch_related(
+                Prefetch(
+                    "memberships",
+                    queryset=Membership.objects.filter(conversation__kind=Conversation.Kind.DIRECT).select_related("user"),
+                    to_attr="member_list",
+                )
+            )
+            .order_by(F("last_message_at").desc(nulls_last=True), "name", "id")
+        )
+
+    def _context_for(self, conversations):
+        ids = [c.last_message_id for c in conversations if c.last_message_id]
+        last = {m.conversation_id: m for m in Message.objects.filter(pk__in=ids).select_related("author")}
+        return {**self.get_serializer_context(), "last_messages": last}
+
+    @extend_schema(parameters=[
+        OpenApiParameter("scope", str, enum=["mine", "browse"]),
+        OpenApiParameter("archived", bool, description="Include archived conversations"),
+    ])
+    def list(self, request):
+        qs = self.get_queryset()
+        if request.query_params.get("archived") not in ("true", "1"):
+            qs = qs.filter(archived_at__isnull=True)
+        if request.query_params.get("scope") == "browse":
+            qs = qs.filter(kind=Conversation.Kind.CHANNEL, is_member=False)
+        else:
+            qs = qs.filter(is_member=True)
+        conversations = list(qs)
+        return Response(ConversationSerializer(conversations, many=True, context=self._context_for(conversations)).data)
+
+    def retrieve(self, request, pk=None):
+        conversation = self.get_object()
+        return Response(ConversationSerializer(conversation, context=self._context_for([conversation])).data)
+
+    def _reload(self, conversation):
+        fresh = self.get_queryset().get(pk=conversation.pk)
+        return ConversationSerializer(fresh, context=self._context_for([fresh])).data
+
+    # ------------------------------------------------------------ channels
+
+    def create(self, request):
+        serializer = ChannelWriteSerializer(data=request.data, context=self.get_serializer_context())
+        serializer.is_valid(raise_exception=True)
+        initial = serializer.validated_data.pop("initial_members", [])
+        channel = serializer.save(kind=Conversation.Kind.CHANNEL, created_by=request.user)
+        services.add_members(channel, {request.user, *initial})
+        log_action(request.user, AuditLog.Action.CREATE, channel, request=request, changes={
+            "name": channel.name, "channel_type": channel.channel_type, "is_private": channel.is_private,
+            "department": str(channel.department) if channel.department else None,
+            "members": _names(User.objects.filter(chat_memberships__conversation=channel)),
+        })
+        return Response(self._reload(channel), status=status.HTTP_201_CREATED)
+
+    def partial_update(self, request, pk=None):
+        channel = self.get_object()
+        if not rules.can_manage(request.user, channel):
+            raise PermissionDenied(_("You can't change this channel."))
+        tracked = ("name", "description", "channel_type", "is_private", "department_id")
+        before = {f: getattr(channel, f) for f in tracked}
+        serializer = ChannelWriteSerializer(channel, data=request.data, partial=True, context=self.get_serializer_context())
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        changes = {f.removesuffix("_id"): [before[f], getattr(channel, f)] for f in tracked if before[f] != getattr(channel, f)}
+        if changes:
+            log_action(request.user, AuditLog.Action.UPDATE, channel, changes=changes, request=request)
+            services.notify_conversations_changed(channel.memberships.values_list("user_id", flat=True), channel.pk)
+        return Response(self._reload(channel))
+
+    def update(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
+    def _managed_channel(self, request):
+        channel = self.get_object()
+        if not rules.can_manage(request.user, channel):
+            raise PermissionDenied(_("You can't change this channel."))
+        return channel
+
+    @extend_schema(request=None, responses={200: ConversationSerializer})
+    @action(detail=True, methods=["post"])
+    def archive(self, request, pk=None):
+        """Archived channels are read-only and leave everyone's list. Default channels can't be archived."""
+        channel = self._managed_channel(request)
+        if channel.is_default:
+            raise ValidationError({"detail": _("Default channels can't be archived.")})
+        if not channel.archived:
+            channel.archived_at = timezone.now()
+            channel.save(update_fields=["archived_at", "updated_at"])
+            log_action(request.user, AuditLog.Action.UPDATE, channel, changes={"archived": [False, True]}, request=request)
+            services.notify_conversations_changed(channel.memberships.values_list("user_id", flat=True), channel.pk)
+        return Response(self._reload(channel))
+
+    @extend_schema(request=None, responses={200: ConversationSerializer})
+    @action(detail=True, methods=["post"])
+    def unarchive(self, request, pk=None):
+        channel = self._managed_channel(request)
+        if channel.archived:
+            channel.archived_at = None
+            channel.save(update_fields=["archived_at", "updated_at"])
+            log_action(request.user, AuditLog.Action.UPDATE, channel, changes={"archived": [True, False]}, request=request)
+            services.notify_conversations_changed(channel.memberships.values_list("user_id", flat=True), channel.pk)
+        return Response(self._reload(channel))
+
+    @extend_schema(request=UserIdsSerializer, responses={200: dict})
+    @action(detail=True, methods=["get", "post"])
+    def members(self, request, pk=None):
+        """GET: the members (anyone who can read the conversation). POST {"user_ids": [...]}: add people."""
+        conversation = self.get_object()
+        if request.method == "GET":
+            if not rules.readable_conversations(request.user).filter(pk=conversation.pk).exists() and not rules.can_manage(request.user, conversation):
+                raise PermissionDenied()
+            people = User.objects.filter(chat_memberships__conversation=conversation).order_by("full_name")
+            return Response([services.person(u) for u in people])
+        channel = self._managed_channel(request)
+        if channel.is_default:
+            raise ValidationError({"detail": _("Members of default channels follow the organization automatically.")})
+        ids = request.data.get("user_ids") or []
+        if not isinstance(ids, list) or not all(isinstance(i, int) for i in ids):
+            raise ValidationError({"user_ids": _("Give a list of people.")})
+        users = list(User.objects.filter(pk__in=ids, is_active=True))
+        added = services.add_members(channel, users)
+        if added:
+            log_action(request.user, AuditLog.Action.UPDATE, channel, request=request,
+                       changes={"members_added": [None, _names(u for u in users if u.pk in added)]})
+        return Response({"added": added})
+
+    @extend_schema(request=None, responses={204: None})
+    @action(detail=True, methods=["delete"], url_path=r"members/(?P<user_id>\d+)")
+    def remove_member(self, request, pk=None, user_id=None):
+        channel = self._managed_channel(request)
+        if channel.is_default:
+            raise ValidationError({"detail": _("Members of default channels follow the organization automatically.")})
+        person = get_object_or_404(User, pk=user_id)
+        if services.remove_members(channel, [person.pk]):
+            log_action(request.user, AuditLog.Action.UPDATE, channel, request=request, changes={"members_removed": [person.full_name, None]})
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @extend_schema(request=None, responses={200: ConversationSerializer})
+    @action(detail=True, methods=["post"])
+    def join(self, request, pk=None):
+        """Join a public channel."""
+        channel = self.get_object()
+        if not channel.is_channel or channel.is_private or channel.archived:
+            raise PermissionDenied(_("You can only join open, public channels."))
+        if services.add_members(channel, [request.user]):
+            log_action(request.user, AuditLog.Action.UPDATE, channel, request=request, changes={"members_added": [None, request.user.full_name]})
+        return Response(self._reload(channel))
+
+    @extend_schema(request=None, responses={204: None})
+    @action(detail=True, methods=["post"])
+    def leave(self, request, pk=None):
+        channel = self.get_object()
+        if not channel.is_channel:
+            raise ValidationError({"detail": _("You can't leave a direct message.")})
+        if channel.is_default:
+            raise ValidationError({"detail": _("Everyone stays in default channels.")})
+        if services.remove_members(channel, [request.user.pk]):
+            log_action(request.user, AuditLog.Action.UPDATE, channel, request=request, changes={"members_removed": [request.user.full_name, None]})
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    # ------------------------------------------------------------ direct messages
+
+    @extend_schema(request=DirectSerializer, responses={200: ConversationSerializer})
+    @action(detail=False, methods=["post"])
+    def direct(self, request):
+        """Open (or start) the direct message with a colleague: {"user": id}."""
+        try:
+            other = User.objects.get(pk=int(request.data.get("user")), is_active=True)
+        except (TypeError, ValueError, User.DoesNotExist):
+            raise ValidationError({"user": _("Choose a colleague.")})
+        conversation, created = services.get_or_create_dm(request.user, other)
+        return Response(self._reload(conversation), status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+
+    @extend_schema(responses={200: dict})
+    @action(detail=False, methods=["get"])
+    def unread(self, request):
+        """Unread messages across all your conversations (for the badge)."""
+        return Response({"count": services.total_unread(request.user)})
+
+    # ------------------------------------------------------------ messages
+
+    @extend_schema(
+        parameters=[OpenApiParameter("cursor", str), OpenApiParameter("page_size", int)],
+        request=MessageSerializer, responses={200: MessageSerializer(many=True), 201: MessageSerializer},
+    )
+    @action(detail=True, methods=["get", "post"])
+    def messages(self, request, pk=None):
+        """GET: history, newest first (follow `next` for older). POST {"body", "reply_to"?}: send."""
+        conversation = self.get_object()
+        if request.method == "GET":
+            if not rules.readable_conversations(request.user).filter(pk=conversation.pk).exists():
+                raise PermissionDenied(_("Only members can read this conversation."))
+            qs = Message.objects.filter(conversation=conversation).select_related("author")
+            paginator = MessageHistoryPagination()
+            page = paginator.paginate_queryset(qs, request, view=self)
+            return paginator.get_paginated_response([services.message_data(m) for m in page])
+        if not rules.can_post(request.user, conversation):
+            raise PermissionDenied(_("Join this conversation to write in it.") if not conversation.archived else _("This channel is archived."))
+        serializer = MessageSerializer(data=request.data, context={**self.get_serializer_context(), "conversation": conversation})
+        serializer.is_valid(raise_exception=True)
+        message = services.send_message(conversation, request.user, serializer.validated_data["body"], serializer.validated_data.get("reply_to"))
+        return Response(services.message_data(message), status=status.HTTP_201_CREATED)
+
+    @extend_schema(request=ReadSerializer, responses={200: dict})
+    @action(detail=True, methods=["post"])
+    def read(self, request, pk=None):
+        """Mark as read, up to `message` (default: the newest). Returns your unread count."""
+        conversation = self.get_object()
+        if not rules.is_member(request.user, conversation):
+            return Response({"unread": 0})
+        up_to = request.data.get("message")
+        try:
+            up_to = int(up_to) if up_to is not None else None
+        except (TypeError, ValueError):
+            raise ValidationError({"message": _("Give a message id.")})
+        return Response({"unread": services.mark_read(conversation, request.user, up_to)})
+
+
+class MessageViewSet(mixins.UpdateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
+    """Edit your own message within 15 minutes (marked "edited"), or delete it ("message deleted")."""
+
+    module = "chat"
+    permission_classes = [ModulePermission]
+    serializer_class = MessageSerializer
+    http_method_names = ["patch", "delete", "head", "options"]
+
+    def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Message.objects.none()
+        return Message.objects.filter(
+            conversation__in=rules.readable_conversations(self.request.user)
+        ).select_related("author", "conversation")
+
+    def _own(self):
+        message = self.get_object()
+        if message.author_id != self.request.user.pk:
+            raise PermissionDenied(_("You can only change your own messages."))
+        if message.is_deleted:
+            raise ValidationError({"detail": _("This message was deleted.")})
+        if message.conversation.archived:
+            raise PermissionDenied(_("This channel is archived."))
+        return message
+
+    def partial_update(self, request, pk=None):
+        message = self._own()
+        if timezone.now() > message.created_at + services.EDIT_WINDOW:
+            raise PermissionDenied(_("Messages can be edited for 15 minutes after sending."))
+        serializer = MessageSerializer(message, data={"body": request.data.get("body", "")}, partial=True)
+        serializer.is_valid(raise_exception=True)
+        return Response(services.message_data(services.edit_message(message, serializer.validated_data["body"])))
+
+    def destroy(self, request, pk=None):
+        services.delete_message(self._own())
+        return Response(status=status.HTTP_204_NO_CONTENT)
