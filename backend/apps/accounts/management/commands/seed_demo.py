@@ -223,6 +223,30 @@ TEMPLATES = [
 ]
 
 
+# (title, body, author, departments (none = everyone), pinned, days ago, who has read it)
+ANNOUNCEMENTS = [
+    (
+        "Office closed on Friday afternoon",
+        "The office will close at **4 pm on Friday** for electrical maintenance.\n\n"
+        "Before you leave:\n"
+        "- Save your work and shut down your computer\n"
+        "- Unplug heaters and kettles\n"
+        "- Take your laptop home if you'll work over the weekend\n\n"
+        "Questions? Ask [Ayesha](mailto:admin@office.test).",
+        ADMIN, [], True, 1, [SALES_MGR, OPS_MGR, HAMZA],
+    ),
+    (
+        "اس ماہ کے سیلز اہداف",
+        "سیلز ٹیم کے لیے اس ماہ کے اہداف:\n\n"
+        "1. ہر ہفتے کم از کم **پانچ نئے کلائنٹس** سے رابطہ\n"
+        "2. تمام کوٹیشنز جمعرات تک بھیج دیں\n"
+        "3. ہر کال کے بعد CRM میں اندراج ضرور کریں\n\n"
+        "شکریہ، بلال",
+        SALES_MGR, ["Sales"], False, 3, [FATIMA],
+    ),
+]
+
+
 class Command(BaseCommand):
     help = "Create demo organization settings, departments, users, companies and contacts (idempotent)."
 
@@ -267,6 +291,7 @@ class Command(BaseCommand):
         self._seed_repeating_tasks()
         self._seed_chat()
         self._seed_templates()
+        self._seed_announcements()
 
         self.stdout.write(self.style.SUCCESS("Demo data ready. All demo users share the password: " + DEMO_PASSWORD))
         for email, name, role, dept, _ in USERS:
@@ -320,6 +345,24 @@ class Command(BaseCommand):
                 sharing=sharing, department=user.department if sharing == "department" else None, created_by=user,
                 usage_count=len(TEMPLATES) - index,  # a believable "most used" order
             )
+
+    def _seed_announcements(self):
+        """Two announcements: a pinned one for everyone, and one in Urdu for Sales (skipped once any exists).
+        Created directly, so seeding sends no notifications or emails."""
+        from apps.announcements.models import Announcement, AnnouncementRead
+
+        if Announcement.objects.exists():
+            return
+        users = {u.email: u for u in User.objects.all()}
+        now = timezone.now()
+        for title, body, author, departments, pinned, days_ago, readers in ANNOUNCEMENTS:
+            announcement = Announcement.objects.create(
+                title=title, body=body, created_by=users[author], pinned=pinned, published_at=now - timedelta(days=days_ago),
+                audience=Announcement.Audience.DEPARTMENTS if departments else Announcement.Audience.EVERYONE,
+            )
+            announcement.departments.set(Department.objects.filter(name__in=departments))
+            for email in [author, *readers]:
+                AnnouncementRead.objects.create(announcement=announcement, user=users[email], read_at=now - timedelta(days=days_ago, hours=-2))
 
     def _seed_chat(self):
         """Default channels (General, one per department) and a few conversations, read up to an hour ago."""

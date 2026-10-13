@@ -1,3 +1,4 @@
+import type { AnnouncementsWidget } from './announcements'
 import type { TimelineItem } from './timeline'
 
 export type Role = 'admin' | 'manager' | 'staff'
@@ -141,6 +142,8 @@ export interface DashboardData {
   chat_mentions: { unread: number } | null
   /** My client follow-ups due within a week, overdue first (Phase 3). */
   follow_ups_due: FollowUpDue[] | null
+  /** Current announcements I haven't opened (Phase 3). */
+  announcements: AnnouncementsWidget | null
 }
 
 export interface DashboardListItem {

@@ -26,7 +26,8 @@
     "companies": "Companies",
     "pipeline": "Pipeline",
     "log": "Communication log",
-    "templates": "Templates"
+    "templates": "Templates",
+    "announcements": "Announcements"
   },
   "common": {
     "save": "Save",
@@ -174,7 +175,10 @@
     "followUps": "My follow-ups due",
     "allFollowUps": "All follow-ups",
     "noFollowUps": "No follow-ups due this week",
-    "hasTask": "Has a task"
+    "hasTask": "Has a task",
+    "announcements": "Announcements",
+    "allAnnouncements": "All announcements",
+    "noAnnouncements": "You're up to date"
   },
   "notifications": {
     "title": "Notifications",
@@ -1283,5 +1287,68 @@
     "openWhatsapp": "Open WhatsApp",
     "openEmail": "Open email app",
     "editBeforeSending": "Change anything before sending."
+  },
+  "announcements": {
+    "title": "Announcements",
+    "subtitle": "News for the whole office or your department. Pinned ones stay on top.",
+    "new": "New announcement",
+    "edit": "Edit announcement",
+    "post": "Post",
+    "posted": "Announcement posted",
+    "saved": "Announcement saved",
+    "deleted": "Announcement deleted",
+    "titleLabel": "Title",
+    "body": "Announcement",
+    "preview": "Preview",
+    "write": "Write",
+    "previewEmpty": "Nothing to preview yet.",
+    "fmt": {
+      "toolbar": "Formatting",
+      "hint": "**bold**, \"- \" for a list, \"1. \" for a numbered list, [text](https://…) for a link",
+      "bold": "Bold",
+      "bullets": "Bulleted list",
+      "numbers": "Numbered list",
+      "link": "Link",
+      "boldSample": "bold text",
+      "linkSample": "link text",
+      "itemSample": "List item"
+    },
+    "audience": "Who is it for",
+    "audiences": {
+      "everyone": "Everyone",
+      "departments": "Chosen departments"
+    },
+    "forDepartment": "Your department: {{name}}",
+    "forList": "For {{names}}",
+    "pinned": "Pin to the top",
+    "pinnedHint": "Stays above newer announcements",
+    "pinnedBadge": "Pinned",
+    "expiresOn": "Show until",
+    "expiresHint": "Optional. Afterwards it moves to the archive.",
+    "files": "Files",
+    "addFiles": "Add files",
+    "filesHint": "PDF, images, Office documents, text or ZIP, up to 10 MB each.",
+    "removeFile": "Remove {{name}}",
+    "current": "Board",
+    "archive": "Archive",
+    "archived": "Archived",
+    "search": "Search announcements…",
+    "noMatches": "No announcements match",
+    "empty": "No announcements yet",
+    "emptyHint": "News for the office will appear here.",
+    "archiveEmpty": "Nothing in the archive",
+    "unread": "Unread",
+    "until": "until {{date}}",
+    "expiredOn": "ended {{date}}",
+    "readBy": "Read by {{read}} of {{total}}",
+    "back": "Announcements",
+    "notFound": "This announcement no longer exists or is not for you.",
+    "deleteTitle": "Delete this announcement?",
+    "deleteText": "“{{title}}” and its files will be removed for everyone.",
+    "receipts": "Who has read it",
+    "notRead": "Not yet",
+    "readTab": "Read",
+    "everyoneRead": "Everyone has read it.",
+    "nobodyRead": "Nobody has opened it yet."
   }
 }

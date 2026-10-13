@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "apps.tasks",
     "apps.chat",
     "apps.message_templates",
+    "apps.announcements",
 ]
 
 MIDDLEWARE = [

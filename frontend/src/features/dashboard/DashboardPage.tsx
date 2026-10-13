@@ -26,6 +26,7 @@ import { useFormat } from '@/lib/format'
 import type { ActivityItem, DashboardData, DashboardListItem } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { ClientActivityWidget, ContactsByStatusWidget } from './ContactWidgets'
+import { AnnouncementsWidget } from './AnnouncementsWidget'
 import { FollowUpsWidget } from './FollowUpsWidget'
 import { CompletionWidget, MyTasksWidget, TeamWorkloadWidget } from './TaskWidgets'
 
@@ -87,6 +88,7 @@ export function DashboardPage() {
                 items={data?.[w.key] as DashboardListItem[] | null | undefined}
               />
             ))}
+            <AnnouncementsWidget data={data?.announcements} loading={isLoading} />
             <MyTasksWidget data={data} loading={isLoading} className="md:col-span-2 xl:col-span-2" />
             <CompletionWidget data={data?.task_completion} loading={isLoading} />
             <FollowUpsWidget items={data?.follow_ups_due} loading={isLoading} />

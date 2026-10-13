@@ -32,6 +32,8 @@ DEFAULT_PREFERENCES = {
 DEFAULT_PREFERENCES["direct_message"] = {"in_app": True, "email": True}
 # Chat mentions: emailed only if left unread for a while (see apps.chat.tasks).
 DEFAULT_PREFERENCES["chat_mention"] = {"in_app": True, "email": True}
+# Announcements are emailed by default (each person can turn it off).
+DEFAULT_PREFERENCES["announcement"] = {"in_app": True, "email": True}
 # The digest is an email only.
 DEFAULT_PREFERENCES["daily_digest"] = {"in_app": False, "email": True}
 

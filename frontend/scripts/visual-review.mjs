@@ -94,14 +94,18 @@ async function prepareData() {
   const contact = {}
   const company = {}
   const task = {}
+  const announcement = {}
   for (const [role, email] of Object.entries(ROLES)) {
     const token = await apiLogin(email)
+    // Their own announcement where they have one (shows read receipts), otherwise the first.
+    const board = (await (await call(token, 'GET', '/announcements/')).json()).results
+    announcement[role] = (board.find((a) => a.can_edit && a.created_by) ?? board[0]).id
     contact[role] = (await (await call(token, 'GET', '/contacts/?ordering=-updated_at')).json()).results[0].id
     company[role] = (await (await call(token, 'GET', '/companies/')).json()).results[0].id
     const tasks = (await (await call(token, 'GET', '/tasks/?page_size=100')).json()).results
     task[role] = tasks.sort((a, b) => b.comment_count + b.checklist_total - (a.comment_count + a.checklist_total))[0].id
   }
-  return { users: byEmail, depts: dept, contact, company, task }
+  return { users: byEmail, depts: dept, contact, company, task, announcement }
 }
 
 // ---------------------------------------------------------------- page checks
@@ -364,9 +368,47 @@ async function rolePages(browser, role, vpName, vp, data) {
       await page.waitForSelector('[role=dialog] li')
       await s('dialog-chat-new-message', { fullPage: false })
       await page.keyboard.press('Escape')
-      await page.locator('aside[aria-label] li a').first().click()
-      await page.waitForSelector('[role=log] li')
+      // The first conversation (not the Mentions / Search links above the list).
+      await page.locator('aside[aria-label] li a[href^="/chat/"]:not([href$="/mentions"]):not([href*="/search"])').first().click()
+      await page.waitForSelector('main [role=region] li')
       await s('chat-conversation')
+      await go('/chat/mentions')
+      await page.waitForTimeout(600)
+      await s('chat-mentions')
+      await go('/chat/search?q=quotation')
+      await page.waitForTimeout(800)
+      await s('chat-search')
+
+      // Phase 3: communication log, message templates, announcements
+      await go('/log')
+      await page.waitForSelector('main h1')
+      await s('comm-log')
+      await go('/templates')
+      await page.waitForSelector('main li h2')
+      await s('templates')
+      await page.getByRole('button', { name: /^(New template|نیا سانچہ)$/ }).click()
+      await page.waitForSelector('#tpl-name')
+      await page.waitForTimeout(300)
+      await s('dialog-template', { fullPage: false })
+      await page.keyboard.press('Escape')
+      await go('/announcements')
+      await page.waitForSelector('main li')
+      await s('announcements')
+      await go('/announcements?tab=archive')
+      await page.waitForTimeout(500)
+      await s('announcements-archive')
+      await go(`/announcements/${data.announcement[role]}`)
+      await page.waitForSelector('main h1')
+      await page.waitForTimeout(500)
+      await s('announcement-detail')
+      if (role !== 'staff') {
+        await go('/announcements')
+        await page.getByRole('button', { name: /^(New announcement|نیا اعلان)$/ }).click()
+        await page.waitForSelector('#ann-title')
+        await page.waitForTimeout(300)
+        await s('dialog-announcement', { fullPage: false })
+        await page.keyboard.press('Escape')
+      }
 
       await go('/contacts/import')
       await page.waitForSelector('#import-file', { state: 'attached' })

@@ -145,8 +145,9 @@ export const Composer = forwardRef<ComposerHandle, {
   }, [replyTo])
 
   // ------------------------------------------------------------ sending
+  // What was sent is remembered, so anything typed or attached while it's on its way is kept afterwards.
   const send = useMutation({
-    mutationFn: async (confirmBroadcast: boolean) => {
+    mutationFn: async ({ confirmBroadcast, body, files }: { confirmBroadcast: boolean; body: string; files: File[] }) => {
       const url = `/chat/conversations/${conversationId}/messages/`
       const text = editableToBody(body, draft.mentions)
       if (!files.length) {
@@ -159,9 +160,9 @@ export const Composer = forwardRef<ComposerHandle, {
       files.forEach((f) => form.append('files', f, f.name || 'pasted-image.png'))
       return (await api.post<ChatMessage>(url, form)).data
     },
-    onSuccess: (message) => {
-      update('', [])
-      setFiles([])
+    onSuccess: (message, sent) => {
+      if (body === sent.body) update('', [])
+      setFiles((current) => current.filter((f) => !sent.files.includes(f)))
       onCancelReply()
       addMessage(queryClient, message) // shown at once; the live echo of the same message is ignored
       void queryClient.invalidateQueries({ queryKey: [...CONVERSATIONS_KEY, 'mine'] })
@@ -184,10 +185,10 @@ export const Composer = forwardRef<ComposerHandle, {
         confirmLabel: t('chat.broadcastSend'),
       })
       if (!ok) return
-      send.mutate(true)
+      send.mutate({ confirmBroadcast: true, body, files })
       return
     }
-    send.mutate(false)
+    send.mutate({ confirmBroadcast: false, body, files })
   }
   const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (open) {

@@ -102,7 +102,15 @@ def _chat_mention(params: dict) -> tuple[str, str]:
     return title, params.get("preview", "")
 
 
+def _announcement(params: dict) -> tuple[str, str]:
+    return (
+        _("New announcement: %(title)s") % {"title": params.get("title", "")},
+        "%s: %s" % (params.get("actor", ""), params.get("preview", "")) if params.get("actor") else params.get("preview", ""),
+    )
+
+
 RENDERERS = {
+    "announcement": _announcement,
     "chat_mention": _chat_mention,
     "chat_direct": _chat_direct,
     "chat_channel": _chat_channel,

@@ -81,6 +81,7 @@ export function useRealtime() {
           queryClient.setQueryData<{ count: number }>(UNREAD_COUNT_KEY, (old) => ({ count: (old?.count ?? 0) + 1 }))
           void queryClient.invalidateQueries({ queryKey: ['notifications', 'list'] })
           void queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+          if (event.notification.type === 'announcement') void queryClient.invalidateQueries({ queryKey: ['announcements'] })
           toast(event.notification.title, { description: event.notification.body || undefined })
         }
       }

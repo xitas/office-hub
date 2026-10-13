@@ -1310,3 +1310,81 @@ msgstr "%(name)s (نقل)"
 
 msgid "This template is archived."
 msgstr "یہ سانچہ محفوظ شدہ ہے۔"
+
+msgid "Chosen departments"
+msgstr "منتخب شعبے"
+
+msgid "announcement"
+msgstr "اعلان"
+
+msgid "announcements"
+msgstr "اعلانات"
+
+msgid "announcement attachment"
+msgstr "اعلان کی فائل"
+
+msgid "announcement attachments"
+msgstr "اعلان کی فائلیں"
+
+msgid "announcement read"
+msgstr "اعلان پڑھا گیا"
+
+msgid "announcement reads"
+msgstr "اعلان پڑھنے کا ریکارڈ"
+
+msgid "Give the announcement a title."
+msgstr "اعلان کا عنوان لکھیں۔"
+
+msgid "Write the announcement."
+msgstr "اعلان لکھیں۔"
+
+msgid "Links must start with http://, https:// or mailto:."
+msgstr "لنک http://، https:// یا mailto: سے شروع ہونے چاہییں۔"
+
+msgid "The expiry date can't be in the past."
+msgstr "ختم ہونے کی تاریخ گزری ہوئی نہیں ہو سکتی۔"
+
+msgid "Only admins can post to everyone. Choose your department."
+msgstr "سب کے لیے اعلان صرف ایڈمن کر سکتے ہیں۔ اپنا شعبہ چنیں۔"
+
+msgid "Choose at least one department."
+msgstr "کم از کم ایک شعبہ چنیں۔"
+
+msgid "Managers post to their own department only."
+msgstr "مینیجر صرف اپنے شعبے کے لیے اعلان کر سکتے ہیں۔"
+
+msgid "Only managers with a department and admins can post announcements."
+msgstr "اعلان صرف ایڈمن اور شعبے والے مینیجر کر سکتے ہیں۔"
+
+msgid "Only the author or an admin can change this announcement."
+msgstr "یہ اعلان صرف لکھنے والا یا ایڈمن بدل سکتا ہے۔"
+
+msgid "Only the author or an admin can see who has read this."
+msgstr "کس نے پڑھا، یہ صرف لکھنے والا یا ایڈمن دیکھ سکتا ہے۔"
+
+msgid "An announcement can have up to %(n)s files."
+msgstr "ایک اعلان میں زیادہ سے زیادہ %(n)s فائلیں ہو سکتی ہیں۔"
+
+msgid "%(name)s posted an announcement for %(departments)s:"
+msgstr "%(name)s نے %(departments)s کے لیے اعلان کیا:"
+
+msgid "%(name)s posted an announcement for everyone:"
+msgstr "%(name)s نے سب کے لیے اعلان کیا:"
+
+msgid "Attached files: %(files)s"
+msgstr "منسلک فائلیں: %(files)s"
+
+msgid "Shown on the board until %(date)s."
+msgstr "بورڈ پر %(date)s تک دکھایا جائے گا۔"
+
+msgid "Read it in the CRM: %(link)s"
+msgstr "CRM میں پڑھیں: %(link)s"
+
+msgid "You get this email because announcement emails are on in your notification settings."
+msgstr "آپ کو یہ ای میل اس لیے ملی کیونکہ آپ کی اطلاع کی ترتیبات میں اعلانات کی ای میل آن ہے۔"
+
+msgid "Announcement: %(title)s"
+msgstr "اعلان: %(title)s"
+
+msgid "New announcement: %(title)s"
+msgstr "نیا اعلان: %(title)s"

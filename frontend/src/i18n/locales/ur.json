@@ -26,7 +26,8 @@
     "companies": "کمپنیاں",
     "pipeline": "پائپ لائن",
     "log": "رابطوں کا ریکارڈ",
-    "templates": "سانچے"
+    "templates": "سانچے",
+    "announcements": "اعلانات"
   },
   "common": {
     "save": "محفوظ کریں",
@@ -174,7 +175,10 @@
     "followUps": "میرے واجب فالو اپ",
     "allFollowUps": "تمام فالو اپ",
     "noFollowUps": "اس ہفتے کوئی فالو اپ واجب نہیں",
-    "hasTask": "اس کا کام بنا ہوا ہے"
+    "hasTask": "اس کا کام بنا ہوا ہے",
+    "announcements": "اعلانات",
+    "allAnnouncements": "تمام اعلانات",
+    "noAnnouncements": "آپ نے سب پڑھ لیے ہیں"
   },
   "notifications": {
     "title": "اطلاعات",
@@ -1283,5 +1287,68 @@
     "openWhatsapp": "واٹس ایپ کھولیں",
     "openEmail": "ای میل ایپ کھولیں",
     "editBeforeSending": "بھیجنے سے پہلے جو چاہیں بدل لیں۔"
+  },
+  "announcements": {
+    "title": "اعلانات",
+    "subtitle": "پورے دفتر یا آپ کے شعبے کے لیے خبریں۔ پن کیے گئے اعلانات اوپر رہتے ہیں۔",
+    "new": "نیا اعلان",
+    "edit": "اعلان میں ترمیم",
+    "post": "شائع کریں",
+    "posted": "اعلان شائع ہو گیا",
+    "saved": "اعلان محفوظ ہو گیا",
+    "deleted": "اعلان حذف ہو گیا",
+    "titleLabel": "عنوان",
+    "body": "اعلان",
+    "preview": "پیش منظر",
+    "write": "لکھیں",
+    "previewEmpty": "ابھی دکھانے کو کچھ نہیں۔",
+    "fmt": {
+      "toolbar": "فارمیٹنگ",
+      "hint": "**موٹا متن**، فہرست کے لیے \"- \"، نمبر والی فہرست کے لیے \"1. \"، لنک کے لیے [متن](https://…)",
+      "bold": "موٹا",
+      "bullets": "فہرست",
+      "numbers": "نمبر والی فہرست",
+      "link": "لنک",
+      "boldSample": "موٹا متن",
+      "linkSample": "لنک کا متن",
+      "itemSample": "فہرست کا نکتہ"
+    },
+    "audience": "کس کے لیے",
+    "audiences": {
+      "everyone": "سب کے لیے",
+      "departments": "منتخب شعبے"
+    },
+    "forDepartment": "آپ کا شعبہ: {{name}}",
+    "forList": "{{names}} کے لیے",
+    "pinned": "اوپر پن کریں",
+    "pinnedHint": "نئے اعلانات سے اوپر رہے گا",
+    "pinnedBadge": "پن شدہ",
+    "expiresOn": "کب تک دکھائیں",
+    "expiresHint": "اختیاری۔ اس کے بعد آرکائیو میں چلا جائے گا۔",
+    "files": "فائلیں",
+    "addFiles": "فائلیں شامل کریں",
+    "filesHint": "PDF، تصاویر، آفس دستاویزات، متن یا ZIP، ہر ایک 10 MB تک۔",
+    "removeFile": "{{name}} ہٹائیں",
+    "current": "بورڈ",
+    "archive": "آرکائیو",
+    "archived": "آرکائیو شدہ",
+    "search": "اعلانات تلاش کریں…",
+    "noMatches": "کوئی اعلان نہیں ملا",
+    "empty": "ابھی کوئی اعلان نہیں",
+    "emptyHint": "دفتر کی خبریں یہاں نظر آئیں گی۔",
+    "archiveEmpty": "آرکائیو خالی ہے",
+    "unread": "نہیں پڑھا",
+    "until": "{{date}} تک",
+    "expiredOn": "{{date}} کو ختم",
+    "readBy": "{{total}} میں سے {{read}} نے پڑھا",
+    "back": "اعلانات",
+    "notFound": "یہ اعلان اب موجود نہیں یا آپ کے لیے نہیں ہے۔",
+    "deleteTitle": "یہ اعلان حذف کریں؟",
+    "deleteText": "“{{title}}” اور اس کی فائلیں سب کے لیے ہٹا دی جائیں گی۔",
+    "receipts": "کس نے پڑھا",
+    "notRead": "ابھی نہیں",
+    "readTab": "پڑھ لیا",
+    "everyoneRead": "سب نے پڑھ لیا ہے۔",
+    "nobodyRead": "ابھی کسی نے نہیں کھولا۔"
   }
 }

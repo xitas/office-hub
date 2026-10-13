@@ -159,7 +159,7 @@ Phase 2 is split in two:
 
 ## Phase 3 — Communication hub (Module 4)
 
-**Status: in progress** (branch `phase-3-communication`). Slices: 1 Chat foundations ✓, 2 Chat screens and polish ✓, 3 Mentions, search and dashboard ✓, 4 Communication log ✓, 5 Message templates ✓, then 6:
+**Status: done** (branch `phase-3-communication`, 2026-10-13). Slices: 1 Chat foundations ✓, 2 Chat screens and polish ✓, 3 Mentions, search and dashboard ✓, 4 Communication log ✓, 5 Message templates ✓, 6 Announcements and final review ✓:
 1. **Chat foundations:** Channel, ChannelMember and Message tables; direct messages and department channels (project channels when projects exist); visibility rules; live delivery over the existing WebSocket (tickets, Redis channel layer); unread counts per channel
 2. **Chat screens:** channel list and conversation view (desktop split view, phone full screen), live updates, edit/delete own messages, file attachments (reusing private task-file storage), read markers, English/Urdu, light/dark
 3. **Mentions, search and dashboard:** @mentions in chat with notifications (reusing the task mention picker), messages in global search (only conversations you belong to), "Unread messages" dashboard widget live, chat in the bottom nav
@@ -180,14 +180,43 @@ Phase 2 is split in two:
 - [x] "Last contacted" (latest call, meeting, email or WhatsApp; a note doesn't count) on contact and company pages and pipeline cards; open leads with no contact for 14 days or more show "No contact in N days"
 - [x] Follow-up reminders auto-created from logged communications: a follow-up date makes a linked task for the person who logged it (or a colleague they may assign; or "Don't make a task"); changing the date moves the open task; completing the task marks the follow-up done on the entry (reopening clears it); "My follow-ups due" dashboard widget (this week, overdue first). Replaces the manual "Create task" button
 - [x] Message templates (quotations, reminders, thank-you notes): name, category, channel (email, WhatsApp, chat, any), English or Urdu (Urdu shown right to left), email subject, message; placeholders for the contact, me, the organization and today, inserted from chips, with a live preview filled for a real contact and warnings for unknown or empty placeholders (unknown ones are sent as written, empty ones left blank; contacts the user can't see are refused). Templates page with search and filters (category, channel, language, owner), create, edit, duplicate, archive/restore; most used first, with use count and last used. Sharing: anyone keeps personal templates, managers share with their department, admins share with everyone and manage all. Used from the contact page ("WhatsApp template" / "Email template": pick, edit, copy or open wa.me / mailto, then the "Log this" prompt pre-filled), the chat composer (chat or any-channel templates) and the log entry form ("From template"). 8 seeded templates (3 in Urdu)
-- [ ] Announcements board (pinned, read receipts)
+- [x] Announcements board: title, body with light formatting (**bold**, bulleted and numbered lists, links; never rendered as HTML, only http/https/mailto links), audience (everyone, or chosen departments), pinned, optional "show until" date (afterwards it moves to the Archive tab), files with the task-file rules (up to 10, private, downloads only for the audience), author and publish time. Admins post to everyone or any departments; managers to their own department. The author or an admin edits and deletes, all audited (with departments and file names). Board: pinned first, then newest; search; unread dot
+- [x] Read receipts: opening an announcement records the first read (and clears its notification); the author and admins see "Read by N of M" on the board and who has and hasn't read it (names, departments, when), counted only among the current active audience
+- [x] New announcements notify the audience in-app (live) and by email (full text, in each reader's language; new "New announcement" email setting, on by default); "Announcements" dashboard widget with unread ones (pinned first); two seeded announcements (one in Urdu)
 - [x] Dashboard: "Unread messages" widget (conversations with unread counts and the latest message; muted ones left out) and an "Unread mentions" count
 - [x] Messages added to global search ("Messages" group, only conversations the user can read, with "Search all messages")
 - [x] Quick-add Note enabled *(done in Phase 2 slice 4, on the contact timeline)*
 
 ---
 
+### Phase 3 verification (2026-10-13)
+- [x] Backend suite on SQLite and on PostgreSQL + Redis (see changelog)
+- [x] Query counts fixed for chat (conversations, history, mentions, search), global search, communication log and timelines, templates, announcements (board, detail, receipts) and the dashboard: nothing grows with the data
+- [x] Live two-browser run on the Redis channel layer: messages, typing, presence, @mention notification, reaction, image attachment, new announcement notification and dashboard update, read receipt
+- [x] Mailpit with a real Celery worker: announcement, delayed direct-message and chat-mention emails in English and Urdu, each arriving once (the job run twice)
+- [x] Visual review of every page for all three roles, desktop and phone, light and dark, English and Urdu
+
+**Known limitations (Phase 3)**
+- Group direct messages and project channels aren't available yet (projects don't exist); replies quote a message but there are no threads.
+- Presence comes from open WebSocket connections (75 s without a ping counts as offline); there are no mobile push notifications, only in-app and email.
+- Delayed direct-message and mention emails depend on Celery Beat (every 5 minutes, after 30 minutes unread). The review ran that job by hand with the clock moved ahead; the Beat schedule itself was checked in Phase 2B.
+- Communication log types are call, meeting, email, WhatsApp and note; SMS isn't a separate type.
+- Templates have no "amount due" placeholder yet (there are no invoices); placeholders cover the contact, the sender, the organization and today.
+- Announcements publish immediately (no scheduling), go to everyone or whole departments (not to chosen people), and editing one doesn't notify again. Read receipts count the current audience, so someone who changes department moves with it.
+- Emails are plain text, as before.
+
+---
+
 ## Phase 4 — Office planning (Module 6)
+
+**Status: next.** Planned slices (same rules: one branch, a review at the end):
+1. **Resources and bookings:** rooms, projector and vehicles (admins manage); bookings with availability and double-booking prevented by a PostgreSQL exclusion constraint (checked in code too, for SQLite); "Bookings today" widget
+2. **Shared office calendar:** meetings with attendees, holidays, events, and task deadlines on one calendar (day/week/month, reusing the task calendar); Quick-add Meeting; "Meetings today" widget
+3. **Leave:** leave types and yearly balances, requests, manager approve/reject with notifications and audit, holidays respected; "Pending approvals" widget
+4. **Attendance:** daily overview (present, on leave, on field visit, absent) from check-ins and approved leave; manager and admin views
+5. **Supplies and expenses:** inventory with low-stock alerts and purchase requests; expense requests with receipt upload (task-file rules) and an approval workflow
+6. **Weekly planning and final review:** weekly goals per team with progress, then the full review (both databases, query counts, live run, visual review)
+
 - [ ] Resources (rooms, projector, vehicles)
 - [ ] Booking calendar with availability and double-booking prevention (database constraint)
 - [ ] Shared office calendar: meetings, holidays, deadlines, events
@@ -238,7 +267,7 @@ Phase 2 is split in two:
 | Messages | 3 | [x] *(Message)* |
 | Channels | 3 | [x] *(Conversation: channels and direct messages; Membership holds read state)* |
 | CommunicationLogs | 3 | [x] *(TimelineEntry: notes, calls, meetings, emails, WhatsApp; follow-up state)* |
-| Announcements | 3 | [ ] |
+| Announcements | 3 | [x] *(Announcement, with AnnouncementAttachment and AnnouncementRead)* |
 | Resources | 4 | [ ] |
 | Bookings | 4 | [ ] |
 | LeaveRequests | 4 | [ ] |
@@ -247,7 +276,7 @@ Phase 2 is split in two:
 | Expenses | 4 | [ ] |
 | Visits | 5 | [ ] |
 
-Tables added beyond the spec: OrganizationSettings, Notification and NotificationPreference (Phase 1, done); Tag, ContactStatusChange, TimelineEntry and ContactImport (Phase 2A); TaskAttachment, TaskActivity, TaskSeries, ReminderLog and DigestLog (Phase 2B); Membership, Reaction, MessageAttachment and MessageMention (Phase 3, chat); MessageTemplate (Phase 3).
+Tables added beyond the spec: OrganizationSettings, Notification and NotificationPreference (Phase 1, done); Tag, ContactStatusChange, TimelineEntry and ContactImport (Phase 2A); TaskAttachment, TaskActivity, TaskSeries, ReminderLog and DigestLog (Phase 2B); Membership, Reaction, MessageAttachment and MessageMention (Phase 3, chat); MessageTemplate, AnnouncementAttachment and AnnouncementRead (Phase 3).
 
 ---
 
@@ -274,6 +303,7 @@ Tables added beyond the spec: OrganizationSettings, Notification and Notificatio
 ---
 
 ## Changelog
+- **2026-10-13:** Phase 3 slice 6 — Announcements and final review; **Phase 3 complete.** New `announcements` app (Announcement, AnnouncementAttachment, AnnouncementRead): board with pinned first, archive after the "show until" date, search, light formatting rendered safely, files with the task-file rules, read receipts for the author and admins, in-app and email notifications in each reader's language (announcement emails now on by default), dashboard widget (one query), two seeded announcements. Review: 532 passed and 1 skipped on SQLite, 533 passed on PostgreSQL + Redis; new query-count tests for chat mentions and search, global search, communication log and timelines, templates, announcements and the dashboard (nothing grew); live two-browser run on the Redis channel layer (17 checks); Mailpit with a real Celery worker (6 emails in English and Urdu, each once; a second job run sent none); visual review 1,124 screenshots, 0 layout issues. Fixed: the chat composer wiped text and files added while the previous message was still sending; links nested inside links on announcement cards; an Urdu announcement's unread dot and publish time in mixed-direction layouts; department-shared templates labelled "My department" for everyone; the visual review script's outdated chat selectors (and it now covers the Phase 3 pages). 14 new tests.
 - **2026-10-13:** Phase 3 slice 5 — Message templates: new `message_templates` app (MessageTemplate with sharing, department, usage count, last used, archive), placeholder filling on the server (contact visibility checked), preview and placeholder list endpoints, wa.me and mailto links (UTF-8 Urdu, line breaks as %0A / CRLF); Templates page and editor; templates on the contact page, in the chat composer and in the log entry form; copy to clipboard; the quick log prompt now covers email and starts from the sent text. Permission matrix: templates can be created and edited by everyone, with per-template rules (owner, department manager, admin); no delete, archive instead. 8 seeded templates, backend texts in Urdu. 12 new tests (518 on SQLite).
 - **2026-10-13:** Phase 3 slice 4 — Communication log: Email and WhatsApp timeline types; Communication log page (`/timeline/log/`, filters, CSV export with the contacts export permission and audit); quick "Log your call/message" prompt after click-to-call/WhatsApp; follow-up dates create linked tasks automatically (assignee choice or skip; date changes move the task; task completion marks the follow-up done; existing completed follow-ups marked by a data migration); "Last contacted" on contacts, companies and pipeline cards with a "No contact in N days" hint for stale open leads; "My follow-ups due" dashboard widget; seeded emails and WhatsApp messages; timeline summaries line up correctly in Urdu. PostgreSQL test stall guard (statement timeout, ANALYZE, CI timeouts). 10 new tests (506 on SQLite, 507 on PostgreSQL + Redis).
 - **2026-10-12:** Phase 3 slice 3 — Mentions, search and dashboard: MessageMention table (named, @channel, @here) with suggestions, permission and large-channel confirmation rules; mention notifications override mute; delayed email extended to unread mentions with its own "Mentioned in chat" preference (the old "mentioned" setting now covers task comments only, so task-comment emails are unchanged); Mentions view; message search (PostgreSQL full-text with GIN index, word matching on SQLite) with filters and highlighted results; "message in context" (?message=ID loads the messages around it, used by search, Mentions, reply quotes and notifications); messages in global search; record link cards with a permission check; dashboard "Unread messages" widget and "Unread mentions" count (fixed number of queries). Backend texts translated to Urdu. 18 new tests (496 on SQLite, 497 on PostgreSQL + Redis).

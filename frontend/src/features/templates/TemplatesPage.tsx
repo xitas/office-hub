@@ -183,7 +183,11 @@ function TemplateCard({ template: tpl, onEdit }: { template: MessageTemplate; on
             <p className="line-clamp-4 whitespace-pre-wrap text-muted-foreground">{tpl.body}</p>
           </div>
           <p className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
-            <span>{t(`templates.sharingOptions.${tpl.sharing}`)}{tpl.sharing === 'department' && tpl.department_name ? ` · ${tpl.department_name}` : ''}</span>
+            <span>
+              {tpl.sharing === 'department'
+                ? `${t('templates.owners.department')}${tpl.department_name ? ` · ${tpl.department_name}` : ''}`
+                : t(`templates.sharingOptions.${tpl.sharing}`)}
+            </span>
             {tpl.created_by_name && <span>· <bdi>{tpl.created_by_name}</bdi></span>}
             <span>· {t('templates.used', { count: tpl.usage_count })}</span>
             {tpl.last_used_at && <span>· {t('templates.lastUsed', { when: fmt.relative(tpl.last_used_at) })}</span>}

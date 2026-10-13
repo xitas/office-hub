@@ -185,7 +185,8 @@ function size(bytes: number) {
   return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`
 }
 
-function AttachmentChip({ attachment: a }: { attachment: ChatAttachment }) {
+/** A file in a message or announcement: image thumbnail (opens a preview) or a download chip. */
+export function AttachmentChip({ attachment: a }: { attachment: ChatAttachment }) {
   const { t } = useTranslation()
   const thumb = useAuthedBlobUrl(a.thumbnail_url)
   const [preview, setPreview] = useState(false)
