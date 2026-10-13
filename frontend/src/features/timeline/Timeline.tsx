@@ -78,7 +78,7 @@ export function Timeline({ target }: { target: TimelineTarget }) {
         {canAdd && (
           <>
             <div className="rounded-lg border bg-muted/30 p-3">
-              <EntryForm idPrefix="timeline-add" onSubmit={(input) => add.mutateAsync({ ...input, ...target })} />
+              <EntryForm idPrefix="timeline-add" contactId={'contact' in target ? target.contact : undefined} onSubmit={(input) => add.mutateAsync({ ...input, ...target })} />
             </div>
             <Separator />
           </>

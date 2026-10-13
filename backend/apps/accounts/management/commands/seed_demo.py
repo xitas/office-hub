@@ -192,6 +192,37 @@ CHAT = [
 ]
 
 
+# Demo message templates: (name, category, channel, language, subject, body, sharing, owner email)
+TEMPLATES = [
+    ("Quotation sent", "quotation", "email", "en", "Quotation for {contact.company}",
+     "Dear {contact.first_name},\n\nThank you for your interest. Please find our quotation attached. "
+     "Prices are valid for 15 days from {today}.\n\nIf you have any questions, call me on {my.phone}.\n\n"
+     "Regards,\n{my.name}\n{my.job_title}, {org.name}", "everyone", "admin@office.test"),
+    ("Quotation (WhatsApp)", "quotation", "whatsapp", "en", "",
+     "Hi {contact.first_name}, I've emailed the quotation for {contact.company}. It's valid for 15 days. "
+     "Let me know if you'd like to go over it. – {my.name}", "everyone", "admin@office.test"),
+    ("کوٹیشن بھیج دی", "quotation", "whatsapp", "ur", "",
+     "السلام علیکم {contact.first_name} صاحب،\nآپ کی کوٹیشن ای میل کر دی گئی ہے۔ یہ قیمتیں 15 دن کے لیے ہیں۔ "
+     "کوئی سوال ہو تو مجھے {my.phone} پر کال کریں۔\n{my.name}", "everyone", "admin@office.test"),
+    ("Payment reminder", "reminder", "any", "en", "Payment reminder",
+     "Dear {contact.first_name},\n\nThis is a friendly reminder that the payment for our last invoice is now due. "
+     "If you have already paid, please ignore this message.\n\nThank you,\n{my.name}", "everyone", "admin@office.test"),
+    ("ادائیگی کی یاد دہانی", "reminder", "whatsapp", "ur", "",
+     "محترم {contact.first_name} صاحب،\nیاد دہانی کے طور پر عرض ہے کہ ہماری پچھلی انوائس کی ادائیگی واجب الادا ہے۔ "
+     "اگر آپ ادائیگی کر چکے ہیں تو براہِ کرم اس پیغام کو نظر انداز کریں۔\nشکریہ،\n{my.name}", "everyone", "admin@office.test"),
+    ("Meeting confirmation", "follow_up", "any", "en", "Meeting confirmation",
+     "Hi {contact.first_name},\n\nThis is to confirm our meeting. Please let me know if the time no longer suits you.\n\n"
+     "See you soon,\n{my.name}\n{my.phone}", "everyone", "admin@office.test"),
+    ("Thank you", "thank_you", "any", "en", "Thank you, {contact.first_name}",
+     "Dear {contact.first_name},\n\nThank you for choosing {org.name}. It was a pleasure working with "
+     "{contact.company}, and we look forward to working with you again.\n\nBest regards,\n{my.name}",
+     "everyone", "admin@office.test"),
+    ("شکریہ اور فالو اپ", "follow_up", "any", "ur", "",
+     "{contact.first_name} صاحب، آج آپ سے بات کر کے خوشی ہوئی۔ جیسا کہ طے ہوا، میں اگلے ہفتے آپ سے دوبارہ رابطہ کروں گا۔\n{my.name}",
+     "department", "sales.manager@office.test"),
+]
+
+
 class Command(BaseCommand):
     help = "Create demo organization settings, departments, users, companies and contacts (idempotent)."
 
@@ -235,6 +266,7 @@ class Command(BaseCommand):
         self._seed_task_details()
         self._seed_repeating_tasks()
         self._seed_chat()
+        self._seed_templates()
 
         self.stdout.write(self.style.SUCCESS("Demo data ready. All demo users share the password: " + DEMO_PASSWORD))
         for email, name, role, dept, _ in USERS:
@@ -273,6 +305,21 @@ class Command(BaseCommand):
                 follow_up_on=today + timedelta(days=follow_up) if follow_up is not None else None,
             )
             follow_ups.sync(entry, contact.assigned_to)
+
+    def _seed_templates(self):
+        """Useful message templates in English and Urdu (skipped once any template exists)."""
+        from apps.message_templates.models import MessageTemplate
+
+        if MessageTemplate.objects.exists():
+            return
+        users = {u.email: u for u in User.objects.all()}
+        for index, (name, category, channel, language, subject, body, sharing, owner) in enumerate(TEMPLATES):
+            user = users[owner]
+            MessageTemplate.objects.create(
+                name=name, category=category, channel=channel, language=language, subject=subject, body=body,
+                sharing=sharing, department=user.department if sharing == "department" else None, created_by=user,
+                usage_count=len(TEMPLATES) - index,  # a believable "most used" order
+            )
 
     def _seed_chat(self):
         """Default channels (General, one per department) and a few conversations, read up to an hour ago."""

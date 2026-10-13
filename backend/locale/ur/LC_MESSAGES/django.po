@@ -1208,3 +1208,105 @@ msgstr "باقی"
 
 msgid "Exported the communication log to a CSV file"
 msgstr "رابطوں کا ریکارڈ CSV فائل میں برآمد کیا"
+
+msgid "Quotation"
+msgstr "کوٹیشن"
+
+msgid "Reminder"
+msgstr "یاد دہانی"
+
+msgid "Thank you"
+msgstr "شکریہ"
+
+msgid "Chat"
+msgstr "چیٹ"
+
+msgid "Any"
+msgstr "کوئی بھی"
+
+msgid "English"
+msgstr "انگریزی"
+
+msgid "Urdu"
+msgstr "اردو"
+
+msgid "Everyone"
+msgstr "سب"
+
+msgid "My department"
+msgstr "میرا شعبہ"
+
+msgid "Only me"
+msgstr "صرف میں"
+
+msgid "message template"
+msgstr "پیغام کا سانچہ"
+
+msgid "message templates"
+msgstr "پیغام کے سانچے"
+
+msgid "Contact's first name"
+msgstr "رابطے کا پہلا نام"
+
+msgid "Contact's last name"
+msgstr "رابطے کا آخری نام"
+
+msgid "Contact's full name"
+msgstr "رابطے کا پورا نام"
+
+msgid "Contact's job title"
+msgstr "رابطے کا عہدہ"
+
+msgid "Contact's company"
+msgstr "رابطے کی کمپنی"
+
+msgid "Contact's phone"
+msgstr "رابطے کا فون"
+
+msgid "Contact's email"
+msgstr "رابطے کی ای میل"
+
+msgid "Contact's city"
+msgstr "رابطے کا شہر"
+
+msgid "My full name"
+msgstr "میرا پورا نام"
+
+msgid "My first name"
+msgstr "میرا پہلا نام"
+
+msgid "My phone"
+msgstr "میرا فون"
+
+msgid "My email"
+msgstr "میری ای میل"
+
+msgid "My job title"
+msgstr "میرا عہدہ"
+
+msgid "Our organization's name"
+msgstr "ہمارے ادارے کا نام"
+
+msgid "Today's date"
+msgstr "آج کی تاریخ"
+
+msgid "Write the message."
+msgstr "پیغام لکھیں۔"
+
+msgid "Only admins can share templates with everyone."
+msgstr "سانچے سب کے ساتھ صرف ایڈمن شیئر کر سکتے ہیں۔"
+
+msgid "Only managers and admins can share templates with a department."
+msgstr "سانچے شعبے کے ساتھ صرف مینیجر اور ایڈمن شیئر کر سکتے ہیں۔"
+
+msgid "You aren't in a department."
+msgstr "آپ کسی شعبے میں نہیں ہیں۔"
+
+msgid "You can't change this template."
+msgstr "آپ اس سانچے میں تبدیلی نہیں کر سکتے۔"
+
+msgid "%(name)s (copy)"
+msgstr "%(name)s (نقل)"
+
+msgid "This template is archived."
+msgstr "یہ سانچہ محفوظ شدہ ہے۔"

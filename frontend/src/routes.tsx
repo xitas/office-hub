@@ -61,6 +61,10 @@ export const router = createBrowserRouter([
             lazy: () => import('@/features/chat/ChatPage').then((m) => ({ Component: m.ChatPage })),
           },
           {
+            path: 'templates',
+            lazy: () => import('@/features/templates/TemplatesPage').then((m) => ({ Component: m.TemplatesPage })),
+          },
+          {
             path: 'log',
             lazy: () => import('@/features/timeline/CommLogPage').then((m) => ({ Component: m.CommLogPage })),
           },

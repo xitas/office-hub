@@ -14,6 +14,7 @@ api_v1 = [
     path("", include("apps.timeline.urls")),
     path("", include("apps.tasks.urls")),
     path("", include("apps.chat.urls")),
+    path("", include("apps.message_templates.urls")),
 ]
 
 urlpatterns = [

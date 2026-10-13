@@ -32,7 +32,9 @@ export function QuickLogPrompt() {
       record={pending.record}
       initialKind={pending.kind}
       initialDirection="out"
-      title={t(pending.kind === 'call' ? 'log.promptCall' : 'log.promptWhatsapp', { name: pending.record.name })}
+      initialSummary={pending.summary}
+      initialSubject={pending.subject}
+      title={t(`log.prompt.${pending.kind}`, { name: pending.record.name })}
       description={t('log.promptHint')}
     />
   )

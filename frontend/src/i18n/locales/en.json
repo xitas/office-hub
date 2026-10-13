@@ -25,7 +25,8 @@
     "system": "System status",
     "companies": "Companies",
     "pipeline": "Pipeline",
-    "log": "Communication log"
+    "log": "Communication log",
+    "templates": "Templates"
   },
   "common": {
     "save": "Save",
@@ -1183,14 +1184,104 @@
     "record": "Contact or company",
     "anyRecord": "Any contact or company",
     "clearRecord": "Show all contacts and companies",
-    "promptCall": "Log your call with {{name}}?",
-    "promptWhatsapp": "Log your WhatsApp with {{name}}?",
     "promptHint": "Note how it went while it’s fresh. You can close this if there’s nothing to log.",
     "lastContacted": "Last contacted {{when}}",
     "lastContactedTitle": "Last contacted {{date}}",
     "neverContacted": "Not contacted yet",
     "staleHint": "No call, meeting, email or WhatsApp logged for a while",
     "noContactIn_one": "No contact in {{count}} day",
-    "noContactIn_other": "No contact in {{count}} days"
+    "noContactIn_other": "No contact in {{count}} days",
+    "prompt": {
+      "call": "Log your call with {{name}}?",
+      "whatsapp": "Log your WhatsApp with {{name}}?",
+      "email": "Log your email to {{name}}?"
+    }
+  },
+  "templates": {
+    "title": "Message templates",
+    "subtitle": "Ready-made quotations, reminders and thank-you notes, filled in for each contact.",
+    "new": "New template",
+    "edit": "Edit template",
+    "created": "Template saved",
+    "name": "Name",
+    "category": "Category",
+    "channel": "Channel",
+    "language": "Language",
+    "sharing": "Shared with",
+    "subject": "Email subject",
+    "subjectHint": "Used when sending by email",
+    "body": "Message",
+    "message": "Message",
+    "placeholders": "Placeholders — click to insert",
+    "unknownPlaceholders": "Not a placeholder (will be sent as written):",
+    "emptyPlaceholders": "Empty for this contact (left blank):",
+    "preview": "Preview",
+    "previewWith": "Preview with a contact",
+    "previewEmpty": "Write a message to see the preview.",
+    "clearContact": "Preview without a contact",
+    "categories": {
+      "quotation": "Quotation",
+      "reminder": "Reminder",
+      "thank_you": "Thank you",
+      "follow_up": "Follow-up",
+      "general": "General"
+    },
+    "channels": {
+      "email": "Email",
+      "whatsapp": "WhatsApp",
+      "chat": "Chat",
+      "any": "Any channel"
+    },
+    "sharingOptions": {
+      "personal": "Only me",
+      "department": "My department",
+      "everyone": "Everyone"
+    },
+    "search": "Search templates…",
+    "all": "All",
+    "owner": "Owner",
+    "owners": {
+      "all": "All I can use",
+      "mine": "Mine",
+      "department": "Department",
+      "everyone": "Everyone"
+    },
+    "showArchived": "Show archived",
+    "hideArchived": "Hide archived",
+    "empty": "No templates yet",
+    "emptyHint": "Create one for the messages you write again and again.",
+    "archived": "Archived",
+    "actions": "Actions for {{name}}",
+    "duplicate": "Duplicate",
+    "archive": "Archive",
+    "unarchive": "Restore",
+    "done": {
+      "archive": "Template archived",
+      "unarchive": "Template restored",
+      "duplicate": "A copy was added to your templates"
+    },
+    "used_one": "used {{count}} time",
+    "used_other": "used {{count}} times",
+    "lastUsed": "last {{when}}",
+    "hasUnknown": "Check its placeholders",
+    "useTemplate": "Template",
+    "fromTemplate": "From template",
+    "insert": "Insert a template",
+    "noneForChannel": "No templates for this yet",
+    "manage": "Manage templates",
+    "checkText": "Some placeholders are empty or unknown. Check the text before sending.",
+    "fillFailed": "The template could not be filled in.",
+    "sendWhatsapp": "WhatsApp template",
+    "sendEmail": "Email template",
+    "sendWhatsappTo": "WhatsApp {{name}}",
+    "sendEmailTo": "Email {{name}}",
+    "pickToSend": "Choose a template. You can change the text before sending.",
+    "otherTemplate": "Other template",
+    "copy": "Copy",
+    "copied": "Copied to the clipboard",
+    "copyFailed": "Could not copy. Select the text and copy it yourself.",
+    "openWhatsapp": "Open WhatsApp",
+    "openEmail": "Open email app",
+    "editBeforeSending": "Change anything before sending."
   }
 }

@@ -8,6 +8,9 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { apiError } from '@/lib/api'
 import { useMe } from '@/lib/auth'
+import { TemplatePicker } from '@/features/templates/TemplatePicker'
+import { fillTemplate, recordTemplateUse, type MessageTemplate } from '@/lib/templates'
+import { toast } from 'sonner'
 import { usePermission } from '@/lib/permissions'
 import { useTaskAssignees } from '@/lib/tasks'
 import {
@@ -32,6 +35,10 @@ interface Props {
   /** New entry: start on this type (e.g. "call" after tapping Call), going this way. */
   initialKind?: EntryKind
   initialDirection?: 'in' | 'out'
+  initialSummary?: string
+  initialSubject?: string
+  /** The contact being logged on: "From template" fills in their details. */
+  contactId?: number
   onSubmit: (input: Partial<EntryInput>) => Promise<unknown>
   onCancel?: () => void
   /** Prefix for element ids, so two forms can sit on one page. */
@@ -41,7 +48,19 @@ interface Props {
 
 /** Add/edit form for a note, call, meeting, email or WhatsApp message. Shows the extra fields of the
  *  chosen type, and with a follow-up date who the follow-up task goes to (or no task). */
-export function EntryForm({ entry, kinds = ENTRY_KINDS, initialKind, initialDirection, onSubmit, onCancel, idPrefix = 'entry', autoFocus }: Props) {
+export function EntryForm({
+  entry,
+  kinds = ENTRY_KINDS,
+  initialKind,
+  initialDirection,
+  initialSummary,
+  initialSubject,
+  contactId,
+  onSubmit,
+  onCancel,
+  idPrefix = 'entry',
+  autoFocus,
+}: Props) {
   const { t } = useTranslation()
   const me = useMe()
   const canCreateTasks = usePermission('tasks.create')
@@ -50,13 +69,13 @@ export function EntryForm({ entry, kinds = ENTRY_KINDS, initialKind, initialDire
   const meeting = (entry?.details ?? {}) as MeetingDetails
   const email = (entry?.details ?? {}) as EmailDetails
   const [kind, setKind] = useState<EntryKind>((entry?.kind as EntryKind) ?? initialKind ?? kinds[0])
-  const [summary, setSummary] = useState(entry?.summary ?? '')
+  const [summary, setSummary] = useState(entry?.summary ?? initialSummary ?? '')
   const [direction, setDirection] = useState<string>(call.direction ?? initialDirection ?? 'out')
   const [outcome, setOutcome] = useState<string>(call.outcome ?? 'connected')
   const [duration, setDuration] = useState(call.duration_minutes != null ? String(call.duration_minutes) : '')
   const [location, setLocation] = useState(meeting.location ?? '')
   const [attendees, setAttendees] = useState(meeting.attendees ?? '')
-  const [subject, setSubject] = useState(email.subject ?? '')
+  const [subject, setSubject] = useState(email.subject ?? initialSubject ?? '')
   // Blank "when" means "now" (filled in by the server when saving).
   const [when, setWhen] = useState(entry ? toLocalInput(entry.occurred_at) : '')
   const [followUp, setFollowUp] = useState(entry?.follow_up_on ?? '')
@@ -119,6 +138,19 @@ export function EntryForm({ entry, kinds = ENTRY_KINDS, initialKind, initialDire
       setMessage(Object.keys(info.fields).length ? '' : info.message)
     } finally {
       setSaving(false)
+    }
+  }
+
+  // "From template": the summary (and an email's subject) start from a template filled for this contact.
+  const fromTemplate = async (template: MessageTemplate) => {
+    try {
+      const filled = await fillTemplate(template.id, contactId)
+      setSummary(filled.body)
+      if (kind === 'email' && filled.subject) setSubject(filled.subject)
+      recordTemplateUse(template.id)
+      if (filled.unknown.length || filled.empty.length) toast.warning(t('templates.checkText'))
+    } catch {
+      toast.error(t('templates.fillFailed'))
     }
   }
 
@@ -218,6 +250,16 @@ export function EntryForm({ entry, kinds = ENTRY_KINDS, initialKind, initialDire
         </div>
       )}
 
+      {!entry && (
+        <div className="-mb-2 flex justify-end">
+          <TemplatePicker
+            channel={kind === 'email' || kind === 'whatsapp' ? kind : 'any'}
+            label={t('templates.fromTemplate')}
+            align="end"
+            onPick={(tpl) => void fromTemplate(tpl)}
+          />
+        </div>
+      )}
       <FormField id={id('summary')} label={t(kind === 'note' ? 'timeline.note' : 'timeline.summary')} error={errors.summary}>
         <Textarea
           id={id('summary')}

@@ -25,7 +25,8 @@
     "system": "سسٹم کی حالت",
     "companies": "کمپنیاں",
     "pipeline": "پائپ لائن",
-    "log": "رابطوں کا ریکارڈ"
+    "log": "رابطوں کا ریکارڈ",
+    "templates": "سانچے"
   },
   "common": {
     "save": "محفوظ کریں",
@@ -1183,14 +1184,104 @@
     "record": "رابطہ یا کمپنی",
     "anyRecord": "کوئی بھی رابطہ یا کمپنی",
     "clearRecord": "تمام رابطے اور کمپنیاں دکھائیں",
-    "promptCall": "{{name}} کے ساتھ اپنی کال درج کریں؟",
-    "promptWhatsapp": "{{name}} کے ساتھ اپنا واٹس ایپ درج کریں؟",
     "promptHint": "ابھی یاد ہے تو لکھ لیں۔ درج کرنے کو کچھ نہ ہو تو بند کر دیں۔",
     "lastContacted": "آخری رابطہ {{when}}",
     "lastContactedTitle": "آخری رابطہ {{date}}",
     "neverContacted": "ابھی رابطہ نہیں ہوا",
     "staleHint": "کافی عرصے سے کوئی کال، ملاقات، ای میل یا واٹس ایپ درج نہیں ہوا",
     "noContactIn_one": "{{count}} دن سے رابطہ نہیں",
-    "noContactIn_other": "{{count}} دن سے رابطہ نہیں"
+    "noContactIn_other": "{{count}} دن سے رابطہ نہیں",
+    "prompt": {
+      "call": "{{name}} کے ساتھ اپنی کال درج کریں؟",
+      "whatsapp": "{{name}} کے ساتھ اپنا واٹس ایپ درج کریں؟",
+      "email": "{{name}} کو بھیجی ای میل درج کریں؟"
+    }
+  },
+  "templates": {
+    "title": "پیغام کے سانچے",
+    "subtitle": "تیار کوٹیشنز، یاد دہانیاں اور شکریے کے پیغامات، ہر رابطے کے لیے خود بھرے ہوئے۔",
+    "new": "نیا سانچہ",
+    "edit": "سانچے میں ترمیم",
+    "created": "سانچہ محفوظ ہو گیا",
+    "name": "نام",
+    "category": "زمرہ",
+    "channel": "ذریعہ",
+    "language": "زبان",
+    "sharing": "کس کے ساتھ",
+    "subject": "ای میل کا موضوع",
+    "subjectHint": "ای میل سے بھیجنے پر استعمال ہوتا ہے",
+    "body": "پیغام",
+    "message": "پیغام",
+    "placeholders": "خالی جگہیں — شامل کرنے کے لیے کلک کریں",
+    "unknownPlaceholders": "یہ خالی جگہ نہیں (ایسے ہی بھیجی جائے گی):",
+    "emptyPlaceholders": "اس رابطے کے لیے خالی (خالی چھوڑ دی گئی):",
+    "preview": "پیش منظر",
+    "previewWith": "کسی رابطے کے ساتھ پیش منظر",
+    "previewEmpty": "پیش منظر دیکھنے کے لیے پیغام لکھیں۔",
+    "clearContact": "رابطے کے بغیر پیش منظر",
+    "categories": {
+      "quotation": "کوٹیشن",
+      "reminder": "یاد دہانی",
+      "thank_you": "شکریہ",
+      "follow_up": "فالو اپ",
+      "general": "عمومی"
+    },
+    "channels": {
+      "email": "ای میل",
+      "whatsapp": "واٹس ایپ",
+      "chat": "چیٹ",
+      "any": "کوئی بھی ذریعہ"
+    },
+    "sharingOptions": {
+      "personal": "صرف میں",
+      "department": "میرا شعبہ",
+      "everyone": "سب"
+    },
+    "search": "سانچے تلاش کریں…",
+    "all": "سب",
+    "owner": "مالک",
+    "owners": {
+      "all": "جو میں استعمال کر سکتا ہوں",
+      "mine": "میرے",
+      "department": "شعبے کے",
+      "everyone": "سب کے لیے"
+    },
+    "showArchived": "محفوظ شدہ دکھائیں",
+    "hideArchived": "محفوظ شدہ چھپائیں",
+    "empty": "ابھی کوئی سانچہ نہیں",
+    "emptyHint": "جو پیغام بار بار لکھتے ہیں اس کا سانچہ بنا لیں۔",
+    "archived": "محفوظ شدہ",
+    "actions": "{{name}} کے اقدامات",
+    "duplicate": "نقل بنائیں",
+    "archive": "محفوظ کریں",
+    "unarchive": "بحال کریں",
+    "done": {
+      "archive": "سانچہ محفوظ کر دیا",
+      "unarchive": "سانچہ بحال ہو گیا",
+      "duplicate": "نقل آپ کے سانچوں میں شامل ہو گئی"
+    },
+    "used_one": "{{count}} بار استعمال",
+    "used_other": "{{count}} بار استعمال",
+    "lastUsed": "آخری بار {{when}}",
+    "hasUnknown": "اس کی خالی جگہیں دیکھیں",
+    "useTemplate": "سانچہ",
+    "fromTemplate": "سانچے سے",
+    "insert": "سانچہ شامل کریں",
+    "noneForChannel": "اس کے لیے ابھی کوئی سانچہ نہیں",
+    "manage": "سانچوں کا انتظام",
+    "checkText": "کچھ خالی جگہیں خالی یا نامعلوم ہیں۔ بھیجنے سے پہلے متن دیکھ لیں۔",
+    "fillFailed": "سانچہ بھرا نہیں جا سکا۔",
+    "sendWhatsapp": "واٹس ایپ سانچہ",
+    "sendEmail": "ای میل سانچہ",
+    "sendWhatsappTo": "{{name}} کو واٹس ایپ",
+    "sendEmailTo": "{{name}} کو ای میل",
+    "pickToSend": "سانچہ چنیں۔ بھیجنے سے پہلے متن بدل سکتے ہیں۔",
+    "otherTemplate": "دوسرا سانچہ",
+    "copy": "کاپی کریں",
+    "copied": "کلپ بورڈ پر کاپی ہو گیا",
+    "copyFailed": "کاپی نہیں ہو سکا۔ متن منتخب کر کے خود کاپی کریں۔",
+    "openWhatsapp": "واٹس ایپ کھولیں",
+    "openEmail": "ای میل ایپ کھولیں",
+    "editBeforeSending": "بھیجنے سے پہلے جو چاہیں بدل لیں۔"
   }
 }

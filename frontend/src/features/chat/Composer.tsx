@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { AtSign, FileText, Megaphone, Paperclip, Reply, SendHorizontal, X } from 'lucide-react'
+import { AtSign, FileText, Megaphone, Paperclip, Reply, ScrollText, SendHorizontal, X } from 'lucide-react'
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState, type KeyboardEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -22,6 +22,8 @@ import {
   type MentionSuggestions,
 } from '@/lib/chat'
 import { useConfirm } from '@/lib/confirm'
+import { TemplatePicker } from '@/features/templates/TemplatePicker'
+import { fillTemplate, recordTemplateUse, type MessageTemplate } from '@/lib/templates'
 import { editableToBody } from '@/lib/tasks'
 import { useDebouncedValue } from '@/lib/useDebouncedValue'
 import { cn } from '@/lib/utils'
@@ -102,6 +104,27 @@ export const Composer = forwardRef<ComposerHandle, {
       el.focus()
       el.setSelectionRange(before.length, before.length)
     })
+  }
+
+  // ------------------------------------------------------------ templates (chat or any channel)
+  const insertTemplate = async (template: MessageTemplate) => {
+    try {
+      const filled = await fillTemplate(template.id)
+      const el = input.current
+      const start = el?.selectionStart ?? body.length
+      const end = el?.selectionEnd ?? body.length
+      const text = body.slice(0, start) + filled.body + body.slice(end)
+      update(text)
+      recordTemplateUse(template.id)
+      // No contact here: contact placeholders stay empty, so point them out.
+      if (filled.unknown.length || filled.empty.length) toast.warning(t('templates.checkText'))
+      requestAnimationFrame(() => {
+        el?.focus()
+        el?.setSelectionRange(start + filled.body.length, start + filled.body.length)
+      })
+    } catch {
+      toast.error(t('templates.fillFailed'))
+    }
   }
 
   // ------------------------------------------------------------ files
@@ -259,6 +282,15 @@ export const Composer = forwardRef<ComposerHandle, {
         <Button type="button" variant="ghost" size="icon" onClick={() => picker.current?.click()} aria-label={t('chat.attach')} title={t('chat.attach')}>
           <Paperclip className="size-4" />
         </Button>
+        <TemplatePicker
+          channel="chat"
+          onPick={(tpl) => void insertTemplate(tpl)}
+          trigger={
+            <Button type="button" variant="ghost" size="icon" aria-label={t('templates.insert')} title={t('templates.insert')}>
+              <ScrollText className="size-4" />
+            </Button>
+          }
+        />
         <Textarea
           ref={input}
           value={body}

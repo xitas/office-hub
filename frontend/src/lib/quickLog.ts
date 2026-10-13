@@ -6,15 +6,18 @@ const MIN_AWAY_MS = 3000
 const MAX_AGE_MS = 2 * 60 * 60 * 1000
 
 export interface PendingLog {
-  kind: 'call' | 'whatsapp'
+  kind: 'call' | 'whatsapp' | 'email'
   record: Picked
   at: number
+  /** What was sent (from a template), to start the log entry with. */
+  summary?: string
+  subject?: string
 }
 
-/** Remember a click-to-call or click-to-WhatsApp, so the app can offer to log it on return. */
-export function rememberContactAttempt(kind: PendingLog['kind'], record: Picked) {
+/** Remember a click-to-call, WhatsApp or email, so the app can offer to log it on return. */
+export function rememberContactAttempt(kind: PendingLog['kind'], record: Picked, sent?: { summary?: string; subject?: string }) {
   try {
-    sessionStorage.setItem(KEY, JSON.stringify({ kind, record, at: Date.now() } satisfies PendingLog))
+    sessionStorage.setItem(KEY, JSON.stringify({ kind, record, at: Date.now(), ...sent } satisfies PendingLog))
   } catch {
     /* private mode: no prompt, nothing else breaks */
   }

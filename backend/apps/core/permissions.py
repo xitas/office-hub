@@ -30,7 +30,8 @@ PERMISSIONS: dict[str, dict[str, set[str]]] = {
     # Phase 3
     "chat": {"view": ALL, "create": ALL, "edit": ALL, "delete": ALL, "manage_channels": MGMT},
     "comms": {"view": ALL, "create": ALL, "edit": ALL, "delete": MGMT},
-    "templates": {"view": ALL, "create": MGMT, "edit": MGMT, "delete": MGMT},
+    # Anyone keeps personal templates; who may share them is checked per template (apps.message_templates.rules).
+    "templates": {"view": ALL, "create": ALL, "edit": ALL, "delete": MGMT},
     "announcements": {"view": ALL, "create": MGMT, "edit": MGMT, "delete": MGMT},
     # Phase 4
     "bookings": {"view": ALL, "create": ALL, "edit": ALL, "delete": ALL},

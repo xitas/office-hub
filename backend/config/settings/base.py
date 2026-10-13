@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "apps.timeline",
     "apps.tasks",
     "apps.chat",
+    "apps.message_templates",
 ]
 
 MIDDLEWARE = [

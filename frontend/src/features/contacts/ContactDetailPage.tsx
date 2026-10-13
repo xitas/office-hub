@@ -6,6 +6,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { EmptyState, ErrorState, SimpleSelect, UserAvatar } from '@/components/common'
 import { ContactButtons } from '@/components/common/ContactButtons'
+import { TemplateSendButtons } from '@/features/templates/SendWithTemplate'
 import { LastContacted } from '@/features/timeline/EntryBits'
 import { StatusBadge } from '@/components/common/StatusBadge'
 import { Badge } from '@/components/ui/badge'
@@ -181,12 +182,16 @@ export function ContactDetailPage() {
         </Card>
       ) : (
         <div className="grid gap-4">
-          <ContactButtons
-            phone={contact.phone}
-            whatsapp={contact.whatsapp}
-            email={contact.email}
-            logFor={{ target: { contact: contact.id }, name: contact.full_name, hint: contact.company_name ?? '', type: 'contact' }}
-          />
+          <div className="flex flex-wrap gap-2">
+            <ContactButtons
+              phone={contact.phone}
+              whatsapp={contact.whatsapp}
+              email={contact.email}
+              className="contents"
+              logFor={{ target: { contact: contact.id }, name: contact.full_name, hint: contact.company_name ?? '', type: 'contact' }}
+            />
+            <TemplateSendButtons contact={contact} />
+          </div>
 
           <Card>
             <CardHeader>

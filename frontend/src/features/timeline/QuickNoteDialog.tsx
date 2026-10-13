@@ -18,6 +18,8 @@ export function QuickNoteDialog({
   record,
   initialKind,
   initialDirection,
+  initialSummary,
+  initialSubject,
   title,
   description,
 }: {
@@ -28,6 +30,9 @@ export function QuickNoteDialog({
   record?: Picked
   initialKind?: EntryKind
   initialDirection?: 'in' | 'out'
+  /** Start the summary (and email subject) with this, e.g. the template text that was sent. */
+  initialSummary?: string
+  initialSubject?: string
   title?: string
   description?: string
 }) {
@@ -88,6 +93,9 @@ export function QuickNoteDialog({
             kinds={kinds}
             initialKind={initialKind}
             initialDirection={initialDirection}
+            initialSummary={initialSummary}
+            initialSubject={initialSubject}
+            contactId={'contact' in picked.target ? picked.target.contact : undefined}
             autoFocus
             onCancel={() => close(false)}
             onSubmit={async (input) => {
