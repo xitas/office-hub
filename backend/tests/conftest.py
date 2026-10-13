@@ -73,3 +73,14 @@ def _clear_cache():
 def _private_media(settings, tmp_path):
     # Uploaded files go to a temp folder, never into the real private_media folder.
     settings.PRIVATE_MEDIA_ROOT = tmp_path / "private_media"
+
+
+@pytest.fixture(autouse=True)
+def _fresh_channel_layer():
+    # Each test gets its own in-memory channel layer: groups and undelivered events from one
+    # test's WebSockets can never reach the next test.
+    from channels.layers import channel_layers
+
+    channel_layers.backends.clear()
+    yield
+    channel_layers.backends.clear()

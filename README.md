@@ -78,12 +78,15 @@ Notes:
 ```powershell
 cd backend; .venv\Scripts\python -m pytest    # fast: in-memory SQLite, no Redis needed (Celery runs inline)
 .\scripts\test-postgres.ps1                   # full suite on PostgreSQL, plus Redis tests if the container runs
+.\scripts\test-ci.ps1                         # exactly as CI runs it (Docker); use before pushing
 cd frontend; npx tsc -b; npm run lint; npm run build
 ```
 
-- **Postgres runs:** the script reads `DATABASE_URL` from `backend\.env`. Django creates and drops a temporary `test_office_crm` database, so your data isn't touched.
+- **Same as CI:** `test-ci.ps1` runs `docker-compose.test.yml`, the file the GitHub Actions job uses: the pinned Python image, the packages in `backend\requirements.lock`, PostgreSQL 17 and Redis (throwaway, no host ports), UTC. After changing `requirements*.txt`, run `.\scripts\test-ci.ps1 -Lock` to update the lock file.
+- **Tests never read `backend\.env`:** they use only `config/settings/test.py` and `TEST_DATABASE_URL` / `TEST_REDIS_URL`, so every machine runs them the same way.
+- **Postgres runs:** `test-postgres.ps1` reads the server from `DATABASE_URL` in `backend\.env`. Django creates and drops a temporary `test_office_crm` database, so your data isn't touched. It warns when your Python or packages differ from CI's.
 - **Redis tests:** they use Redis database 15.
-- **CI:** GitHub Actions (`.github/workflows/ci.yml`) runs the backend tests on PostgreSQL 17 + Redis, plus the frontend type-check, lint, build and dependency audits, on every push and pull request.
+- **CI:** GitHub Actions (`.github/workflows/ci.yml`) runs the backend tests (via `docker-compose.test.yml`) plus the frontend type-check, lint, build and dependency audits, on every push and pull request.
 
 ## Translations (English / Urdu)
 

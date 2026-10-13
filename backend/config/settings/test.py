@@ -7,6 +7,7 @@ if DATABASES["default"]["ENGINE"].endswith("postgresql"):
     # A stuck query fails its test after 30 s instead of hanging the whole run (in CI too).
     DATABASES["default"].setdefault("OPTIONS", {})["options"] = "-c statement_timeout=30000"
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
+SECRET_KEY = "test-only-not-secret-0123456789-abcdefghijklmnopqrstuvwxyz"  # the same on every machine
 # Fixed, test-only key (never use outside tests).
 FIELD_ENCRYPTION_KEYS = ["Q2FuYXJ5VGVzdEtleUZvckZpZWxkRW5jcnlwdGlvbjA="]
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"

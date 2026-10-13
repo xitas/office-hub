@@ -5,7 +5,6 @@ from unittest import mock
 
 import pytest
 from channels.db import database_sync_to_async
-from channels.testing import WebsocketCommunicator
 from django.core import mail
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
@@ -13,9 +12,8 @@ from PIL import Image
 
 from apps.chat import presence, services
 from apps.chat.models import Conversation, Membership, Message, MessageAttachment
-from apps.core.ws_auth import issue_ticket
 from apps.notifications.models import Notification, NotificationPreference
-from config.asgi import application
+from tests import ws
 
 pytestmark = pytest.mark.django_db
 
@@ -108,27 +106,6 @@ def test_reaction_updates_reach_members_only(people, django_capture_on_commit_ca
 # ================================================================ typing and presence over the WebSocket
 
 
-async def _connect(user):
-    ws = WebsocketCommunicator(application, f"/ws/notifications/?ticket={issue_ticket(user)}", headers=[(b"origin", b"http://localhost")])
-    assert (await ws.connect())[0]
-    assert (await ws.receive_json_from())["type"] == "unread_count"
-    return ws
-
-
-async def _none(ws, event, timeout=0.4):
-    """No chat event of this kind arrives (receive_nothing keeps the connection usable)."""
-    while not await ws.receive_nothing(timeout=timeout):
-        assert (await ws.receive_json_from()).get("event") != event
-
-
-async def _next(ws, event, timeout=2):
-    """The next chat event of this kind (others, e.g. presence changes, are skipped)."""
-    while True:
-        data = await ws.receive_json_from(timeout=timeout)
-        if data.get("event") == event:
-            return data
-
-
 @pytest.mark.django_db(transaction=True)
 async def test_typing_goes_to_other_members_only_and_is_throttled(make_user):
     writer = await database_sync_to_async(make_user)("writer@test.com", full_name="Sana Writer")
@@ -136,19 +113,17 @@ async def test_typing_goes_to_other_members_only_and_is_throttled(make_user):
     outsider = await database_sync_to_async(make_user)("outsider@test.com", department="ops")
     channel = await database_sync_to_async(sales)()
 
-    member_ws, outsider_ws, writer_ws = await _connect(member), await _connect(outsider), await _connect(writer)
-    await writer_ws.send_json_to({"type": "chat.typing", "conversation": channel.pk})
-    await writer_ws.send_json_to({"type": "chat.typing", "conversation": channel.pk})  # within 3 s: dropped
-    event = await _next(member_ws, "typing")
-    assert event == {"type": "chat", "event": "typing", "conversation": channel.pk, "user": {"id": writer.pk, "full_name": "Sana Writer"}}
-    await _none(member_ws, "typing")
+    async with ws.connected(member, outsider, writer) as (member_ws, outsider_ws, writer_ws):
+        await writer_ws.send_json_to({"type": "chat.typing", "conversation": channel.pk})
+        await writer_ws.send_json_to({"type": "chat.typing", "conversation": channel.pk})  # within 3 s: dropped
+        event = await ws.next_event(member_ws, "typing")
+        assert event == {"type": "chat", "event": "typing", "conversation": channel.pk, "user": {"id": writer.pk, "full_name": "Sana Writer"}}
+        await ws.no_event(member_ws, "typing")
 
-    # Typing into a conversation you're not in reaches nobody.
-    await outsider_ws.send_json_to({"type": "chat.typing", "conversation": channel.pk})
-    await _none(member_ws, "typing")
-    await _none(outsider_ws, "typing")
-    for ws in (member_ws, outsider_ws, writer_ws):
-        await ws.disconnect()
+        # Typing into a conversation you're not in reaches nobody.
+        await outsider_ws.send_json_to({"type": "chat.typing", "conversation": channel.pk})
+        await ws.no_event(member_ws, "typing")
+        await ws.no_event(outsider_ws, "typing")
 
 
 @pytest.mark.django_db(transaction=True)
@@ -159,18 +134,20 @@ async def test_presence_online_and_offline_for_colleagues_only(make_user, client
     await database_sync_to_async(lambda: Membership.objects.filter(user=loner).delete())()
     arriving = await database_sync_to_async(make_user)("arriving@test.com")
 
-    watcher_ws, loner_ws = await _connect(watcher), await _connect(loner)
-    arriving_ws = await _connect(arriving)
-    assert await _next(watcher_ws, "presence") == {"type": "chat", "event": "presence", "user": arriving.pk, "online": True}
-    await _none(loner_ws, "presence")
+    is_arriving = lambda e: e["user"] == arriving.pk  # noqa: E731
+    async with ws.connected(watcher, loner) as (watcher_ws, loner_ws):
+        arriving_ws = await ws.connect(arriving)
+        try:
+            online = await ws.next_event(watcher_ws, "presence", where=is_arriving)
+            assert online == {"type": "chat", "event": "presence", "user": arriving.pk, "online": True}
+            await ws.no_event(loner_ws, "presence")
 
-    online = await database_sync_to_async(lambda: client_for(watcher).get(f"{CONV}presence/").data["online"])()
-    assert arriving.pk in online and loner.pk not in online  # the loner shares nothing with the watcher
-
-    await arriving_ws.disconnect()
-    assert await _next(watcher_ws, "presence") == {"type": "chat", "event": "presence", "user": arriving.pk, "online": False}
-    await watcher_ws.disconnect()
-    await loner_ws.disconnect()
+            ids = await database_sync_to_async(lambda: client_for(watcher).get(f"{CONV}presence/").data["online"])()
+            assert arriving.pk in ids and loner.pk not in ids  # the loner shares nothing with the watcher
+        finally:
+            await arriving_ws.disconnect()
+        offline = await ws.next_event(watcher_ws, "presence", where=is_arriving)
+        assert offline == {"type": "chat", "event": "presence", "user": arriving.pk, "online": False}
 
 
 def test_presence_expires_without_pings(people):

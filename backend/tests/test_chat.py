@@ -5,7 +5,6 @@ from unittest import mock
 
 import pytest
 from channels.db import database_sync_to_async
-from channels.testing import WebsocketCommunicator
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
@@ -14,8 +13,7 @@ from apps.accounts.models import Department, User
 from apps.chat import services
 from apps.chat.models import Conversation, Membership, Message
 from apps.core.models import AuditLog
-from apps.core.ws_auth import issue_ticket
-from config.asgi import application
+from tests import ws
 
 pytestmark = pytest.mark.django_db
 
@@ -329,28 +327,15 @@ async def test_websocket_delivers_messages_to_members_only(make_user):
     outsider = await database_sync_to_async(make_user)("outsider@test.com", department="ops")
     sales = await database_sync_to_async(dept_channel)("Sales")
 
-    async def connect(user):
-        ws = WebsocketCommunicator(application, f"/ws/notifications/?ticket={issue_ticket(user)}", headers=[(b"origin", b"http://localhost")])
-        assert (await ws.connect())[0]
-        await ws.receive_json_from()  # notification unread count on connect
-        return ws
+    async with ws.connected(member, outsider) as (member_ws, outsider_ws):
+        await database_sync_to_async(services.send_message)(sales, sender, "Sales only")
+        event = await ws.next_event(member_ws, "message.new")  # (colleagues coming online are announced too)
+        assert event["message"]["body"] == "Sales only" and event["unread"] == 1
+        await ws.no_event(outsider_ws, "message.new")
 
-    member_ws, outsider_ws = await connect(member), await connect(outsider)
-    await database_sync_to_async(services.send_message)(sales, sender, "Sales only")
-    event = await member_ws.receive_json_from(timeout=2)
-    while event.get("event") == "presence":  # colleagues coming online are announced too
-        event = await member_ws.receive_json_from(timeout=2)
-    assert event["event"] == "message.new" and event["message"]["body"] == "Sales only" and event["unread"] == 1
-    while not await outsider_ws.receive_nothing(timeout=0.3):
-        assert (await outsider_ws.receive_json_from())["event"] != "message.new"
-
-    # Read on one device: the user's other open sessions hear about it.
-    await database_sync_to_async(services.mark_read)(sales, member)
-    event = await member_ws.receive_json_from(timeout=2)
-    while event.get("event") != "read":  # skips presence changes and the in-app notification
-        event = await member_ws.receive_json_from(timeout=2)
-    await member_ws.disconnect()
-    await outsider_ws.disconnect()
+        # Read on one device: the user's other open sessions hear about it.
+        await database_sync_to_async(services.mark_read)(sales, member)
+        await ws.next_event(member_ws, "read")
 
 
 # ================================================================ rate limit

@@ -1,11 +1,9 @@
 """Backend-generated text follows the reader's language (Accept-Language, sent by the frontend)."""
 import pytest
 from channels.db import database_sync_to_async
-from channels.testing import WebsocketCommunicator
 
-from apps.core.ws_auth import issue_ticket
 from apps.notifications.models import Notification
-from config.asgi import application
+from tests import ws
 
 pytestmark = pytest.mark.django_db
 
@@ -44,23 +42,15 @@ def test_department_change_with_no_department_is_translated(client_for, admin, s
 async def test_live_push_uses_recipient_language(admin, staff):
     staff.language = "ur"
     await database_sync_to_async(staff.save)()
-    ws = WebsocketCommunicator(
-        application,
-        f"/ws/notifications/?ticket={issue_ticket(staff)}",
-        headers=[(b"origin", b"http://localhost")],
-    )
-    assert (await ws.connect())[0]
-    await ws.receive_json_from()  # unread_count
-
     from apps.notifications.services import notify
 
-    await database_sync_to_async(notify)(
-        staff, "system", actor=admin, message="account_updated", params={"actor": admin.full_name, "role": "staff"}
-    )
-    event = await ws.receive_json_from(timeout=2)
-    assert event["notification"]["title"] == "آپ کا اکاؤنٹ اپ ڈیٹ ہو گیا"
-    assert "عملہ" in event["notification"]["body"]
-    await ws.disconnect()
+    async with ws.connected(staff) as (staff_ws,):
+        await database_sync_to_async(notify)(
+            staff, "system", actor=admin, message="account_updated", params={"actor": admin.full_name, "role": "staff"}
+        )
+        event = await ws.next_event(staff_ws, "notification")
+        assert event["notification"]["title"] == "آپ کا اکاؤنٹ اپ ڈیٹ ہو گیا"
+        assert "عملہ" in event["notification"]["body"]
 
 
 def test_server_errors_are_translated(api, staff, client_for):

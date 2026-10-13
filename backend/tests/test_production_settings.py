@@ -17,6 +17,7 @@ PROD_ENV = {
     "FIELD_ENCRYPTION_KEYS": Fernet.generate_key().decode(),
     "DATABASE_URL": "sqlite:///:memory:",
     "REDIS_URL": "",
+    "DJANGO_DOTENV": "0",  # only these values, never a developer's backend/.env
 }
 
 

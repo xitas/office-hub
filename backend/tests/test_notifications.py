@@ -3,10 +3,10 @@ from channels.db import database_sync_to_async
 from channels.testing import WebsocketCommunicator
 from django.core import mail
 
-from apps.core.ws_auth import issue_ticket
 from apps.notifications.models import Notification, NotificationPreference
 from apps.notifications.services import notify
 from config.asgi import application
+from tests import ws
 
 
 @pytest.mark.django_db
@@ -66,14 +66,7 @@ async def test_websocket_requires_token_and_receives_push(staff, manager):
     connected, code = await anon.connect()
     assert not connected
 
-    ws = WebsocketCommunicator(
-        application, f"/ws/notifications/?ticket={issue_ticket(staff)}", headers=[(b"origin", b"http://localhost")]
-    )
-    connected, _ = await ws.connect()
-    assert connected
-    assert await ws.receive_json_from() == {"type": "unread_count", "count": 0}
-
-    await database_sync_to_async(notify)(staff, "mention", "Hello live", actor=manager)
-    event = await ws.receive_json_from(timeout=2)
-    assert event["type"] == "notification" and event["notification"]["title"] == "Hello live"
-    await ws.disconnect()
+    async with ws.connected(staff) as (staff_ws,):
+        await database_sync_to_async(notify)(staff, "mention", "Hello live", actor=manager)
+        event = await ws.next_event(staff_ws, "notification")
+        assert event["notification"]["title"] == "Hello live"

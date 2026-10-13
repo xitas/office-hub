@@ -1,0 +1,60 @@
+# Backend tests exactly as CI runs them. GitHub Actions uses this same file, so passing here means
+# passing in CI: same Python (pinned image), same packages (backend/requirements.lock), same
+# PostgreSQL and Redis, same variables, no backend/.env, UTC clock.
+#
+#   .\scripts\test-ci.ps1                 run everything (extra args go to pytest, e.g. -k chat)
+#   docker compose -f docker-compose.test.yml run --rm tests
+#   docker compose -f docker-compose.test.yml down -v     remove the throwaway containers
+#
+# Nothing is published on host ports, so it runs beside the dev containers and a local PostgreSQL.
+name: office-crm-test
+
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: crm
+      POSTGRES_PASSWORD: crm
+      POSTGRES_DB: office_crm
+    tmpfs: /var/lib/postgresql/data # throwaway
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "crm"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: redis:7.4-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  tests:
+    image: python:3.13.16-slim
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    working_dir: /app/backend
+    volumes:
+      - .:/app
+      - pip-cache:/root/.cache/pip
+    environment:
+      TEST_DATABASE_URL: postgres://crm:crm@postgres:5432/office_crm
+      TEST_REDIS_URL: redis://redis:6379/15
+      PYTHONDONTWRITEBYTECODE: "1" # don't leave root-owned files in the checkout
+      PIP_ROOT_USER_ACTION: ignore
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+    # Arguments after the service name are passed to pytest.
+    entrypoint:
+      - sh
+      - -c
+      - >-
+        pip install -q -r requirements-dev.txt -c requirements.lock &&
+        python manage.py makemigrations --check --dry-run --settings=config.settings.test &&
+        pytest --create-db -rs -p no:cacheprovider "$$@"
+      - tests
+
+volumes:
+  pip-cache:

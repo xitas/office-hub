@@ -1,3 +1,4 @@
+import os
 from datetime import timedelta
 from pathlib import Path
 
@@ -13,7 +14,11 @@ env = environ.Env(
     CORS_ALLOWED_ORIGINS=(list, ["http://localhost:5173"]),
     REDIS_URL=(str, ""),
 )
-environ.Env.read_env(BASE_DIR / ".env")
+# Tests never read backend/.env: they depend only on config/settings/test.py and TEST_* variables,
+# so a run on a developer machine matches CI (which has no .env). DJANGO_DOTENV=0 skips it elsewhere
+# (the production-settings tests use that).
+if os.environ.get("DJANGO_DOTENV") != "0" and not os.environ.get("DJANGO_SETTINGS_MODULE", "").endswith(".test"):
+    environ.Env.read_env(BASE_DIR / ".env")
 
 SECRET_KEY = env("DJANGO_SECRET_KEY", default="insecure-dev-key-change-me-in-env-file-0123456789")
 # Fernet keys for encrypted model fields (2FA secrets). Separate from SECRET_KEY; first key encrypts,
