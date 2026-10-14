@@ -58,13 +58,13 @@ def _task_assigned(params: dict) -> tuple[str, str]:
 def _task_due_soon(params: dict) -> tuple[str, str]:
     from django.utils.dateparse import parse_datetime
 
-    from apps.core.office_time import office_tz
+    from apps.core.office_time import clock, office_tz
 
     due = parse_datetime(params.get("due", "") or "")
     when = ""
     if due:
         local = due.astimezone(office_tz())
-        when = local.strftime("%d/%m/%Y %H:%M") if params.get("has_time") else local.strftime("%d/%m/%Y")
+        when = f"{local:%d/%m/%Y} {clock(due)}" if params.get("has_time") else local.strftime("%d/%m/%Y")
     return (
         _("Due soon: “%(task)s”") % {"task": params.get("task", "")},
         _("This task is due %(when)s.") % {"when": when},
@@ -113,13 +113,12 @@ def _booking_when(params: dict) -> str:
     """ "14/10/2026 10:00–11:00" in the office time zone (date and times as the office reads them)."""
     from django.utils.dateparse import parse_datetime
 
-    from apps.core.office_time import office_tz
+    from apps.core.office_time import clock, office_tz
 
     start, end = parse_datetime(params.get("start", "") or ""), parse_datetime(params.get("end", "") or "")
     if not start or not end:
         return ""
-    s, e = start.astimezone(office_tz()), end.astimezone(office_tz())
-    return f"{s:%d/%m/%Y %H:%M}–{e:%H:%M}"
+    return f"{start.astimezone(office_tz()):%d/%m/%Y} {clock(start)}–{clock(end)}"
 
 
 def _booking_detail(params: dict) -> str:
@@ -160,7 +159,62 @@ def _booking_reminder(params: dict) -> tuple[str, str]:
     return _("Starts in 15 minutes: %(title)s") % params, _booking_detail(params)
 
 
+def _event_when(params: dict) -> str:
+    """ "14/10/2026 2:30 pm–3:30 pm", or the day(s) for all-day items, in the office time zone."""
+    from datetime import timedelta
+
+    from django.utils.dateparse import parse_datetime
+
+    from apps.core.office_time import clock, office_tz
+
+    start, end = parse_datetime(params.get("start", "") or ""), parse_datetime(params.get("end", "") or "")
+    if not start or not end:
+        return ""
+    s, e = start.astimezone(office_tz()), end.astimezone(office_tz())
+    if params.get("all_day"):
+        last = (e - timedelta(days=1)).date()
+        return f"{s:%d/%m/%Y}" if last == s.date() else f"{s:%d/%m/%Y}–{last:%d/%m/%Y}"
+    return f"{s:%d/%m/%Y} {clock(start)}–{clock(end)}"
+
+
+def _event_detail(params: dict) -> str:
+    parts = [_event_when(params)]
+    if params.get("location"):
+        parts.append(params["location"])
+    return " · ".join(p for p in parts if p)
+
+
+def _meeting_invite(params: dict) -> tuple[str, str]:
+    return _("%(actor)s invited you: %(title)s") % params, _event_detail(params)
+
+
+def _meeting_changed(params: dict) -> tuple[str, str]:
+    return _("Meeting changed: %(title)s") % params, _event_detail(params)
+
+
+def _meeting_cancelled(params: dict) -> tuple[str, str]:
+    return _("Meeting cancelled: %(title)s") % params, _event_detail(params)
+
+
+def _meeting_reminder(params: dict) -> tuple[str, str]:
+    return _("Meeting in 15 minutes: %(title)s") % params, _event_detail(params)
+
+
+def _event_added(params: dict) -> tuple[str, str]:
+    return _("New office event: %(title)s") % params, _event_detail(params)
+
+
+def _holiday_added(params: dict) -> tuple[str, str]:
+    return _("Office holiday: %(title)s") % params, _event_detail(params)
+
+
 RENDERERS = {
+    "meeting_invite": _meeting_invite,
+    "meeting_changed": _meeting_changed,
+    "meeting_cancelled": _meeting_cancelled,
+    "meeting_reminder": _meeting_reminder,
+    "event_added": _event_added,
+    "holiday_added": _holiday_added,
     "booking_request": _booking_request,
     "booking_approved": _booking_approved,
     "booking_rejected": _booking_rejected,

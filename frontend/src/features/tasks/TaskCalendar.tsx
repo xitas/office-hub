@@ -1,22 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-  addMonths,
-  addWeeks,
-  eachDayOfInterval,
-  endOfMonth,
-  endOfWeek,
-  format,
-  isSameMonth,
-  parseISO,
-  startOfMonth,
-  startOfWeek,
-} from 'date-fns'
+import { format, isSameMonth, parseISO, startOfMonth } from 'date-fns'
 import { AlarmClock, CalendarX2, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { useMemo, useState, type DragEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { ErrorState, FormDialog } from '@/components/common'
+import { calendarRange, calendarTitles, stepAnchor } from '@/lib/calendar'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -82,12 +72,7 @@ export function TaskCalendar({ params, onCreate }: { params: Record<string, stri
   }
 
   const anchorDate = parseISO(anchor)
-  const range = useMemo(() => {
-    const anchorDate = parseISO(anchor)
-    const first = mode === 'month' ? startOfWeek(startOfMonth(anchorDate), { weekStartsOn }) : startOfWeek(anchorDate, { weekStartsOn })
-    const last = mode === 'month' ? endOfWeek(endOfMonth(anchorDate), { weekStartsOn }) : endOfWeek(anchorDate, { weekStartsOn })
-    return { start: iso(first), end: iso(last), days: eachDayOfInterval({ start: first, end: last }) }
-  }, [anchor, mode, weekStartsOn])
+  const range = useMemo(() => calendarRange(anchor, mode, weekStartsOn), [anchor, mode, weekStartsOn])
 
   const { due_from: _from, due_to: _to, ...filters } = params
   const key = ['tasks', 'calendar', filters, range.start, range.end]
@@ -129,24 +114,17 @@ export function TaskCalendar({ params, onCreate }: { params: Record<string, stri
   }
 
   const step = (dir: 1 | -1) => {
-    const next = mode === 'month' ? addMonths(anchorDate, dir) : addWeeks(anchorDate, dir)
-    setAnchor(iso(next))
-    setSelected(iso(mode === 'month' ? startOfMonth(next) : next))
+    const next = stepAnchor(anchor, mode, dir)
+    setAnchor(next)
+    setSelected(mode === 'month' ? iso(startOfMonth(parseISO(next))) : next)
   }
   const goToday = () => {
     setAnchor(today)
     setSelected(today)
   }
 
-  // Dates are plain calendar days: format them at UTC noon so no time zone can shift the day.
-  const dayDate = (d: string) => new Date(`${d}T12:00:00Z`)
-  const title = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric', timeZone: 'UTC', numberingSystem: 'latn' }).format(dayDate(anchor))
-  // Compact, so it fits next to the controls on phones: "5–11 Oct 2026", "29 Sept – 5 Oct 2026".
-  const weekTitle = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC', numberingSystem: 'latn' })
-    .formatRange(dayDate(range.start), dayDate(range.end))
-  const weekday = (d: string, style: 'short' | 'long') => new Intl.DateTimeFormat(locale, { weekday: style, timeZone: 'UTC' }).format(dayDate(d))
-  const longDay = (d: string) =>
-    new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC', numberingSystem: 'latn' }).format(dayDate(d))
+  // Shared with the office calendar (lib/calendar).
+  const { month: title, week: weekTitle, weekday, longDay } = calendarTitles(locale, anchor, range)
 
   const drop = (e: DragEvent, date: string | null) => {
     e.preventDefault()
@@ -426,6 +404,7 @@ function TaskChip({
   onPick?: () => void
 }) {
   const { t } = useTranslation()
+  const fmt = useFormat()
   const navigate = useNavigate()
   const label = `${task.title}${task.is_overdue ? ` (${t('tasks.overdue')})` : ''}`
   return (
@@ -460,7 +439,7 @@ function TaskChip({
       <span dir="auto" className="min-w-0 flex-1 truncate">
         {task.title}
       </span>
-      {task.due_time && !compact && <span className="shrink-0 text-[11px] text-muted-foreground font-latin">{task.due_time.slice(0, 5)}</span>}
+      {task.due_time && !compact && <span dir="ltr" className="shrink-0 text-[11px] text-muted-foreground font-latin">{fmt.clock(task.due_time.slice(0, 5))}</span>}
     </button>
   )
 }

@@ -219,6 +219,9 @@ class WebSocketTicketView(APIView):
         return Response({"ticket": issue_ticket(request.user), "expires_in": TICKET_TTL})
 
 
+PREFERENCE_FIELDS = {"language", "theme", "time_format", "task_reminder_lead"}
+
+
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
     parser_classes = [JSONParser, MultiPartParser, FormParser]
@@ -235,7 +238,10 @@ class MeView(APIView):
         user = ser.save()
         changes = diff(before, snapshot(user))
         if changes:
-            log_action(user, AuditLog.Action.UPDATE, user, changes=changes, request=request, description=N_("Updated own profile"))
+            # Display preferences (theme, language, clock, reminder timing) are still audited, but marked so the
+            # dashboard's team activity leaves them out: switching to dark mode isn't news for the team.
+            description = N_("Changed display preferences") if set(changes) <= PREFERENCE_FIELDS else N_("Updated own profile")
+            log_action(user, AuditLog.Action.UPDATE, user, changes=changes, request=request, description=description)
         return Response(ser.data)
 
 

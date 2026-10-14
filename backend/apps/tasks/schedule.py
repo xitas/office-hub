@@ -22,7 +22,7 @@ from django.utils.translation import ngettext
 
 from apps.accounts.models import User
 from apps.core.email import queue_email
-from apps.core.office_time import office_datetime, office_now, office_tz
+from apps.core.office_time import clock, office_datetime, office_now, office_tz
 
 from .models import ChecklistItem, DigestLog, ReminderLog, Task, TaskActivity, TaskSeries, overdue_q
 
@@ -259,7 +259,7 @@ def render_digest(user, today, due_today, overdue, follow_ups) -> tuple[str, str
         if due_today:
             lines.append(_("Due today (%(count)s):") % {"count": len(due_today)})
             for t in due_today:
-                at = f" {t.due_time:%H:%M}" if t.due_time else ""
+                at = f" {clock(t.due_time)}" if t.due_time else ""
                 lines.append(f"  • {t.title}{at} — {base}/tasks/{t.pk}")
             lines.append("")
         if overdue:

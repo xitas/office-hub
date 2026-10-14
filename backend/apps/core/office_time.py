@@ -27,6 +27,18 @@ def office_today() -> date:
     return office_now().date()
 
 
+def clock(moment: datetime | time) -> str:
+    """A time of day in the organization's clock format: "2:30 pm" (12-hour) or "14:30" (24-hour),
+    in the office time zone. Used in notifications and emails (which go to many people at once)."""
+    from .models import OrganizationSettings
+
+    t = moment.astimezone(office_tz()).time() if isinstance(moment, datetime) else moment
+    if OrganizationSettings.cached().time_format == "24h":
+        return t.strftime("%H:%M")
+    hour = t.hour % 12 or 12
+    return f"{hour}:{t.minute:02d} {'am' if t.hour < 12 else 'pm'}"
+
+
 def office_datetime(day: date, at: time) -> datetime:
     """An aware moment for a wall-clock date and time in the office."""
     return datetime.combine(day, at, tzinfo=office_tz())

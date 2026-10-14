@@ -50,7 +50,7 @@ export const NAV_ITEMS: NavItem[] = [
   { key: 'chat', path: '/chat', icon: MessagesSquare, label: 'nav.chat', permission: 'chat.view', enabled: true, mobilePrimary: true, section: 'main' },
   { key: 'bookings', path: '/bookings', icon: CalendarClock, label: 'nav.bookings', permission: 'bookings.view', enabled: true, section: 'main' },
   { key: 'resources', path: '/resources', icon: DoorOpen, label: 'nav.resources', permission: 'resources.view', enabled: true, section: 'main' },
-  { key: 'calendar', path: '/calendar', icon: CalendarDays, label: 'nav.calendar', permission: 'calendar.view', enabled: false, section: 'main' },
+  { key: 'calendar', path: '/calendar', icon: CalendarDays, label: 'nav.calendar', permission: 'calendar.view', enabled: true, section: 'main' },
   { key: 'visits', path: '/visits', icon: MapPin, label: 'nav.visits', permission: 'visits.view', enabled: false, section: 'main' },
   { key: 'reports', path: '/reports', icon: BarChart3, label: 'nav.reports', permission: 'reports.view', enabled: false, section: 'main' },
   { key: 'team', path: '/team', icon: Users, label: 'nav.team', permission: 'users.view', enabled: true, mobilePrimary: true, section: 'main' },

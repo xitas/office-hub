@@ -9,9 +9,9 @@ import { useFormat } from '@/lib/format'
 /** "Wed 15/10/2026 · 10:00–11:00" in the office time zone. */
 export function useWhen() {
   const fmt = useFormat()
-  // 24-hour office-clock times, like the timeline and the booking form.
+  // Office-clock times in the person's 12- or 24-hour clock, like the timeline and the booking form.
   const tz = fmt.settings.timezone
-  return (b: Pick<Booking, 'start' | 'end'>) => `${fmt.date(b.start)} · ${officeParts(tz, b.start).time}–${officeParts(tz, b.end).time}`
+  return (b: Pick<Booking, 'start' | 'end'>) => `${fmt.date(b.start)} · ${fmt.clock(officeParts(tz, b.start).time)}–${fmt.clock(officeParts(tz, b.end).time)}`
 }
 
 export function useBookingActions(booking: Booking, onDone?: () => void) {

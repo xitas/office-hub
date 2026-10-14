@@ -223,6 +223,18 @@ TEMPLATES = [
 ]
 
 
+# Calendar: (kind, title, organizer, attendees, departments (events), day offset, start, end (None = all day), room, location)
+CALENDAR = [
+    ("meeting", "Daily sales stand-up", SALES_MGR, [HAMZA, FATIMA], [], 0, "09:30", "09:45", None, "Sales corner"),
+    ("meeting", "Pipeline review", SALES_MGR, [HAMZA, FATIMA, ADMIN], [], 1, "11:00", "12:00", "Meeting room A", ""),
+    ("meeting", "Month-end close", ZAINAB, [ADMIN, OPS_MGR], [], 2, "15:00", "15:30", None, "Accounts office"),
+    ("event", "Negotiation training", SALES_MGR, [], ["Sales"], 5, "14:00", "16:00", None, "Board room"),
+    ("event", "Annual office dinner", ADMIN, [], [], 9, "19:00", "22:00", None, "Pearl Continental, Karachi"),
+]
+# Office holidays (month, day): the next time each date comes round.
+HOLIDAYS = [("Iqbal Day", 11, 9), ("Quaid-e-Azam Day", 12, 25)]
+
+
 # (name, type, capacity, location, description, departments that may book (none = everyone), needs approval)
 RESOURCES = [
     ("Board room", "room", 12, "2nd floor", "Large screen, video calls, whiteboard.", [], False),
@@ -315,6 +327,7 @@ class Command(BaseCommand):
         self._seed_templates()
         self._seed_announcements()
         self._seed_bookings()
+        self._seed_calendar()
 
         self.stdout.write(self.style.SUCCESS("Demo data ready. All demo users share the password: " + DEMO_PASSWORD))
         for email, name, role, dept, _ in USERS:
@@ -368,6 +381,44 @@ class Command(BaseCommand):
                 sharing=sharing, department=user.department if sharing == "department" else None, created_by=user,
                 usage_count=len(TEMPLATES) - index,  # a believable "most used" order
             )
+
+    def _seed_calendar(self):
+        """Meetings (one with a room), office events and the next holidays (skipped once any exists).
+        Created directly: no notifications."""
+        from datetime import date, datetime
+
+        from apps.bookings.models import Booking, Resource
+        from apps.core.office_time import office_today, office_tz
+        from apps.events.models import Event
+        from apps.events.services import day_bounds
+
+        if Event.objects.exists():
+            return
+        users = {u.email: u for u in User.objects.all()}
+        tz, today = office_tz(), office_today()
+        for kind, title, organizer, attendees, departments, offset, start, end, room, location in CALENDAR:
+            day = today + timedelta(days=offset)
+            begins = datetime.combine(day, datetime.strptime(start, "%H:%M").time(), tzinfo=tz)
+            ends = datetime.combine(day, datetime.strptime(end, "%H:%M").time(), tzinfo=tz)
+            event = Event.objects.create(
+                kind=kind, title=title, organizer=users[organizer], start=begins, end=ends, location=location,
+                audience=Event.Audience.DEPARTMENTS if departments else Event.Audience.EVERYONE,
+            )
+            event.attendees.set([users[a] for a in attendees])
+            event.departments.set(Department.objects.filter(name__in=departments))
+            if room:
+                booking = Booking.objects.create(
+                    resource=Resource.objects.get(name=room), title=title, start=begins, end=ends, booked_by=users[organizer],
+                )
+                booking.attendees.set([users[a] for a in attendees])
+                event.booking = booking
+                event.save(update_fields=["booking"])
+        for title, month, day in HOLIDAYS:
+            when = date(today.year, month, day)
+            if when < today:
+                when = date(today.year + 1, month, day)
+            start, end = day_bounds(when, when)
+            Event.objects.create(kind=Event.Kind.HOLIDAY, title=title, all_day=True, start=start, end=end, organizer=users[ADMIN])
 
     def _seed_bookings(self):
         """A few rooms, a projector and a car, with bookings today and in the next two days

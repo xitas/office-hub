@@ -84,7 +84,7 @@ export function Timeline({
           <div className="relative h-8 flex-1">
             {hours.map((m) => (
               <span key={m} className="absolute top-2 -translate-x-1/2 font-latin rtl:translate-x-1/2" style={{ insetInlineStart: pct(m) }}>
-                {timeOf(m)}
+                {fmt.clock(timeOf(m))}
               </span>
             ))}
           </div>
@@ -145,8 +145,8 @@ export function Timeline({
                       type="button"
                       onClick={() => onOpen(b)}
                       onPointerDown={(ev) => ev.stopPropagation()}
-                      title={`${b.title} · ${timeOf(start)}–${timeOf(end)} · ${b.booked_by_name}`}
-                      aria-label={t('bookings.blockLabel', { title: b.title, start: timeOf(start), end: timeOf(end), name: b.booked_by_name })}
+                      title={`${b.title} · ${fmt.clock(timeOf(start))}–${fmt.clock(timeOf(end))} · ${b.booked_by_name}`}
+                      aria-label={t('bookings.blockLabel', { title: b.title, start: fmt.clock(timeOf(start)), end: fmt.clock(timeOf(end)), name: b.booked_by_name })}
                       className={cn(
                         'absolute inset-y-1 overflow-hidden rounded-md border px-1.5 py-0.5 text-start text-[11px] leading-tight shadow-xs',
                         mine ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-secondary text-secondary-foreground',
@@ -157,7 +157,7 @@ export function Timeline({
                     >
                       <bdi className="block truncate font-medium">{b.title}</bdi>
                       <span className="block truncate opacity-80">
-                        <span dir="ltr" className="font-latin">{timeOf(start)}–{timeOf(end)}</span> · <bdi>{b.booked_by_name}</bdi>
+                        <span dir="ltr" className="font-latin">{fmt.clock(timeOf(start))}–{fmt.clock(timeOf(end))}</span> · <bdi>{b.booked_by_name}</bdi>
                       </span>
                     </button>
                   )

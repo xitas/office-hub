@@ -265,7 +265,11 @@
       "1d": "1 day before",
       "off": "Off"
     },
-    "emailOnly": "Email only"
+    "emailOnly": "Email only",
+    "clock": "Clock",
+    "clockOrg": "Office default",
+    "clock12": "12-hour",
+    "clock24": "24-hour"
   },
   "admin": {
     "users": {
@@ -321,7 +325,9 @@
       "bookingMax": "Longest booking",
       "bookingHorizon": "Book up to (days ahead)",
       "bookingHorizonHint": "How far ahead people can book.",
-      "duration": "{{h}}:{{m}} h"
+      "duration": "{{h}}:{{m}} h",
+      "timeFormat": "Clock",
+      "timeFormatHint": "Everyone sees times this way unless they choose otherwise in Settings."
     },
     "audit": {
       "title": "Audit log",
@@ -395,7 +401,9 @@
     "task_overdue": "Task overdue",
     "daily_digest": "Morning digest (email)",
     "channel_message": "New message in my channels",
-    "chat_mention": "Mentioned in chat"
+    "chat_mention": "Mentioned in chat",
+    "meeting": "Meeting invitations, changes and reminders",
+    "office_event": "Office events and holidays"
   },
   "companies": {
     "title": "Companies",
@@ -1483,5 +1491,99 @@
     "replacePhoto": "Replace photo",
     "removePhoto": "Remove photo",
     "viewBookings": "See bookings"
+  },
+  "calendar": {
+    "pageTitle": "Calendar",
+    "pageSubtitle": "Meetings, office events, holidays, your task deadlines and bookings in one place.",
+    "add": "Add",
+    "new": {
+      "meeting": "New meeting",
+      "event": "New office event",
+      "holiday": "New holiday"
+    },
+    "edit": {
+      "meeting": "Change meeting",
+      "event": "Change office event",
+      "holiday": "Change holiday"
+    },
+    "added": {
+      "meeting": "Meeting added, invitations sent",
+      "event": "Office event added",
+      "holiday": "Holiday added"
+    },
+    "saved": "Saved",
+    "removed": "Removed",
+    "kind": "What to add",
+    "kinds": {
+      "meeting": "Meeting",
+      "event": "Office event",
+      "holiday": "Holiday"
+    },
+    "title": "Title",
+    "titlePlaceholder": {
+      "meeting": "e.g. Pipeline review",
+      "event": "e.g. Annual dinner",
+      "holiday": "e.g. Iqbal Day"
+    },
+    "allDay": "All day",
+    "date": "Date",
+    "firstDay": "First day",
+    "lastDay": "Last day",
+    "from": "From",
+    "to": "To",
+    "room": "Room",
+    "roomHint": "The room is booked for the meeting (its rules and approval apply).",
+    "noRoom": "No room",
+    "roomFree": "The room is free then.",
+    "roomPending": "Waiting for approval",
+    "location": "Location",
+    "attendees": "Attendees",
+    "attendeesHint": "They get an invitation and a reminder 15 minutes before.",
+    "audience": "Who is it for",
+    "audiences": {
+      "everyone": "Everyone",
+      "departments": "Chosen departments"
+    },
+    "forDepartment": "Your department: {{name}}",
+    "forEveryone": "For everyone",
+    "forList": "For {{names}}",
+    "description": "Details",
+    "organizer": "Organized by {{name}}",
+    "loading": "Loading…",
+    "notFound": "This is no longer on the calendar, or isn’t for you.",
+    "remove": "Remove",
+    "removeTitle": {
+      "meeting": "Cancel this meeting?",
+      "event": "Remove this office event?",
+      "holiday": "Remove this holiday?"
+    },
+    "removeMeetingText": "Attendees are told, and the room booking is cancelled.",
+    "removeText": "“{{title}}” will be removed from the calendar.",
+    "previous": "Previous",
+    "next": "Next",
+    "today": "Today",
+    "view": "View",
+    "views": {
+      "month": "Month",
+      "week": "Week",
+      "day": "Day"
+    },
+    "show": "Show",
+    "layers": {
+      "meetings": "Meetings",
+      "events": "Office events",
+      "holidays": "Holidays",
+      "tasks": "My tasks",
+      "bookings": "My bookings"
+    },
+    "nothing": "Nothing on this day",
+    "more_one": "+{{count}} more",
+    "more_other": "+{{count}} more",
+    "itemCount_one": "{{count}} item",
+    "itemCount_other": "{{count}} items",
+    "openDay": "Open {{date}}",
+    "addOn": "Add on {{date}}",
+    "addAt": "Add a meeting at {{time}}",
+    "hint": "Click a day or an hour to add a meeting. Task deadlines and bookings open in their own pages."
   }
 }

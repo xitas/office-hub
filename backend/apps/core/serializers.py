@@ -9,7 +9,7 @@ class OrganizationSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrganizationSettings
         fields = [
-            "org_name", "currency", "date_format", "timezone", "week_start", "default_language",
+            "org_name", "currency", "date_format", "timezone", "week_start", "time_format", "default_language",
             "staff_can_import_contacts", "staff_can_export_contacts",
             "office_opens", "office_closes", "booking_max_minutes", "booking_horizon_days", "updated_at",
         ]

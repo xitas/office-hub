@@ -2,7 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from './api'
-import type { OrgSettings } from './types'
+import { useAuth } from './auth'
+import type { OrgSettings, TimeFormat } from './types'
 
 export const ORG_SETTINGS_KEY = ['org-settings'] as const
 
@@ -12,6 +13,7 @@ const DEFAULT_SETTINGS: OrgSettings = {
   date_format: 'DD/MM/YYYY',
   timezone: 'Asia/Karachi',
   week_start: 1,
+  time_format: '12h',
   default_language: 'en',
   staff_can_import_contacts: true,
   staff_can_export_contacts: false,
@@ -40,9 +42,13 @@ function toDate(value: DateInput): Date | null {
   return Number.isNaN(d.getTime()) ? null : d
 }
 
-export function buildFormatter(settings: OrgSettings, language: string) {
+/** Keeps "9:00 AM" in that order inside right-to-left (Urdu) text, wherever it is shown (Unicode isolate). */
+const ltr = (text: string) => `\u2066${text}\u2069`
+
+export function buildFormatter(settings: OrgSettings, language: string, timeFormat: TimeFormat = settings.time_format) {
   const locale = LOCALES[language] ?? 'en-PK'
   const timeZone = settings.timezone
+  const hourCycle = timeFormat === '24h' ? 'h23' : 'h12'
 
   const partsOf = (d: Date, month: '2-digit' | 'short') => {
     const parts = new Intl.DateTimeFormat(locale, {
@@ -81,7 +87,13 @@ export function buildFormatter(settings: OrgSettings, language: string) {
 
   const time = (value: DateInput) => {
     const d = toDate(value)
-    return d ? new Intl.DateTimeFormat(locale, { timeZone, hour: 'numeric', minute: '2-digit' }).format(d) : '—'
+    return d ? ltr(new Intl.DateTimeFormat(locale, { timeZone, hour: 'numeric', minute: '2-digit', hourCycle }).format(d)) : '—'
+  }
+
+  /** A wall-clock time "HH:MM" (office time: timelines, time pickers) in the chosen 12- or 24-hour clock. */
+  const clock = (hhmm: string) => {
+    const [h, m] = hhmm.split(':').map(Number)
+    return ltr(new Intl.DateTimeFormat(locale, { timeZone: 'UTC', hour: 'numeric', minute: '2-digit', hourCycle }).format(new Date(Date.UTC(2000, 0, 1, h, m))))
   }
 
   const dateTime = (value: DateInput) => {
@@ -115,13 +127,15 @@ export function buildFormatter(settings: OrgSettings, language: string) {
   const currentHour = () =>
     Number(new Intl.DateTimeFormat('en-US', { timeZone, hour: 'numeric', hourCycle: 'h23' }).format(new Date()))
 
-  return { date, time, dateTime, relative, currency, number, currentHour, settings }
+  return { date, time, clock, dateTime, relative, currency, number, currentHour, settings, timeFormat }
 }
 
-/** Formats dates and money using the organization's settings and the current UI language. */
+/** Formats dates, times and money using the organization's settings, the person's clock choice and the UI language. */
 export function useFormat() {
   const { data } = useOrgSettings()
+  const { user } = useAuth()
   const { i18n } = useTranslation()
   const settings = data ?? DEFAULT_SETTINGS
-  return useMemo(() => buildFormatter(settings, i18n.language), [settings, i18n.language])
+  const timeFormat = user?.time_format || settings.time_format
+  return useMemo(() => buildFormatter(settings, i18n.language, timeFormat), [settings, i18n.language, timeFormat])
 }

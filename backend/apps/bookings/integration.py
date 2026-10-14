@@ -43,11 +43,12 @@ def my_bookings_today(user, limit=8):
     return [_item(b, mine=True) for b in qs[:limit]]
 
 
-def meetings_today(user, limit=8):
+def bookings_for_meetings_widget(user, limit=8):
     """Today's confirmed bookings across the resources I can see: rooms first (meetings), then the rest."""
     start, end = _today_range()
     qs = (
         Booking.objects.filter(resource__in=rules.visible_resources(user), start__lt=end, end__gt=start, status=Booking.Status.CONFIRMED)
+        .filter(meeting__isnull=True)  # a meeting's room shows as the meeting (apps.events)
         .select_related("resource", "booked_by")
         .order_by("start", "id")
     )
@@ -58,4 +59,4 @@ def meetings_today(user, limit=8):
 
 def register():
     dashboard.register("bookings_today", my_bookings_today)
-    dashboard.register("meetings_today", meetings_today)
+    # "meetings_today" (meetings, holidays and these bookings together) is registered by apps.events.

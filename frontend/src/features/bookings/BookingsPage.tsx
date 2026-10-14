@@ -275,7 +275,7 @@ function PhoneDay({
                           onClick={() => onOpen(b)}
                           className={cn('flex w-full items-center gap-2 rounded-md border px-2 py-1.5 text-start text-sm', b.status === 'pending' && 'border-dashed border-amber-500')}
                         >
-                          <span dir="ltr" className="shrink-0 font-latin text-xs">{timeOf(start)}–{timeOf(end)}</span>
+                          <span dir="ltr" className="shrink-0 font-latin text-xs">{fmt.clock(timeOf(start))}–{fmt.clock(timeOf(end))}</span>
                           <bdi className="min-w-0 flex-1 truncate">{b.title}</bdi>
                           {b.status === 'pending' && <StatusBadge status="pending" />}
                         </button>
@@ -289,7 +289,7 @@ function PhoneDay({
                       {t('bookings.freeAt')}{' '}
                       {free.map(([s, e], i) => (
                         <Badge key={i} variant="outline" dir="ltr" className="me-1 mt-1 font-latin font-normal">
-                          {timeOf(s)}–{timeOf(e)}
+                          {fmt.clock(timeOf(s))}–{fmt.clock(timeOf(e))}
                         </Badge>
                       ))}
                     </>

@@ -53,8 +53,12 @@ export function BookingDialog({ booking, draft, onClose }: { booking?: Booking; 
   const [resource, setResource] = useState<number | undefined>(booking?.resource ?? draft?.resource)
   const [title, setTitle] = useState(booking?.title ?? '')
   const [date, setDate] = useState(initial?.start.date ?? draft?.date ?? todayInOffice(tz))
-  const [start, setStart] = useState(initial?.start.time ?? draft?.start ?? timeOf(opens))
-  const [end, setEnd] = useState(initial?.end.time ?? draft?.end ?? timeOf(Math.min(minutesOf(draft?.start ?? timeOf(opens)) + 60, closes)))
+  // Today: the next free quarter hour within office hours (a time that has passed can't be booked).
+  const [nowMinutes] = useState(() => minutesOf(officeParts(tz, new Date()).time))
+  const defaultStart =
+    (draft?.date ?? todayInOffice(tz)) === todayInOffice(tz) ? timeOf(Math.min(Math.max(opens, Math.ceil((nowMinutes + 1) / 15) * 15), closes - 15)) : timeOf(opens)
+  const [start, setStart] = useState(initial?.start.time ?? draft?.start ?? defaultStart)
+  const [end, setEnd] = useState(initial?.end.time ?? draft?.end ?? timeOf(Math.min(minutesOf(draft?.start ?? defaultStart) + 60, closes)))
   const [attendees, setAttendees] = useState<number[]>(booking?.attendees ?? [])
   const [notes, setNotes] = useState(booking?.notes ?? '')
   const [repeat, setRepeat] = useState(false)
@@ -177,11 +181,11 @@ export function BookingDialog({ booking, draft, onClose }: { booking?: Booking; 
                 setStart(v)
                 if (minutesOf(end) <= minutesOf(v)) setEnd(timeOf(Math.min(minutesOf(v) + 60, closes)))
               }}
-              options={startOptions.map((s) => ({ value: s, label: s }))}
+              options={startOptions.map((s) => ({ value: s, label: fmt.clock(s) }))}
             />
           </FormField>
           <FormField id="bk-end" label={t('bookings.end')} error={errors.end}>
-            <SimpleSelect id="bk-end" value={end} onChange={setEnd} options={endOptions.map((s) => ({ value: s, label: s }))} />
+            <SimpleSelect id="bk-end" value={end} onChange={setEnd} options={endOptions.map((s) => ({ value: s, label: fmt.clock(s) }))} />
           </FormField>
         </div>
 

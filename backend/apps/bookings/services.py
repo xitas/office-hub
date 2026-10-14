@@ -19,7 +19,7 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from apps.core.models import OrganizationSettings
-from apps.core.office_time import office_tz
+from apps.core.office_time import clock, office_tz
 from apps.notifications.models import NotificationType
 from apps.notifications.services import notify
 from apps.tasks import recurrence
@@ -63,7 +63,7 @@ def time_problems(user, start: datetime, end: datetime, *, now=None) -> dict[str
         problems["end"] = _("A booking must start and end on the same day.")
     elif s.time() < org.office_opens or e.time() > org.office_closes:
         problems["start"] = _("Bookings must be within office hours (%(opens)s–%(closes)s).") % {
-            "opens": org.office_opens.strftime("%H:%M"), "closes": org.office_closes.strftime("%H:%M"),
+            "opens": clock(org.office_opens), "closes": clock(org.office_closes),
         }
     if start < floor_slot(now):
         problems["start"] = _("This time has already passed.")
@@ -136,7 +136,7 @@ def _lock(resource):
     Resource.objects.select_for_update().filter(pk=resource.pk).first()
 
 
-def create(user, resource, *, title, start, end, attendees=(), notes="", repeat=None, skip_conflicts=False):
+def create(user, resource, *, title, start, end, attendees=(), notes="", repeat=None, skip_conflicts=False, invite=True):
     """Book one time, or a weekly series. Returns (bookings, skipped occurrences).
 
     Raises BookingConflict when the (only) time is taken, or ValueError(occurrences) when a series
@@ -171,11 +171,12 @@ def create(user, resource, *, title, start, end, attendees=(), notes="", repeat=
                     created.append(booking)
         except IntegrityError:
             raise BookingConflict()
-        transaction.on_commit(lambda: _announce_new(created, user))
+        # `invite=False`: a meeting books its room and sends its own invitations (approval requests still go out).
+        transaction.on_commit(lambda: _announce_new(created, user, invite=invite))
     return created, bad
 
 
-def change(user, booking, data: dict) -> Booking:
+def change(user, booking, data: dict, *, announce=True) -> Booking:
     """Edit title, notes, attendees, resource or times. New times are checked again; on a resource
     that needs approval, a non-admin's new time goes back to "pending"."""
     if booking.status not in Booking.HOLDING or booking.is_past:
@@ -211,11 +212,12 @@ def change(user, booking, data: dict) -> Booking:
         if "attendees" in data:
             booking.attendees.set([a for a in data["attendees"] if a.pk != booking.booked_by_id])
         pk, actor_pk = booking.pk, user.pk
-        transaction.on_commit(lambda: _announce_change(pk, actor_pk, before, old_attendees))
+        if announce:
+            transaction.on_commit(lambda: _announce_change(pk, actor_pk, before, old_attendees))
     return booking
 
 
-def cancel(user, booking, *, following=False) -> list[Booking]:
+def cancel(user, booking, *, following=False, announce=True) -> list[Booking]:
     """Cancel this booking (and, with `following`, the later ones of its series)."""
     targets = [booking]
     if following and booking.series_id:
@@ -231,7 +233,8 @@ def cancel(user, booking, *, following=False) -> list[Booking]:
         status=Booking.Status.CANCELLED, cancelled_by=user, cancelled_at=now, updated_at=now
     )
     ids, actor_pk = [b.pk for b in targets], user.pk
-    transaction.on_commit(lambda: _announce_cancel(ids, actor_pk))
+    if announce:
+        transaction.on_commit(lambda: _announce_cancel(ids, actor_pk))
     return targets
 
 
@@ -265,7 +268,7 @@ def link(booking) -> str:
     return f"/bookings?date={day.isoformat()}&booking={booking.pk}"
 
 
-def _announce_new(bookings, user):
+def _announce_new(bookings, user, invite=True):
     first = bookings[0]
     extra = {"more": len(bookings) - 1}
     if first.status == Booking.Status.PENDING:
@@ -273,7 +276,7 @@ def _announce_new(bookings, user):
             rules.approvers_for(user), NotificationType.APPROVAL_REQUEST, link="/bookings/mine?tab=approvals",
             actor=user, message="booking_request", params=_params(first, user, **extra),
         )
-    else:
+    elif invite:
         notify(
             list(first.attendees.all()), NotificationType.BOOKING, link=link(first), actor=user,
             message="booking_invited", params=_params(first, user, **extra),
@@ -322,7 +325,7 @@ def _announce_decision(pk):
         message="booking_approved" if approved else "booking_rejected",
         params=_params(booking, booking.decided_by, reason=booking.decision_reason),
     )
-    if approved:
+    if approved and not hasattr(booking, "meeting"):  # a meeting's people were invited by the meeting
         notify(list(booking.attendees.all()), NotificationType.BOOKING, link=link(booking), actor=booking.booked_by,
                message="booking_invited", params=_params(booking, booking.booked_by, more=0))
 
@@ -338,7 +341,8 @@ def send_reminders(now=None) -> int:
     """
     now = now or timezone.now()
     due = (
-        Booking.objects.filter(status=Booking.Status.CONFIRMED, start__gt=now, start__lte=now + REMINDER_LEAD)
+        # A meeting's room booking is left out: the meeting reminds its organizer and attendees.
+        Booking.objects.filter(status=Booking.Status.CONFIRMED, start__gt=now, start__lte=now + REMINDER_LEAD, meeting__isnull=True)
         .select_related("resource", "booked_by")
         .prefetch_related("attendees")
     )

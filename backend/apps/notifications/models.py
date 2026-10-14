@@ -19,6 +19,8 @@ class NotificationType(models.TextChoices):
     APPROVAL_RESULT = "approval_result", _("My request approved/rejected")
     ANNOUNCEMENT = "announcement", _("New announcement")
     BOOKING = "booking", _("Booking updates")
+    MEETING = "meeting", _("Meeting invitations, changes and reminders")
+    OFFICE_EVENT = "office_event", _("Office events and holidays")
     VISIT = "visit", _("Field visit updates")
     SYSTEM = "system", _("System and security")
 
@@ -34,6 +36,8 @@ DEFAULT_PREFERENCES["direct_message"] = {"in_app": True, "email": True}
 DEFAULT_PREFERENCES["chat_mention"] = {"in_app": True, "email": True}
 # Announcements are emailed by default (each person can turn it off).
 DEFAULT_PREFERENCES["announcement"] = {"in_app": True, "email": True}
+# Meeting invitations and changes are emailed by default; office events and holidays are in-app only.
+DEFAULT_PREFERENCES["meeting"] = {"in_app": True, "email": True}
 # The digest is an email only.
 DEFAULT_PREFERENCES["daily_digest"] = {"in_app": False, "email": True}
 

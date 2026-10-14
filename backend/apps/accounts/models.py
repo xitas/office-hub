@@ -76,6 +76,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     avatar = models.ImageField(upload_to="avatars/", null=True, blank=True)
     language = models.CharField(max_length=5, choices=settings.LANGUAGES, default="en")
     theme = models.CharField(max_length=10, choices=Theme.choices, default=Theme.SYSTEM)
+    # "" follows the organization's clock (Organization page); "12h" / "24h" is this person's own choice.
+    time_format = models.CharField(max_length=3, choices=[("", "Organization default"), ("12h", "12-hour"), ("24h", "24-hour")], default="", blank=True)
     is_active = models.BooleanField(default=True)
 
     # Two-factor auth (TOTP). The secret is set during setup and only trusted once enabled.

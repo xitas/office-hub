@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "apps.message_templates",
     "apps.announcements",
     "apps.bookings",
+    "apps.events",
 ]
 
 MIDDLEWARE = [
@@ -184,6 +185,7 @@ SPECTACULAR_SETTINGS = {
         "LanguageEnum": "config.settings.base.LANGUAGES",
         "ContactStatusEnum": "apps.contacts.models.Contact.Status",
         "ResourceTypeEnum": "apps.bookings.models.Resource.Type",
+        "EventKindEnum": "apps.events.models.Event.Kind",
         "NotificationTypeEnum": "apps.notifications.models.NotificationType",
         # Announcement audience and resource "bookable by" share one choice set (everyone / departments).
         "AudienceEnum": "apps.announcements.models.Announcement.Audience",

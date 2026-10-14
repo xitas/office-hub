@@ -43,6 +43,8 @@ class OrganizationSettings(models.Model):
     date_format = models.CharField(max_length=20, choices=DateFormat.choices, default=DateFormat.DMY)
     timezone = models.CharField(max_length=64, default="Asia/Karachi")
     week_start = models.PositiveSmallIntegerField(choices=WeekStart.choices, default=WeekStart.MONDAY)
+    # 12-hour ("2:30 pm") or 24-hour ("14:30") clock; each person can choose their own in Settings.
+    time_format = models.CharField(max_length=3, choices=[("12h", "12-hour"), ("24h", "24-hour")], default="12h")
     default_language = models.CharField(max_length=5, choices=settings.LANGUAGES, default="en")
     # Admin-controlled switches for staff (managers and admins always have these).
     staff_can_import_contacts = models.BooleanField(default=True)

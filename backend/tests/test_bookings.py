@@ -311,7 +311,14 @@ def test_attendees_and_booker_hear_about_changes(client_for, people, room, djang
                                                      "attendees": [people["colleague"].pk, people["manager"].pk]}, format="json")
     assert res.status_code == 200
     changed = Notification.objects.get(type="booking", recipient=people["colleague"], title__startswith="Booking changed")
-    assert "14:00–15:00" in changed.body
+    assert "2:00 pm–3:00 pm" in changed.body  # the organization's clock (12-hour by default)
+    org = OrganizationSettings.get_solo()
+    org.time_format = "24h"
+    org.save()
+    changed.refresh_from_db()
+    from apps.notifications.services import display_text
+
+    assert "14:00–15:00" in display_text(changed)[1]  # re-rendered with the 24-hour clock
     assert Notification.objects.filter(recipient=people["manager"], title__contains="booked Board room").exists()  # newly invited
     assert not Notification.objects.filter(recipient=people["staff"]).exists()  # nobody is told about their own action
 

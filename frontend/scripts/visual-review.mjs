@@ -75,13 +75,21 @@ async function prepareData() {
   const byEmail = Object.fromEntries(users.map((u) => [u.email, u]))
   const dept = Object.fromEntries(depts.map((d) => [d.name, d]))
 
+  // "Your account was updated" notifications for the screenshots: made once, not on every run, so repeated
+  // reviews don't fill the team activity with the same role and department changes.
+  // (Theme and language switches during the run are audited as display preferences, which the activity leaves out.)
   const staff = byEmail[ROLES.staff]
-  await call(admin, 'PATCH', `/users/${staff.id}/`, { role: 'manager' })
-  await call(admin, 'PATCH', `/users/${staff.id}/`, { role: 'staff', job_title: 'Senior Sales Executive' })
   const mgr = byEmail[ROLES.manager]
-  await call(admin, 'PATCH', `/users/${mgr.id}/`, { department: dept.Operations.id })
-  await call(admin, 'PATCH', `/users/${mgr.id}/`, { department: dept.Sales.id })
-  await call(admin, 'PATCH', `/users/${byEmail['fatima@office.test'].id}/`, { phone: '0300 1234567' })
+  const staffNotes = (await (await call(await apiLogin(ROLES.staff), 'GET', '/notifications/?page_size=100')).json()).results ?? []
+  if (!staffNotes.some((n) => n.type === 'system')) {
+    await call(admin, 'PATCH', `/users/${staff.id}/`, { role: 'manager' })
+    await call(admin, 'PATCH', `/users/${staff.id}/`, { role: 'staff', job_title: 'Senior Sales Executive' })
+    await call(admin, 'PATCH', `/users/${mgr.id}/`, { department: dept.Operations.id })
+    await call(admin, 'PATCH', `/users/${mgr.id}/`, { department: dept.Sales.id })
+  }
+  if (byEmail['fatima@office.test'].phone !== '0300 1234567') {
+    await call(admin, 'PATCH', `/users/${byEmail['fatima@office.test'].id}/`, { phone: '0300 1234567' })
+  }
 
   // A 2FA-enabled account for the OTP screen.
   const z = await apiLogin(TWO_FA_USER).catch(() => null)

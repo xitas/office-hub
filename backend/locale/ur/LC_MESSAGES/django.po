@@ -1526,3 +1526,90 @@ msgstr "وسیلہ"
 
 msgid "resources"
 msgstr "وسائل"
+
+msgid "%(actor)s invited you: %(title)s"
+msgstr "%(actor)s نے آپ کو مدعو کیا: %(title)s"
+
+msgid "A room is booked for a time, not a whole day."
+msgstr "کمرہ وقت کے لیے بک ہوتا ہے، پورے دن کے لیے نہیں۔"
+
+msgid "At most 24 hours; use an all-day event for longer."
+msgstr "زیادہ سے زیادہ 24 گھنٹے؛ اس سے لمبے کے لیے پورے دن کا ایونٹ بنائیں۔"
+
+msgid "At most 31 days."
+msgstr "زیادہ سے زیادہ 31 دن۔"
+
+msgid "Changed display preferences"
+msgstr "ڈسپلے کی ترجیحات بدلیں"
+
+msgid "Choose a date."
+msgstr "تاریخ منتخب کریں۔"
+
+msgid "Choose a meeting room."
+msgstr "میٹنگ روم منتخب کریں۔"
+
+msgid "Choose a start and end time."
+msgstr "شروع اور ختم ہونے کا وقت منتخب کریں۔"
+
+msgid "Give it a title."
+msgstr "عنوان لکھیں۔"
+
+msgid "Holiday"
+msgstr "چھٹی"
+
+msgid "Managers add events for their own department; admins for anyone."
+msgstr "مینیجر اپنے شعبے کے لیے ایونٹ شامل کرتے ہیں؛ ایڈمن سب کے لیے۔"
+
+msgid "Meeting cancelled: %(title)s"
+msgstr "میٹنگ منسوخ: %(title)s"
+
+msgid "Meeting changed: %(title)s"
+msgstr "میٹنگ میں تبدیلی: %(title)s"
+
+msgid "Meeting in 15 minutes: %(title)s"
+msgstr "15 منٹ میں میٹنگ: %(title)s"
+
+msgid "Meeting invitations, changes and reminders"
+msgstr "میٹنگ کے دعوت نامے، تبدیلیاں اور یاد دہانیاں"
+
+msgid "New office event: %(title)s"
+msgstr "نیا دفتری ایونٹ: %(title)s"
+
+msgid "Office event"
+msgstr "دفتری ایونٹ"
+
+msgid "Office events and holidays"
+msgstr "دفتری ایونٹس اور چھٹیاں"
+
+msgid "Office holiday"
+msgstr "دفتر کی چھٹی"
+
+msgid "Office holiday: %(title)s"
+msgstr "دفتر کی چھٹی: %(title)s"
+
+msgid "Only the organizer or an admin can change this."
+msgstr "اسے صرف منتظم یا ایڈمن بدل سکتا ہے۔"
+
+msgid "Room waiting for approval"
+msgstr "کمرہ منظوری کا منتظر"
+
+msgid "The kind can't be changed."
+msgstr "قسم بدلی نہیں جا سکتی۔"
+
+msgid "The last day can't be before the first."
+msgstr "آخری دن پہلے دن سے پہلے نہیں ہو سکتا۔"
+
+msgid "The room is already booked then: %(title)s (%(name)s)"
+msgstr "اس وقت کمرہ پہلے سے بک ہے: %(title)s (%(name)s)"
+
+msgid "You can't add this to the calendar."
+msgstr "آپ اسے کیلنڈر میں شامل نہیں کر سکتے۔"
+
+msgid "You can't book this room."
+msgstr "آپ یہ کمرہ بک نہیں کر سکتے۔"
+
+msgid "calendar event"
+msgstr "کیلنڈر ایونٹ"
+
+msgid "calendar events"
+msgstr "کیلنڈر ایونٹس"

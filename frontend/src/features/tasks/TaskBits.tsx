@@ -30,7 +30,7 @@ export function DueLabel({ task, className }: { task: Pick<Task, 'due_date' | 'd
   const { t } = useTranslation()
   const fmt = useFormat()
   if (!task.due_date) return <span className={cn('text-muted-foreground', className)}>{t('tasks.noDueDate')}</span>
-  const time = shortTime(task.due_time)
+  const time = task.due_time ? fmt.clock(shortTime(task.due_time)) : ''
   const text = (
     <span className="font-latin" dir="ltr">
       {/* noon: the same calendar day in any browser time zone */}

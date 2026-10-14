@@ -427,7 +427,7 @@ def send_unread_dm_emails(now=None) -> int:
 
 
 def render_dm_email(user, conversation, messages) -> tuple[str, str]:
-    from apps.core.office_time import office_tz
+    from apps.core.office_time import clock
 
     sender = messages[-1].author.full_name if messages[-1].author else _("A colleague")
     link = f"{settings.FRONTEND_URL.rstrip('/')}/chat/{conversation.pk}?message={messages[0].pk}"
@@ -440,7 +440,7 @@ def render_dm_email(user, conversation, messages) -> tuple[str, str]:
             lines = [_("You were mentioned in #%(channel)s:") % {"channel": channel}, ""]
         for m in messages[-10:]:
             who = "" if direct else f"{m.author.full_name if m.author else ''}: "
-            lines.append(f"  {m.created_at.astimezone(office_tz()):%H:%M}  {who}{preview_text(m)}")
+            lines.append(f"  {clock(m.created_at)}  {who}{preview_text(m)}")
         if len(messages) > 10:
             lines.append("  " + _("…and %(n)s more") % {"n": len(messages) - 10})
         lines += ["", _("Reply in the CRM: %(link)s") % {"link": link}, "",

@@ -7,12 +7,15 @@ from apps.notifications.models import Notification
 # Security events stay in the audit log; they are not "team activity".
 HIDDEN_ACTIONS = [AuditLog.Action.LOGIN, AuditLog.Action.LOGIN_FAILED, AuditLog.Action.LOGOUT, AuditLog.Action.SECURITY]
 HIDDEN_MODELS = ["organizationsettings", "notification", "notificationpreference"]
+# Someone changing their own theme, language or clock: kept in the audit log, not shown as team activity.
+PREFERENCES_DESCRIPTION = "Changed display preferences"
 
 
 def activity(user, limit=15):
     """Recent changes: admins see the whole office, everyone else sees their department."""
     qs = (
         AuditLog.objects.exclude(action__in=HIDDEN_ACTIONS)
+        .exclude(description=PREFERENCES_DESCRIPTION)
         .exclude(content_type__model__in=HIDDEN_MODELS)
         .select_related("actor", "content_type")
     )

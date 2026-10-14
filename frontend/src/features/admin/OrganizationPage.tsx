@@ -117,6 +117,17 @@ function OrgForm({ initial }: { initial: OrgSettings }) {
               options={['1', '0', '6'].map((d) => ({ value: d, label: t(`admin.org.days.${d}`) }))}
             />
           </FormField>
+          <FormField id="org-clock" label={t('admin.org.timeFormat')} hint={t('admin.org.timeFormatHint')} error={errors.time_format}>
+            <SimpleSelect
+              id="org-clock"
+              value={form.time_format}
+              onChange={(v) => set('time_format', v as OrgSettings['time_format'])}
+              options={[
+                { value: '12h', label: t('settings.clock12') },
+                { value: '24h', label: t('settings.clock24') },
+              ]}
+            />
+          </FormField>
           <FormField id="org-lang" label={t('admin.org.defaultLanguage')} error={errors.default_language}>
             <SimpleSelect
               id="org-lang"

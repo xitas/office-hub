@@ -26,7 +26,7 @@ export function useSetPreference() {
   const { setTheme } = useTheme()
 
   const persist = useCallback(
-    async (patch: Partial<Pick<Me, 'language' | 'theme'>>) => {
+    async (patch: Partial<Pick<Me, 'language' | 'theme' | 'time_format'>>) => {
       if (!user) return
       const { data } = await api.patch<Me>('/auth/me/', patch)
       setUser(data)
@@ -42,6 +42,8 @@ export function useSetPreference() {
     [i18n, persist],
   )
 
+  const setTimeFormat = useCallback((time_format: Me['time_format']) => persist({ time_format }), [persist])
+
   const setThemePref = useCallback(
     (theme: ThemePref) => {
       setTheme(theme)
@@ -50,5 +52,5 @@ export function useSetPreference() {
     [setTheme, persist],
   )
 
-  return { setLanguage, setTheme: setThemePref }
+  return { setLanguage, setTheme: setThemePref, setTimeFormat }
 }

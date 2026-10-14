@@ -2,6 +2,7 @@ import type { AnnouncementsWidget } from './announcements'
 import type { TimelineItem } from './timeline'
 
 export type Role = 'admin' | 'manager' | 'staff'
+export type TimeFormat = '12h' | '24h'
 export type Language = 'en' | 'ur'
 export type ThemePref = 'light' | 'dark' | 'system'
 
@@ -17,6 +18,8 @@ export interface Me {
   avatar: string | null
   language: Language
   theme: ThemePref
+  /** '' = the organization's clock. */
+  time_format: TimeFormat | ''
   /** When "due soon" task reminders go out. */
   task_reminder_lead?: '1h' | '1d' | 'off'
   two_factor_enabled: boolean
@@ -64,6 +67,8 @@ export interface OrgSettings {
   date_format: 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD' | 'DD MMM YYYY'
   timezone: string
   week_start: number
+  /** Clock for everyone who hasn't chosen their own. */
+  time_format: TimeFormat
   default_language: Language
   staff_can_import_contacts: boolean
   staff_can_export_contacts: boolean
