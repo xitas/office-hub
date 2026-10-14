@@ -2,6 +2,8 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
+/* Self-hosted (no requests to Google Fonts; the CSP allows fonts from this site only). */
+@import "@fontsource-variable/noto-nastaliq-urdu";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -27,7 +29,7 @@
     --shadow-card: var(--card-shadow);
     --color-warning: var(--warning);
     /* Latin characters stay in Geist; Urdu falls through to Nastaliq. */
-    --font-urdu: 'Geist Variable', 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', serif;
+    --font-urdu: 'Geist Variable', 'Noto Nastaliq Urdu Variable', 'Jameel Noori Nastaleeq', serif;
     --font-latin: 'Geist Variable', sans-serif;
     --color-input: var(--input);
     --color-border: var(--border);

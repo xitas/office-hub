@@ -10,8 +10,13 @@ class OrganizationSettingsSerializer(serializers.ModelSerializer):
         model = OrganizationSettings
         fields = [
             "org_name", "currency", "date_format", "timezone", "week_start", "default_language",
-            "staff_can_import_contacts", "staff_can_export_contacts", "updated_at",
+            "staff_can_import_contacts", "staff_can_export_contacts",
+            "office_opens", "office_closes", "booking_max_minutes", "booking_horizon_days", "updated_at",
         ]
+        extra_kwargs = {
+            "booking_max_minutes": {"min_value": 15, "max_value": 24 * 60},
+            "booking_horizon_days": {"min_value": 1, "max_value": 730},
+        }
         read_only_fields = ["updated_at"]
 
     def validate_currency(self, value):
@@ -19,6 +24,18 @@ class OrganizationSettingsSerializer(serializers.ModelSerializer):
         if len(value) != 3 or not value.isalpha():
             raise serializers.ValidationError(_("Use a 3-letter ISO currency code, e.g. PKR."))
         return value
+
+    def validate(self, attrs):
+        opens = attrs.get("office_opens", getattr(self.instance, "office_opens", None))
+        closes = attrs.get("office_closes", getattr(self.instance, "office_closes", None))
+        if opens and closes:
+            if closes <= opens:
+                raise serializers.ValidationError({"office_closes": [_("The office must close after it opens.")]})
+            if opens.minute % 15 or closes.minute % 15 or opens.second or closes.second:
+                raise serializers.ValidationError({"office_opens": [_("Use quarter hours, e.g. 09:00 or 17:30.")]})
+        if "booking_max_minutes" in attrs and attrs["booking_max_minutes"] % 15:
+            raise serializers.ValidationError({"booking_max_minutes": [_("Use a multiple of 15 minutes.")]})
+        return attrs
 
     def validate_timezone(self, value):
         from zoneinfo import available_timezones

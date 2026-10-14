@@ -15,6 +15,10 @@ const DEFAULT_SETTINGS: OrgSettings = {
   default_language: 'en',
   staff_can_import_contacts: true,
   staff_can_export_contacts: false,
+  office_opens: '09:00:00',
+  office_closes: '18:00:00',
+  booking_max_minutes: 480,
+  booking_horizon_days: 60,
   updated_at: '',
 }
 

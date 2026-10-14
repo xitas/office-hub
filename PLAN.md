@@ -209,23 +209,28 @@ Phase 2 is split in two:
 
 ## Phase 4 — Office planning (Module 6)
 
-**Status: next.** Planned slices (same rules: one branch, a review at the end):
-1. **Resources and bookings:** rooms, projector and vehicles (admins manage); bookings with availability and double-booking prevented by a PostgreSQL exclusion constraint (checked in code too, for SQLite); "Bookings today" widget
-2. **Shared office calendar:** meetings with attendees, holidays, events, and task deadlines on one calendar (day/week/month, reusing the task calendar); Quick-add Meeting; "Meetings today" widget
+**Status: in progress** (branch `phase-4-office-planning`). Slices: 1 Rooms and resource booking ✓, then 2–6 (same rules: one branch, a review at the end):
+1. **Rooms and resource booking:** resources (rooms, projector, vehicles; admins manage), bookings with office hours and limits, overlaps refused by the database, approvals, weekly repeats, reminders, "My bookings today" and "Today's meetings and bookings" widgets
+2. **Shared office calendar:** meetings with attendees, holidays, events, and task deadlines on one calendar (day/week/month, reusing the task calendar); Quick-add Meeting; calendar meetings join the "Today's meetings and bookings" widget
 3. **Leave:** leave types and yearly balances, requests, manager approve/reject with notifications and audit, holidays respected; "Pending approvals" widget
 4. **Attendance:** daily overview (present, on leave, on field visit, absent) from check-ins and approved leave; manager and admin views
 5. **Supplies and expenses:** inventory with low-stock alerts and purchase requests; expense requests with receipt upload (task-file rules) and an approval workflow
 6. **Weekly planning and final review:** weekly goals per team with progress, then the full review (both databases, query counts, live run, visual review)
 
-- [ ] Resources (rooms, projector, vehicles)
-- [ ] Booking calendar with availability and double-booking prevention (database constraint)
+- [x] Resources (rooms, projector, vehicles, other): name, type, seats (rooms), location, description, photo (image rules from task files, private, with thumbnail), bookable by everyone or chosen departments, needs approval, active/inactive. Admins create, edit and deactivate (a resource with bookings can't be deleted); everyone sees the active ones they may book. Rooms & resources page
+- [x] Bookings: resource, title, start/end in the office time zone, attendees, notes, status (confirmed, waiting for approval, rejected, cancelled). Rules: 15-minute steps, within office hours (Organization page), not in the past, a maximum length and how far ahead (Organization page; admins exempt from these two). Confirmed and pending bookings never overlap: a PostgreSQL exclusion constraint (btree_gist, `[start, end)`), with a row lock on the resource so simultaneous requests are handled one at a time and get a clear "already booked" answer
+- [x] Approvals: resources that need approval create pending bookings (they hold the time); the requester's department managers (admins if there are none, or for a manager's own request) approve or reject with an optional reason; the requester is told either way. "To approve" tab
+- [x] Change and cancel by the booker or an admin (cancel one date, or this and the later dates of a series); booker and attendees are told; a new time on an approval resource goes back to pending
+- [x] Weekly repeats on chosen days until a date (task recurrence rules): every date is checked before saving and clashes are listed; book the free dates and skip the rest
+- [x] Booking page: day timeline of all resources or week timeline of one, with free slots, click or drag to book (desktop), a list with free times and a form on phones; "My bookings" (upcoming, past, to approve)
+- [x] Reminders 15 minutes before to the booker and attendees (Celery Beat every minute, once per start time; a moved booking is reminded again)
 - [ ] Shared office calendar: meetings, holidays, deadlines, events
 - [ ] Leave requests, manager approve/reject, leave balance tracking
 - [ ] Attendance overview (present, on leave, on field visit, absent)
 - [ ] Office supplies inventory with low-stock alerts and purchase requests
 - [ ] Expense requests with receipt upload and approval workflow
 - [ ] Weekly planning board: weekly goals per team with progress tracking
-- [ ] Dashboard: meetings, bookings and pending approvals widgets live
+- [~] Dashboard: "My bookings today" and "Today's meetings and bookings" live *(pending approvals come with leave and expenses)*
 - [ ] Quick-add Meeting enabled
 
 ---
@@ -268,15 +273,15 @@ Phase 2 is split in two:
 | Channels | 3 | [x] *(Conversation: channels and direct messages; Membership holds read state)* |
 | CommunicationLogs | 3 | [x] *(TimelineEntry: notes, calls, meetings, emails, WhatsApp; follow-up state)* |
 | Announcements | 3 | [x] *(Announcement, with AnnouncementAttachment and AnnouncementRead)* |
-| Resources | 4 | [ ] |
-| Bookings | 4 | [ ] |
+| Resources | 4 | [x] |
+| Bookings | 4 | [x] *(Booking, BookingSeries for weekly repeats)* |
 | LeaveRequests | 4 | [ ] |
 | Attendance | 4 | [ ] |
 | Inventory | 4 | [ ] |
 | Expenses | 4 | [ ] |
 | Visits | 5 | [ ] |
 
-Tables added beyond the spec: OrganizationSettings, Notification and NotificationPreference (Phase 1, done); Tag, ContactStatusChange, TimelineEntry and ContactImport (Phase 2A); TaskAttachment, TaskActivity, TaskSeries, ReminderLog and DigestLog (Phase 2B); Membership, Reaction, MessageAttachment and MessageMention (Phase 3, chat); MessageTemplate, AnnouncementAttachment and AnnouncementRead (Phase 3).
+Tables added beyond the spec: OrganizationSettings, Notification and NotificationPreference (Phase 1, done); Tag, ContactStatusChange, TimelineEntry and ContactImport (Phase 2A); TaskAttachment, TaskActivity, TaskSeries, ReminderLog and DigestLog (Phase 2B); Membership, Reaction, MessageAttachment and MessageMention (Phase 3, chat); MessageTemplate, AnnouncementAttachment and AnnouncementRead (Phase 3); BookingSeries (Phase 4).
 
 ---
 
@@ -303,6 +308,7 @@ Tables added beyond the spec: OrganizationSettings, Notification and Notificatio
 ---
 
 ## Changelog
+- **2026-10-14:** Phase 4 slice 1 — Rooms and resource booking (branch `phase-4-office-planning`). Web fonts self-hosted (Geist and Noto Nastaliq Urdu from npm; no Google Fonts requests, so the strict CSP stays as is). New `bookings` app: Resource, Booking, BookingSeries; PostgreSQL exclusion constraint against overlapping confirmed or pending bookings (btree_gist) plus a resource row lock; office hours, longest booking and how far ahead on the Organization page; approvals by department managers or admins; weekly repeats with conflict check and skip; cancel one or the rest of a series; notifications for requests, decisions, invitations, changes and cancellations (in each reader's language); 15-minute reminders (Celery Beat, once per start time); Bookings page (day/week timeline, drag to book; phone list and form), My bookings, Rooms & resources (admins manage, photos); dashboard "My bookings today" and "Today's meetings and bookings"; seeded rooms, a projector and a car with bookings. Shared people picker (tasks and bookings). Fixed on the way: a rejected photo upload no longer deletes the current photo; schema enum names made unique. 18 new tests (556 passed and 4 skipped on SQLite, 559 passed and 1 skipped on PostgreSQL; the skip is the Redis test, Docker was off).
 - **2026-10-13:** CI fix — the backend job failed (35 failed, 3 errors) while everything passed locally. Cause: the chat, task and announcement signal receivers were functions defined inside `AppConfig.ready()`; Django holds receivers weakly, and on CI's Python 3.13.16 they were garbage-collected (local 3.13.3 kept them alive), so department channels, channel membership and attachment-file removal silently stopped. They are module-level now (`apps/core/signals.py`, `apps/chat/signals.py`), with a test that fails on any Python if a receiver is nested. WebSocket tests share one helper that waits for a specific event up to a deadline and always disconnects, and each test gets a fresh channel layer. CI and `scripts/test-ci.ps1` now run the same `docker-compose.test.yml` (pinned Python image, `backend/requirements.lock`, PostgreSQL 17, Redis); tests never read `backend/.env`; `test-postgres.ps1` warns about Python/package differences. 542 passed the CI way.
 - **2026-10-13:** Phase 3 slice 6 — Announcements and final review; **Phase 3 complete.** New `announcements` app (Announcement, AnnouncementAttachment, AnnouncementRead): board with pinned first, archive after the "show until" date, search, light formatting rendered safely, files with the task-file rules, read receipts for the author and admins, in-app and email notifications in each reader's language (announcement emails now on by default), dashboard widget (one query), two seeded announcements. Review: 532 passed and 1 skipped on SQLite, 533 passed on PostgreSQL + Redis; new query-count tests for chat mentions and search, global search, communication log and timelines, templates, announcements and the dashboard (nothing grew); live two-browser run on the Redis channel layer (17 checks); Mailpit with a real Celery worker (6 emails in English and Urdu, each once; a second job run sent none); visual review 1,124 screenshots, 0 layout issues. Fixed: the chat composer wiped text and files added while the previous message was still sending; links nested inside links on announcement cards; an Urdu announcement's unread dot and publish time in mixed-direction layouts; department-shared templates labelled "My department" for everyone; the visual review script's outdated chat selectors (and it now covers the Phase 3 pages). 14 new tests.
 - **2026-10-13:** Phase 3 slice 5 — Message templates: new `message_templates` app (MessageTemplate with sharing, department, usage count, last used, archive), placeholder filling on the server (contact visibility checked), preview and placeholder list endpoints, wa.me and mailto links (UTF-8 Urdu, line breaks as %0A / CRLF); Templates page and editor; templates on the contact page, in the chat composer and in the log entry form; copy to clipboard; the quick log prompt now covers email and starts from the sent text. Permission matrix: templates can be created and edited by everyone, with per-template rules (owner, department manager, admin); no delete, archive instead. 8 seeded templates, backend texts in Urdu. 12 new tests (518 on SQLite).

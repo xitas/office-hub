@@ -34,7 +34,8 @@ PERMISSIONS: dict[str, dict[str, set[str]]] = {
     "templates": {"view": ALL, "create": ALL, "edit": ALL, "delete": MGMT},
     "announcements": {"view": ALL, "create": MGMT, "edit": MGMT, "delete": MGMT},
     # Phase 4
-    "bookings": {"view": ALL, "create": ALL, "edit": ALL, "delete": ALL},
+    # Anyone books; the booker or an admin changes a booking; managers approve their department's requests.
+    "bookings": {"view": ALL, "create": ALL, "edit": ALL, "delete": ALL, "approve": MGMT},
     "resources": {"view": ALL, "create": ADMIN_ONLY, "edit": ADMIN_ONLY, "delete": ADMIN_ONLY},
     "calendar": {"view": ALL, "create": ALL, "edit": ALL, "delete": MGMT},
     "leave": {"view": ALL, "create": ALL, "edit": ALL, "delete": ALL, "approve": MGMT},

@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "apps.chat",
     "apps.message_templates",
     "apps.announcements",
+    "apps.bookings",
 ]
 
 MIDDLEWARE = [
@@ -182,6 +183,10 @@ SPECTACULAR_SETTINGS = {
     "ENUM_NAME_OVERRIDES": {
         "LanguageEnum": "config.settings.base.LANGUAGES",
         "ContactStatusEnum": "apps.contacts.models.Contact.Status",
+        "ResourceTypeEnum": "apps.bookings.models.Resource.Type",
+        "NotificationTypeEnum": "apps.notifications.models.NotificationType",
+        # Announcement audience and resource "bookable by" share one choice set (everyone / departments).
+        "AudienceEnum": "apps.announcements.models.Announcement.Audience",
     },
 }
 

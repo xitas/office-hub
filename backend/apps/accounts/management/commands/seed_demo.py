@@ -223,6 +223,28 @@ TEMPLATES = [
 ]
 
 
+# (name, type, capacity, location, description, departments that may book (none = everyone), needs approval)
+RESOURCES = [
+    ("Board room", "room", 12, "2nd floor", "Large screen, video calls, whiteboard.", [], False),
+    ("Meeting room A", "room", 6, "1st floor", "Whiteboard and TV.", [], False),
+    ("Meeting room B", "room", 4, "1st floor", "Quiet room for short calls.", [], False),
+    ("Epson projector", "projector", None, "Admin office", "Portable projector with HDMI and USB-C cables.", [], False),
+    ("Toyota Corolla (LEA-2147)", "vehicle", None, "Basement parking", "Company car for client visits. Return with a full tank.",
+     ["Sales", "Operations"], True),
+]
+
+# (resource, title, booked by, attendees, day offset from today, start, end, status)
+BOOKINGS = [
+    ("Board room", "Weekly sales review", SALES_MGR, [HAMZA, FATIMA], 0, "10:00", "11:00", "confirmed"),
+    ("Meeting room A", "Supplier call: Khyber Logistics", OPS_MGR, [USMAN], 0, "14:00", "14:30", "confirmed"),
+    ("Meeting room B", "Interview: accounts assistant", ZAINAB, [ADMIN], 0, "16:00", "17:00", "confirmed"),
+    ("Epson projector", "Product demo for Saba Software", HAMZA, [], 1, "11:00", "13:00", "confirmed"),
+    ("Board room", "Quarterly planning", ADMIN, [SALES_MGR, OPS_MGR], 1, "09:30", "12:00", "confirmed"),
+    ("Toyota Corolla (LEA-2147)", "Client visit: Margalla Builders", HAMZA, [], 1, "13:00", "17:00", "pending"),
+    ("Toyota Corolla (LEA-2147)", "Site visit in Gulberg", USMAN, [], 2, "09:00", "12:00", "confirmed"),
+]
+
+
 # (title, body, author, departments (none = everyone), pinned, days ago, who has read it)
 ANNOUNCEMENTS = [
     (
@@ -292,6 +314,7 @@ class Command(BaseCommand):
         self._seed_chat()
         self._seed_templates()
         self._seed_announcements()
+        self._seed_bookings()
 
         self.stdout.write(self.style.SUCCESS("Demo data ready. All demo users share the password: " + DEMO_PASSWORD))
         for email, name, role, dept, _ in USERS:
@@ -345,6 +368,36 @@ class Command(BaseCommand):
                 sharing=sharing, department=user.department if sharing == "department" else None, created_by=user,
                 usage_count=len(TEMPLATES) - index,  # a believable "most used" order
             )
+
+    def _seed_bookings(self):
+        """A few rooms, a projector and a car, with bookings today and in the next two days
+        (skipped once any resource exists). Created directly: no notifications."""
+        from datetime import datetime
+
+        from apps.bookings.models import Booking, Resource
+        from apps.core.office_time import office_today, office_tz
+
+        if Resource.objects.exists():
+            return
+        users = {u.email: u for u in User.objects.all()}
+        resources = {}
+        for name, rtype, capacity, location, description, departments, approval in RESOURCES:
+            resource = Resource.objects.create(
+                name=name, type=rtype, capacity=capacity, location=location, description=description, needs_approval=approval,
+                bookable_by=Resource.BookableBy.DEPARTMENTS if departments else Resource.BookableBy.EVERYONE,
+                created_by=users[ADMIN],
+            )
+            resource.departments.set(Department.objects.filter(name__in=departments))
+            resources[name] = resource
+        tz, today = office_tz(), office_today()
+        for resource, title, booker, attendees, offset, start, end, status in BOOKINGS:
+            day = today + timedelta(days=offset)
+            booking = Booking.objects.create(
+                resource=resources[resource], title=title, booked_by=users[booker], status=status,
+                start=datetime.combine(day, datetime.strptime(start, "%H:%M").time(), tzinfo=tz),
+                end=datetime.combine(day, datetime.strptime(end, "%H:%M").time(), tzinfo=tz),
+            )
+            booking.attendees.set([users[a] for a in attendees])
 
     def _seed_announcements(self):
         """Two announcements: a pinned one for everyone, and one in Urdu for Sales (skipped once any exists).

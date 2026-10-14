@@ -16,6 +16,7 @@ api_v1 = [
     path("", include("apps.chat.urls")),
     path("", include("apps.message_templates.urls")),
     path("", include("apps.announcements.urls")),
+    path("", include("apps.bookings.urls")),
 ]
 
 urlpatterns = [

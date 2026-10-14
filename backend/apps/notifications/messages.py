@@ -109,7 +109,65 @@ def _announcement(params: dict) -> tuple[str, str]:
     )
 
 
+def _booking_when(params: dict) -> str:
+    """ "14/10/2026 10:00–11:00" in the office time zone (date and times as the office reads them)."""
+    from django.utils.dateparse import parse_datetime
+
+    from apps.core.office_time import office_tz
+
+    start, end = parse_datetime(params.get("start", "") or ""), parse_datetime(params.get("end", "") or "")
+    if not start or not end:
+        return ""
+    s, e = start.astimezone(office_tz()), end.astimezone(office_tz())
+    return f"{s:%d/%m/%Y %H:%M}–{e:%H:%M}"
+
+
+def _booking_detail(params: dict) -> str:
+    text = "%s · %s · %s" % (params.get("title", ""), params.get("resource", ""), _booking_when(params))
+    if params.get("more"):
+        text += " " + _("(and %(n)s more dates)") % {"n": params["more"]}
+    return text
+
+
+def _booking_request(params: dict) -> tuple[str, str]:
+    return _("%(actor)s asks to book %(resource)s") % params, _booking_detail(params)
+
+
+def _booking_approved(params: dict) -> tuple[str, str]:
+    return _("Booking approved: %(resource)s") % params, _booking_detail(params)
+
+
+def _booking_rejected(params: dict) -> tuple[str, str]:
+    body = _booking_detail(params)
+    if params.get("reason"):
+        body += "\n" + _("Reason: %(reason)s") % {"reason": params["reason"]}
+    return _("Booking rejected: %(resource)s") % params, body
+
+
+def _booking_invited(params: dict) -> tuple[str, str]:
+    return _("%(actor)s booked %(resource)s with you") % params, _booking_detail(params)
+
+
+def _booking_changed(params: dict) -> tuple[str, str]:
+    return _("Booking changed: %(title)s") % params, _booking_detail(params)
+
+
+def _booking_cancelled(params: dict) -> tuple[str, str]:
+    return _("Booking cancelled: %(title)s") % params, _booking_detail(params)
+
+
+def _booking_reminder(params: dict) -> tuple[str, str]:
+    return _("Starts in 15 minutes: %(title)s") % params, _booking_detail(params)
+
+
 RENDERERS = {
+    "booking_request": _booking_request,
+    "booking_approved": _booking_approved,
+    "booking_rejected": _booking_rejected,
+    "booking_invited": _booking_invited,
+    "booking_changed": _booking_changed,
+    "booking_cancelled": _booking_cancelled,
+    "booking_reminder": _booking_reminder,
     "announcement": _announcement,
     "chat_mention": _chat_mention,
     "chat_direct": _chat_direct,

@@ -1388,3 +1388,141 @@ msgstr "اعلان: %(title)s"
 
 msgid "New announcement: %(title)s"
 msgstr "نیا اعلان: %(title)s"
+
+msgid "%(actor)s asks to book %(resource)s"
+msgstr "%(actor)s نے %(resource)s کی بکنگ کی درخواست کی ہے"
+
+msgid "%(actor)s booked %(resource)s with you"
+msgstr "%(actor)s نے آپ کے ساتھ %(resource)s بک کیا"
+
+msgid "%(n)s hours"
+msgstr "%(n)s گھنٹے"
+
+msgid "(and %(n)s more dates)"
+msgstr "(اور مزید %(n)s تاریخیں)"
+
+msgid "A booking can be at most %(length)s long."
+msgstr "بکنگ زیادہ سے زیادہ %(length)s کی ہو سکتی ہے۔"
+
+msgid "A booking must start and end on the same day."
+msgstr "بکنگ ایک ہی دن شروع اور ختم ہونی چاہیے۔"
+
+msgid "Already booked: %(title)s (%(name)s)"
+msgstr "پہلے سے بک ہے: %(title)s (%(name)s)"
+
+msgid "Booking approved: %(resource)s"
+msgstr "بکنگ منظور: %(resource)s"
+
+msgid "Booking cancelled: %(title)s"
+msgstr "بکنگ منسوخ: %(title)s"
+
+msgid "Booking changed: %(title)s"
+msgstr "بکنگ میں تبدیلی: %(title)s"
+
+msgid "Booking rejected: %(resource)s"
+msgstr "بکنگ نامنظور: %(resource)s"
+
+msgid "Bookings must be within office hours (%(opens)s–%(closes)s)."
+msgstr "بکنگ دفتری اوقات (%(opens)s–%(closes)s) کے اندر ہونی چاہیے۔"
+
+msgid "Cancelled"
+msgstr "منسوخ"
+
+msgid "Choose a photo (PNG, JPEG, GIF or WebP)."
+msgstr "تصویر منتخب کریں (PNG، JPEG، GIF یا WebP)۔"
+
+msgid "Confirmed"
+msgstr "تصدیق شدہ"
+
+msgid "Give a date range (from, to) of at most %(n)s days."
+msgstr "زیادہ سے زیادہ %(n)s دن کی تاریخیں (from، to) دیں۔"
+
+msgid "Give the booking a title."
+msgstr "بکنگ کا عنوان لکھیں۔"
+
+msgid "Give the resource a name."
+msgstr "وسیلے کا نام لکھیں۔"
+
+msgid "Meeting room"
+msgstr "میٹنگ روم"
+
+msgid "Only the person who booked it or an admin can change this booking."
+msgstr "یہ بکنگ صرف بک کرنے والا یا ایڈمن بدل سکتا ہے۔"
+
+msgid "Only upcoming bookings can be cancelled."
+msgstr "صرف آنے والی بکنگ منسوخ ہو سکتی ہے۔"
+
+msgid "Only upcoming bookings can be changed."
+msgstr "صرف آنے والی بکنگ بدلی جا سکتی ہے۔"
+
+msgid "Pending approval"
+msgstr "منظوری باقی"
+
+msgid "Projector"
+msgstr "پروجیکٹر"
+
+msgid "Reason: %(reason)s"
+msgstr "وجہ: %(reason)s"
+
+msgid "Rejected"
+msgstr "نامنظور"
+
+msgid "Repeat until a later date."
+msgstr "بعد کی کسی تاریخ تک دہرائیں۔"
+
+msgid "Some dates can't be booked."
+msgstr "کچھ تاریخیں بک نہیں ہو سکتیں۔"
+
+msgid "Starts in 15 minutes: %(title)s"
+msgstr "15 منٹ میں شروع: %(title)s"
+
+msgid "The end must be after the start."
+msgstr "اختتام آغاز کے بعد ہونا چاہیے۔"
+
+msgid "The office must close after it opens."
+msgstr "دفتر کھلنے کے بعد بند ہونا چاہیے۔"
+
+msgid "This resource has bookings. Make it inactive instead."
+msgstr "اس وسیلے کی بکنگز موجود ہیں۔ اس کے بجائے اسے غیر فعال کریں۔"
+
+msgid "This time has already passed."
+msgstr "یہ وقت گزر چکا ہے۔"
+
+msgid "This time is already booked."
+msgstr "یہ وقت پہلے سے بک ہے۔"
+
+msgid "Use 15-minute steps (e.g. 10:00, 10:15, 10:30)."
+msgstr "15 منٹ کے وقفے استعمال کریں (مثلاً 10:00، 10:15، 10:30)۔"
+
+msgid "Use a multiple of 15 minutes."
+msgstr "15 منٹ کے حساب سے دیں۔"
+
+msgid "Use quarter hours, e.g. 09:00 or 17:30."
+msgstr "پاؤ گھنٹے کے حساب سے دیں، مثلاً 09:00 یا 17:30۔"
+
+msgid "Vehicle"
+msgstr "گاڑی"
+
+msgid "You can book at most %(days)s days ahead."
+msgstr "آپ زیادہ سے زیادہ %(days)s دن پہلے بک کر سکتے ہیں۔"
+
+msgid "You can't book this resource."
+msgstr "آپ یہ وسیلہ بک نہیں کر سکتے۔"
+
+msgid "You can't decide on this booking."
+msgstr "آپ اس بکنگ کا فیصلہ نہیں کر سکتے۔"
+
+msgid "booking series"
+msgstr "بکنگ سلسلہ"
+
+msgid "booking"
+msgstr "بکنگ"
+
+msgid "bookings"
+msgstr "بکنگز"
+
+msgid "resource"
+msgstr "وسیلہ"
+
+msgid "resources"
+msgstr "وسائل"

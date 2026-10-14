@@ -67,7 +67,7 @@ def test_dashboard_contract_and_scoping(client_for, admin, manager, staff, make_
     data = client_for(manager).get("/api/v1/dashboard/").data
     for key in ["tasks_today", "overdue", "meetings_today", "pending_approvals", "activity", "stats"]:
         assert key in data
-    assert data["tasks_today"] == [] and data["meetings_today"] is None  # tasks live (Phase 2B); meetings not built yet
+    assert data["tasks_today"] == [] and data["meetings_today"] == []  # tasks live (Phase 2B), bookings (Phase 4)
     # Manager (sales) sees the sales staff's change, not the admin's.
     assert [a["actor_name"] for a in data["activity"]] == [staff.full_name]
     assert data["stats"]["departments"] is None

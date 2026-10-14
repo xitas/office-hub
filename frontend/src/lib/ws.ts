@@ -82,6 +82,8 @@ export function useRealtime() {
           void queryClient.invalidateQueries({ queryKey: ['notifications', 'list'] })
           void queryClient.invalidateQueries({ queryKey: ['dashboard'] })
           if (event.notification.type === 'announcement') void queryClient.invalidateQueries({ queryKey: ['announcements'] })
+          if (['booking', 'approval_request', 'approval_result'].includes(event.notification.type))
+            void queryClient.invalidateQueries({ queryKey: ['bookings'] })
           toast(event.notification.title, { description: event.notification.body || undefined })
         }
       }

@@ -67,6 +67,11 @@ export interface OrgSettings {
   default_language: Language
   staff_can_import_contacts: boolean
   staff_can_export_contacts: boolean
+  /** Office hours ("HH:MM:SS", office time zone): bookings must fit inside. */
+  office_opens: string
+  office_closes: string
+  booking_max_minutes: number
+  booking_horizon_days: number
   updated_at: string
 }
 
@@ -151,8 +156,10 @@ export interface DashboardListItem {
   title: string
   subtitle?: string
   time?: string | null
+  /** With `time`: shown as a range (bookings). */
+  end?: string | null
   url?: string
-  badge?: string
+  badge?: string | null
 }
 
 /** My tasks on the dashboard (tasks_today, overdue, upcoming_deadlines). */

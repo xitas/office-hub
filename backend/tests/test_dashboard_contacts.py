@@ -64,5 +64,5 @@ def test_client_activity_is_scoped(client_for, people, data, who, expected):
 
 def test_placeholders_stay_for_later_modules(client_for, people):
     data = client_for(people["staff"]).get(DASHBOARD).data
-    for key in ("meetings_today", "pending_approvals"):
-        assert data[key] is None
+    assert data["pending_approvals"] is None
+    assert data["meetings_today"] == [] and data["bookings_today"] == []  # live since Phase 4 (bookings)

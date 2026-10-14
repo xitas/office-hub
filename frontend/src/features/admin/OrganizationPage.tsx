@@ -125,6 +125,58 @@ function OrgForm({ initial }: { initial: OrgSettings }) {
               options={['en', 'ur'].map((l) => ({ value: l, label: t(`languages.${l}`) }))}
             />
           </FormField>
+          <fieldset className="grid gap-4 border-t pt-4 sm:col-span-2 sm:grid-cols-2">
+            <legend className="sr-only">{t('admin.org.bookings')}</legend>
+            <div className="grid gap-0.5 sm:col-span-2">
+              <p className="text-sm font-medium">{t('admin.org.bookings')}</p>
+              <p className="text-xs text-muted-foreground">{t('admin.org.bookingsHint')}</p>
+            </div>
+            <TextField
+              id="org-opens"
+              type="time"
+              step={900}
+              label={t('admin.org.officeOpens')}
+              value={form.office_opens.slice(0, 5)}
+              onChange={(e) => set('office_opens', e.target.value)}
+              error={errors.office_opens}
+              className="font-latin"
+              required
+            />
+            <TextField
+              id="org-closes"
+              type="time"
+              step={900}
+              label={t('admin.org.officeCloses')}
+              value={form.office_closes.slice(0, 5)}
+              onChange={(e) => set('office_closes', e.target.value)}
+              error={errors.office_closes}
+              className="font-latin"
+              required
+            />
+            <FormField id="org-max" label={t('admin.org.bookingMax')} error={errors.booking_max_minutes}>
+              <SimpleSelect
+                id="org-max"
+                value={String(form.booking_max_minutes)}
+                onChange={(v) => set('booking_max_minutes', Number(v))}
+                options={[...new Set([30, 60, 90, 120, 180, 240, 360, 480, 600, 720, form.booking_max_minutes])]
+                  .sort((a, b) => a - b)
+                  .map((m) => ({ value: String(m), label: t('admin.org.duration', { h: Math.floor(m / 60), m: String(m % 60).padStart(2, '0') }) }))}
+              />
+            </FormField>
+            <TextField
+              id="org-horizon"
+              type="number"
+              min={1}
+              max={730}
+              label={t('admin.org.bookingHorizon')}
+              hint={t('admin.org.bookingHorizonHint')}
+              value={String(form.booking_horizon_days)}
+              onChange={(e) => set('booking_horizon_days', Number(e.target.value))}
+              error={errors.booking_horizon_days}
+              className="font-latin"
+              required
+            />
+          </fieldset>
           <fieldset className="grid gap-3 border-t pt-4 sm:col-span-2">
             <legend className="sr-only">{t('admin.org.staffAccess')}</legend>
             <p className="text-sm font-medium">{t('admin.org.staffAccess')}</p>

@@ -1,3 +1,5 @@
+from datetime import time
+
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -45,6 +47,12 @@ class OrganizationSettings(models.Model):
     # Admin-controlled switches for staff (managers and admins always have these).
     staff_can_import_contacts = models.BooleanField(default=True)
     staff_can_export_contacts = models.BooleanField(default=False)
+    # Office hours (office time zone): rooms and other resources can be booked only within them.
+    office_opens = models.TimeField(default=time(9, 0))
+    office_closes = models.TimeField(default=time(18, 0))
+    # Booking limits for everyone except admins.
+    booking_max_minutes = models.PositiveIntegerField(default=480)
+    booking_horizon_days = models.PositiveIntegerField(default=60)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

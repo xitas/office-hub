@@ -39,8 +39,8 @@ function greetingKey(hour: number) {
 const LIST_WIDGETS: { key: keyof DashboardData; title: string; icon: LucideIcon; tone?: string }[] = [
   { key: 'unread_messages', title: 'dashboard.unreadMessages', icon: MessagesSquare },
   { key: 'pending_approvals', title: 'dashboard.pendingApprovals', icon: Stamp },
-  { key: 'meetings_today', title: 'dashboard.meetingsToday', icon: CalendarDays },
   { key: 'bookings_today', title: 'dashboard.bookingsToday', icon: DoorOpen },
+  { key: 'meetings_today', title: 'dashboard.meetingsToday', icon: CalendarDays },
 ]
 
 export function DashboardPage() {
@@ -219,7 +219,12 @@ function ListWidget({
                   {item.subtitle && <span className="block truncate text-xs text-muted-foreground">{item.subtitle}</span>}
                 </span>
                 {item.badge && <Badge variant="outline">{item.badge}</Badge>}
-                {item.time && <span className="shrink-0 text-xs text-muted-foreground">{fmt.time(item.time)}</span>}
+                {item.time && (
+                  <bdi dir="ltr" className="shrink-0 text-xs text-muted-foreground font-latin">
+                    {fmt.time(item.time)}
+                    {item.end && `–${fmt.time(item.end)}`}
+                  </bdi>
+                )}
               </Link>
             </li>
           ))}

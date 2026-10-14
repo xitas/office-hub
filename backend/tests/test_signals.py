@@ -12,6 +12,7 @@ from django.db.models import signals
 
 from apps.accounts.models import Department, User
 from apps.announcements.models import AnnouncementAttachment
+from apps.bookings.models import Resource
 from apps.chat.models import Conversation, MessageAttachment
 from apps.tasks.models import Task, TaskAttachment
 
@@ -23,6 +24,7 @@ EXPECTED = [
     (signals.post_delete, TaskAttachment),
     (signals.post_delete, MessageAttachment),
     (signals.post_delete, AnnouncementAttachment),
+    (signals.post_delete, Resource),
 ]
 
 
