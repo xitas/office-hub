@@ -79,6 +79,10 @@ export interface OrgSettings {
   booking_horizon_days: number
   /** Working week, 0 = Monday … 6 = Sunday: leave counts only these days. */
   working_days: number[]
+  /** Minutes after opening before a check-in counts as late. */
+  late_after_minutes: number
+  /** Remind people who forgot to check in or out. */
+  attendance_reminders: boolean
   updated_at: string
 }
 

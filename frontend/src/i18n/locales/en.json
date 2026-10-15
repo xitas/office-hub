@@ -30,7 +30,8 @@
     "announcements": "Announcements",
     "bookings": "Bookings",
     "resources": "Rooms & resources",
-    "leave": "Leave"
+    "leave": "Leave",
+    "attendance": "Attendance"
   },
   "common": {
     "save": "Save",
@@ -330,7 +331,12 @@
       "timeFormat": "Clock",
       "timeFormatHint": "Everyone sees times this way unless they choose otherwise in Settings.",
       "workingDays": "Working days",
-      "workingDaysHint": "Leave counts only these days (and not office holidays on the calendar)."
+      "workingDaysHint": "Leave counts only these days (and not office holidays on the calendar).",
+      "attendance": "Attendance",
+      "lateAfter": "Late after (minutes)",
+      "lateAfterHint": "Minutes after the office opens before a check-in counts as late.",
+      "attendanceReminders": "Attendance reminders",
+      "attendanceRemindersHint": "Remind people who haven't checked in, or forgot to check out, on working days."
     },
     "audit": {
       "title": "Audit log",
@@ -406,7 +412,8 @@
     "channel_message": "New message in my channels",
     "chat_mention": "Mentioned in chat",
     "meeting": "Meeting invitations, changes and reminders",
-    "office_event": "Office events and holidays"
+    "office_event": "Office events and holidays",
+    "attendance": "Attendance reminders and corrections"
   },
   "companies": {
     "title": "Companies",
@@ -1672,5 +1679,59 @@
     "paid": "Paid",
     "halfDaysAllowed": "Half days allowed",
     "active": "Active"
+  },
+  "attendance": {
+    "title": "Attendance",
+    "subtitle": "Check in and out, and see who is in today.",
+    "today": "Attendance today",
+    "open": "Open",
+    "tabs": {
+      "me": "My attendance",
+      "team": "Team day",
+      "month": "Team month"
+    },
+    "status": {
+      "present": "Present",
+      "field": "Field visit",
+      "remote": "Remote",
+      "leave": "On leave",
+      "off": "Day off",
+      "not_in": "Not in yet",
+      "absent": "Absent",
+      "upcoming": "Upcoming"
+    },
+    "modes": {
+      "office": "In the office",
+      "field": "On a field visit",
+      "remote": "Working remotely"
+    },
+    "late": "Late",
+    "halfDayLeave": "Half-day leave",
+    "corrected": "Corrected",
+    "inAt": "In {{time}}",
+    "outAt": "Out {{time}}",
+    "checkIn": "Check in",
+    "checkOut": "Check out",
+    "checkedIn": "Checked in",
+    "checkedOut": "Checked out",
+    "note": "Note",
+    "notePlaceholder": "Where? (optional)",
+    "teamToday": "Your team today",
+    "previous": "Previous",
+    "next": "Next",
+    "date": "Date",
+    "allDepartments": "All departments",
+    "person": "Person",
+    "lateHint": "A check-in more than {{minutes}} minutes after the office opens counts as late. Field visits are never late.",
+    "correctHint": "Use the pencil to fix a forgotten check-in or check-out. The person is notified.",
+    "correctFor": "Correct attendance for {{name}}",
+    "correctTitle": "{{name}}, {{date}}",
+    "correctDescription": "Times are office time. The person is notified and the change is logged.",
+    "correctedToast": "Attendance updated",
+    "clear": "Remove this attendance record",
+    "checkInTime": "Check-in",
+    "checkOutTime": "Check-out",
+    "where": "Where",
+    "legend": "P present · F field visit · R remote · L leave · A absent · · not in yet. An amber ring means late."
   }
 }

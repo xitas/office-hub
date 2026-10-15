@@ -23,9 +23,11 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/lib/api'
 import { useMe } from '@/lib/auth'
 import { useFormat } from '@/lib/format'
+import { usePermission } from '@/lib/permissions'
 import type { ActivityItem, DashboardData, DashboardListItem } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { ClientActivityWidget, ContactsByStatusWidget } from './ContactWidgets'
+import { CheckInCard } from '@/features/attendance/CheckInCard'
 import { AnnouncementsWidget } from './AnnouncementsWidget'
 import { FollowUpsWidget } from './FollowUpsWidget'
 import { CompletionWidget, MyTasksWidget, TeamWorkloadWidget } from './TaskWidgets'
@@ -53,6 +55,7 @@ export function DashboardPage() {
   })
 
   const fmt = useFormat()
+  const canAttend = usePermission('attendance.view')
   const firstName = me.full_name.split(' ')[0]
   // Widgets whose module isn't released yet (value null) collapse into one compact card.
   const live = data ? LIST_WIDGETS.filter((w) => data[w.key] !== null) : []
@@ -78,6 +81,8 @@ export function DashboardPage() {
           <StatsRow data={data} loading={isLoading} />
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {/* Loaded from /attendance/today/, not /dashboard/, so the dashboard's query count doesn't grow. */}
+            {canAttend && <CheckInCard />}
             {live.map((w) => (
               <ListWidget
                 key={w.key}

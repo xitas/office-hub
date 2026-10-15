@@ -209,6 +209,32 @@ function OrgForm({ initial }: { initial: OrgSettings }) {
               <p className="text-xs text-muted-foreground">{errors.working_days ?? t('admin.org.workingDaysHint')}</p>
             </div>
           </fieldset>
+          <fieldset className="grid gap-4 border-t pt-4 sm:col-span-2 sm:grid-cols-2">
+            <legend className="sr-only">{t('admin.org.attendance')}</legend>
+            <p className="text-sm font-medium sm:col-span-2">{t('admin.org.attendance')}</p>
+            <TextField
+              id="org-late"
+              type="number"
+              min={0}
+              max={240}
+              label={t('admin.org.lateAfter')}
+              hint={t('admin.org.lateAfterHint')}
+              value={String(form.late_after_minutes)}
+              onChange={(e) => set('late_after_minutes', Number(e.target.value))}
+              error={errors.late_after_minutes}
+              className="font-latin"
+              required
+            />
+            <div className="flex items-start justify-between gap-4 sm:col-span-2">
+              <div className="grid gap-0.5">
+                <label htmlFor="org-att-reminders" className="text-sm">
+                  {t('admin.org.attendanceReminders')}
+                </label>
+                <p className="text-xs text-muted-foreground">{t('admin.org.attendanceRemindersHint')}</p>
+              </div>
+              <Switch id="org-att-reminders" checked={form.attendance_reminders} onCheckedChange={(v) => set('attendance_reminders', v)} />
+            </div>
+          </fieldset>
           <fieldset className="grid gap-3 border-t pt-4 sm:col-span-2">
             <legend className="sr-only">{t('admin.org.staffAccess')}</legend>
             <p className="text-sm font-medium">{t('admin.org.staffAccess')}</p>

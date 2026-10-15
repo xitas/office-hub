@@ -19,6 +19,7 @@ api_v1 = [
     path("", include("apps.bookings.urls")),
     path("", include("apps.events.urls")),
     path("", include("apps.leave.urls")),
+    path("", include("apps.attendance.urls")),
 ]
 
 urlpatterns = [

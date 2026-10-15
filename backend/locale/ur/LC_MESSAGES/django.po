@@ -1724,3 +1724,72 @@ msgstr "چھٹی کی قسم"
 
 msgid "leave types"
 msgstr "چھٹی کی اقسام"
+
+msgid "%(actor)s removed your attendance record for %(date)s."
+msgstr "%(actor)s نے %(date)s کی آپ کی حاضری کا اندراج ہٹا دیا۔"
+
+msgid "%(actor)s set your attendance for %(date)s: %(times)s."
+msgstr "%(actor)s نے %(date)s کی آپ کی حاضری درج کی: %(times)s۔"
+
+msgid "Attendance corrected"
+msgstr "حاضری درست کی گئی"
+
+msgid "Attendance reminders and corrections"
+msgstr "حاضری کی یاد دہانیاں اور درستیاں"
+
+msgid "Check in first."
+msgstr "پہلے حاضری لگائیں۔"
+
+msgid "Check-in reminder"
+msgstr "آمد کی یاد دہانی"
+
+msgid "Check-out must be after check-in."
+msgstr "روانگی آمد کے بعد ہونی چاہیے۔"
+
+msgid "Check-out reminder"
+msgstr "روانگی کی یاد دہانی"
+
+msgid "Days that haven't happened yet can't be filled in."
+msgstr "آنے والے دنوں کی حاضری درج نہیں ہو سکتی۔"
+
+msgid "Forgot to check in?"
+msgstr "حاضری لگانا بھول گئے؟"
+
+msgid "Forgot to check out?"
+msgstr "روانگی درج کرنا بھول گئے؟"
+
+msgid "Give the check-in time."
+msgstr "آمد کا وقت لکھیں۔"
+
+msgid "In the office"
+msgstr "دفتر میں"
+
+msgid "On a field visit"
+msgstr "فیلڈ وزٹ پر"
+
+msgid "Use YYYY-MM."
+msgstr "YYYY-MM استعمال کریں۔"
+
+msgid "Working remotely"
+msgstr "دفتر سے باہر کام"
+
+msgid "You can't correct this person's attendance."
+msgstr "آپ اس فرد کی حاضری درست نہیں کر سکتے۔"
+
+msgid "You can't see this person's attendance."
+msgstr "آپ اس فرد کی حاضری نہیں دیکھ سکتے۔"
+
+msgid "You checked in at %(time)s and haven't checked out yet."
+msgstr "آپ نے %(time)s پر حاضری لگائی تھی اور ابھی روانگی درج نہیں کی۔"
+
+msgid "You have already checked in today."
+msgstr "آپ آج حاضری لگا چکے ہیں۔"
+
+msgid "You have already checked out today."
+msgstr "آپ آج روانگی درج کر چکے ہیں۔"
+
+msgid "You haven't checked in today. The office opened at %(time)s."
+msgstr "آپ نے آج حاضری نہیں لگائی۔ دفتر %(time)s پر کھلا تھا۔"
+
+msgid "attendance"
+msgstr "حاضری"

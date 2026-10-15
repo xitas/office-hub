@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "apps.bookings",
     "apps.events",
     "apps.leave",
+    "apps.attendance",
 ]
 
 MIDDLEWARE = [

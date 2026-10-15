@@ -22,6 +22,8 @@ const DEFAULT_SETTINGS: OrgSettings = {
   booking_max_minutes: 480,
   booking_horizon_days: 60,
   working_days: [0, 1, 2, 3, 4],
+  late_after_minutes: 15,
+  attendance_reminders: true,
   updated_at: '',
 }
 

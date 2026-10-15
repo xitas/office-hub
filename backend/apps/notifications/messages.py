@@ -245,7 +245,51 @@ def _leave_cancelled(params: dict) -> tuple[str, str]:
     return _("Leave cancelled: %(name)s") % params, _leave_detail(params)
 
 
+def _attendance_check_in(params: dict) -> tuple[str, str]:
+    from datetime import datetime
+
+    from apps.core.office_time import clock
+
+    try:
+        opens = clock(datetime.fromisoformat(params.get("opens", "")).time())
+    except ValueError:
+        opens = ""
+    return _("Forgot to check in?"), _("You haven't checked in today. The office opened at %(time)s.") % {"time": opens}
+
+
+def _attendance_check_out(params: dict) -> tuple[str, str]:
+    from django.utils.dateparse import parse_datetime
+
+    from apps.core.office_time import clock
+
+    at = parse_datetime(params.get("check_in", "") or "")
+    return _("Forgot to check out?"), _("You checked in at %(time)s and haven't checked out yet.") % {"time": clock(at) if at else ""}
+
+
+def _attendance_corrected(params: dict) -> tuple[str, str]:
+    from datetime import date
+
+    from django.utils.dateparse import parse_datetime
+
+    from apps.core.office_time import clock
+
+    try:
+        day = date.fromisoformat(params.get("date", "")).strftime("%d/%m/%Y")
+    except ValueError:
+        day = ""
+    if params.get("cleared"):
+        body = _("%(actor)s removed your attendance record for %(date)s.") % {"actor": params.get("actor", ""), "date": day}
+    else:
+        start, end = parse_datetime(params.get("check_in", "") or ""), parse_datetime(params.get("check_out", "") or "")
+        times = f"{clock(start)}–{clock(end)}" if start and end else (clock(start) if start else "")
+        body = _("%(actor)s set your attendance for %(date)s: %(times)s.") % {"actor": params.get("actor", ""), "date": day, "times": times}
+    return _("Attendance corrected"), body
+
+
 RENDERERS = {
+    "attendance_check_in": _attendance_check_in,
+    "attendance_check_out": _attendance_check_out,
+    "attendance_corrected": _attendance_corrected,
     "leave_request": _leave_request,
     "leave_approved": _leave_approved,
     "leave_rejected": _leave_rejected,

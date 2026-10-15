@@ -11,11 +11,13 @@ class OrganizationSettingsSerializer(serializers.ModelSerializer):
         fields = [
             "org_name", "currency", "date_format", "timezone", "week_start", "time_format", "default_language",
             "staff_can_import_contacts", "staff_can_export_contacts",
-            "office_opens", "office_closes", "booking_max_minutes", "booking_horizon_days", "working_days", "updated_at",
+            "office_opens", "office_closes", "booking_max_minutes", "booking_horizon_days", "working_days",
+            "late_after_minutes", "attendance_reminders", "updated_at",
         ]
         extra_kwargs = {
             "booking_max_minutes": {"min_value": 15, "max_value": 24 * 60},
             "booking_horizon_days": {"min_value": 1, "max_value": 730},
+            "late_after_minutes": {"min_value": 0, "max_value": 240},
         }
         read_only_fields = ["updated_at"]
 

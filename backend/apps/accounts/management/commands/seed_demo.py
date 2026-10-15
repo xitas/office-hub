@@ -346,6 +346,7 @@ class Command(BaseCommand):
         self._seed_bookings()
         self._seed_calendar()
         self._seed_leave()
+        self._seed_attendance()
 
         self.stdout.write(self.style.SUCCESS("Demo data ready. All demo users share the password: " + DEMO_PASSWORD))
         for email, name, role, dept, _ in USERS:
@@ -399,6 +400,53 @@ class Command(BaseCommand):
                 sharing=sharing, department=user.department if sharing == "department" else None, created_by=user,
                 usage_count=len(TEMPLATES) - index,  # a believable "most used" order
             )
+
+    def _seed_attendance(self):
+        """The last two weeks of check-ins (working days, not on leave or holidays), with a few late arrivals,
+        field visits, remote days and one absence; some people are already in today. Skipped once any exists."""
+        import random
+        from datetime import datetime
+
+        from apps.attendance.models import Attendance
+        from apps.core.models import OrganizationSettings
+        from apps.core.office_time import office_now, office_tz
+        from apps.leave.models import LeaveRequest
+        from apps.leave.services import holidays_between
+
+        if Attendance.objects.exists():
+            return
+        rng = random.Random(7)  # the same demo every time
+        org = OrganizationSettings.get_solo()
+        tz, now = office_tz(), office_now()
+        users = list(User.objects.filter(is_active=True).order_by("email"))
+        first = now.date() - timedelta(days=14)
+        holidays = holidays_between(first, now.date())
+        on_leave = {
+            (r.user_id, r.start_date + timedelta(days=i))
+            for r in LeaveRequest.objects.filter(status="approved")
+            for i in range((r.end_date - r.start_date).days + 1)
+        }
+        opens = datetime.combine(now.date(), org.office_opens).time()
+        for offset in range(14, -1, -1):
+            day = now.date() - timedelta(days=offset)
+            if day.weekday() not in org.working_days or day in holidays:
+                continue
+            for user in users:
+                if (user.pk, day) in on_leave:
+                    continue
+                roll = rng.random()
+                if offset == 0 and roll < 0.35:
+                    continue  # not in yet today
+                if offset and roll < 0.03:
+                    continue  # an absence
+                late = roll > 0.85
+                start = datetime.combine(day, opens, tzinfo=tz) + timedelta(minutes=rng.randint(25, 70) if late else rng.randint(-20, 10))
+                if start > now:
+                    continue
+                mode = "field" if user.email in (USMAN, OPS_MGR) and roll < 0.5 else "remote" if roll > 0.95 else "office"
+                end = None if offset == 0 else datetime.combine(day, org.office_closes, tzinfo=tz) + timedelta(minutes=rng.randint(-30, 45))
+                Attendance.objects.create(user=user, date=day, check_in=start, check_out=end, mode=mode,
+                                          note="Client sites in Gulberg" if mode == "field" else "")
 
     def _seed_leave(self):
         """Leave types, this year's balances (one with carried-over days) and a few requests

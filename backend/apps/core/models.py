@@ -61,6 +61,10 @@ class OrganizationSettings(models.Model):
     booking_horizon_days = models.PositiveIntegerField(default=60)
     # Working week (0 = Monday … 6 = Sunday): leave counts only these days (and not office holidays).
     working_days = models.JSONField(default=default_working_days)
+    # Attendance: checking in this many minutes after the office opens counts as late.
+    late_after_minutes = models.PositiveSmallIntegerField(default=15)
+    # "Forgot to check in / out?" reminders (in-app; email if a person turns it on).
+    attendance_reminders = models.BooleanField(default=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

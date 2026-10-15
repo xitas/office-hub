@@ -21,6 +21,7 @@ class NotificationType(models.TextChoices):
     BOOKING = "booking", _("Booking updates")
     MEETING = "meeting", _("Meeting invitations, changes and reminders")
     OFFICE_EVENT = "office_event", _("Office events and holidays")
+    ATTENDANCE = "attendance", _("Attendance reminders and corrections")
     VISIT = "visit", _("Field visit updates")
     SYSTEM = "system", _("System and security")
 
