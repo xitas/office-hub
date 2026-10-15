@@ -1613,3 +1613,114 @@ msgstr "کیلنڈر ایونٹ"
 
 msgid "calendar events"
 msgstr "کیلنڈر ایونٹس"
+
+msgid "%(n)s days"
+msgstr "%(n)s دن"
+
+msgid "%(name)s asks for leave"
+msgstr "%(name)s نے چھٹی کی درخواست کی ہے"
+
+msgid "A half day is a single day."
+msgstr "آدھا دن ایک ہی دن کا ہوتا ہے۔"
+
+msgid "Afternoon"
+msgstr "دوپہر کے بعد"
+
+msgid "Approved"
+msgstr "منظور شدہ"
+
+msgid "Booking"
+msgstr "بکنگ"
+
+msgid "Choose at least one working day."
+msgstr "کم از کم ایک کام کا دن منتخب کریں۔"
+
+msgid "Give the leave type a name."
+msgstr "چھٹی کی قسم کا نام لکھیں۔"
+
+msgid "Leave approved"
+msgstr "چھٹی منظور ہو گئی"
+
+msgid "Leave can't run into the next year. Make two requests, one for each year."
+msgstr "چھٹی اگلے سال میں نہیں جا سکتی۔ ہر سال کے لیے الگ درخواست دیں۔"
+
+msgid "Leave cancelled: %(name)s"
+msgstr "چھٹی منسوخ: %(name)s"
+
+msgid "Leave not approved"
+msgstr "چھٹی منظور نہیں ہوئی"
+
+msgid "Leave"
+msgstr "چھٹی"
+
+msgid "Morning"
+msgstr "صبح"
+
+msgid "Not enough %(type)s left to approve this."
+msgstr "اسے منظور کرنے کے لیے %(type)s کافی نہیں بچی۔"
+
+msgid "Not enough %(type)s left: %(left)s days remaining."
+msgstr "%(type)s کافی نہیں: %(left)s دن باقی ہیں۔"
+
+msgid "Note: %(note)s"
+msgstr "نوٹ: %(note)s"
+
+msgid "Only admins change leave allowances."
+msgstr "چھٹیوں کا حق صرف ایڈمن بدل سکتے ہیں۔"
+
+msgid "This leave can't be cancelled."
+msgstr "یہ چھٹی منسوخ نہیں ہو سکتی۔"
+
+msgid "This type has requests. Make it inactive instead."
+msgstr "اس قسم کی درخواستیں موجود ہیں۔ اس کے بجائے اسے غیر فعال کریں۔"
+
+msgid "This type of leave can't be requested any more."
+msgstr "اس قسم کی چھٹی اب نہیں مانگی جا سکتی۔"
+
+msgid "This type of leave is taken in whole days."
+msgstr "یہ چھٹی پورے دنوں کی ہوتی ہے۔"
+
+msgid "This year's or next year's leave only."
+msgstr "صرف اس سال یا اگلے سال کی چھٹی۔"
+
+msgid "Those dates are all weekends or office holidays."
+msgstr "یہ سب تاریخیں ہفتہ وار یا دفتری چھٹیاں ہیں۔"
+
+msgid "Use whole or half days."
+msgstr "پورے یا آدھے دن استعمال کریں۔"
+
+msgid "Waiting for approval"
+msgstr "منظوری کا انتظار"
+
+msgid "Whole day"
+msgstr "پورا دن"
+
+msgid "You already have leave on some of these days."
+msgstr "ان میں سے کچھ دنوں پر آپ کی چھٹی پہلے سے ہے۔"
+
+msgid "You can't decide on this request."
+msgstr "آپ اس درخواست کا فیصلہ نہیں کر سکتے۔"
+
+msgid "half a day (afternoon)"
+msgstr "آدھا دن (دوپہر کے بعد)"
+
+msgid "half a day (morning)"
+msgstr "آدھا دن (صبح)"
+
+msgid "leave balance"
+msgstr "چھٹیوں کا حساب"
+
+msgid "leave balances"
+msgstr "چھٹیوں کے حساب"
+
+msgid "leave request"
+msgstr "چھٹی کی درخواست"
+
+msgid "leave requests"
+msgstr "چھٹی کی درخواستیں"
+
+msgid "leave type"
+msgstr "چھٹی کی قسم"
+
+msgid "leave types"
+msgstr "چھٹی کی اقسام"

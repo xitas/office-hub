@@ -223,6 +223,23 @@ TEMPLATES = [
 ]
 
 
+# Leave types: (name, Urdu name, days per year (None = no limit), paid, half days allowed)
+LEAVE_TYPES = [
+    ("Annual leave", "سالانہ چھٹی", "20", True, True),
+    ("Sick leave", "بیماری کی چھٹی", "10", True, True),
+    ("Casual leave", "اتفاقی چھٹی", "8", True, True),
+    ("Unpaid leave", "بغیر تنخواہ چھٹی", None, False, False),
+]
+# Leave requests: (person, type, first day offset, last day offset, status, decided by, reason, note)
+LEAVE = [
+    (HAMZA, "Annual leave", 7, 9, "pending", None, "Family wedding in Faisalabad.", ""),
+    (FATIMA, "Sick leave", -6, -5, "approved", SALES_MGR, "Fever.", ""),
+    (USMAN, "Casual leave", 10, 10, "approved", OPS_MGR, "Bank work.", ""),
+    (ZAINAB, "Annual leave", 14, 16, "pending", None, "Visiting parents in Multan.", ""),
+    (HAMZA, "Casual leave", -12, -12, "rejected", SALES_MGR, "Personal errand.", "Client visit that day; please pick another date."),
+]
+
+
 # Calendar: (kind, title, organizer, attendees, departments (events), day offset, start, end (None = all day), room, location)
 CALENDAR = [
     ("meeting", "Daily sales stand-up", SALES_MGR, [HAMZA, FATIMA], [], 0, "09:30", "09:45", None, "Sales corner"),
@@ -328,6 +345,7 @@ class Command(BaseCommand):
         self._seed_announcements()
         self._seed_bookings()
         self._seed_calendar()
+        self._seed_leave()
 
         self.stdout.write(self.style.SUCCESS("Demo data ready. All demo users share the password: " + DEMO_PASSWORD))
         for email, name, role, dept, _ in USERS:
@@ -380,6 +398,41 @@ class Command(BaseCommand):
                 name=name, category=category, channel=channel, language=language, subject=subject, body=body,
                 sharing=sharing, department=user.department if sharing == "department" else None, created_by=user,
                 usage_count=len(TEMPLATES) - index,  # a believable "most used" order
+            )
+
+    def _seed_leave(self):
+        """Leave types, this year's balances (one with carried-over days) and a few requests
+        (skipped once any type exists). Created directly: no notifications."""
+        from decimal import Decimal
+
+        from apps.core.office_time import office_today
+        from apps.leave.models import LeaveBalance, LeaveRequest, LeaveType
+        from apps.leave.services import count_days
+
+        if LeaveType.objects.exists():
+            return
+        users = {u.email: u for u in User.objects.all()}
+        types = {}
+        for position, (name, name_ur, days, paid, half) in enumerate(LEAVE_TYPES):
+            types[name] = LeaveType.objects.create(
+                name=name, name_ur=name_ur, days_per_year=Decimal(days) if days else None, paid=paid, allow_half_days=half,
+                position=position,
+            )
+        today = office_today()
+        for user in users.values():
+            for t in types.values():
+                if t.days_per_year is not None:
+                    LeaveBalance.objects.create(user=user, leave_type=t, year=today.year, allowance=t.days_per_year)
+        LeaveBalance.objects.filter(user=users[FATIMA], leave_type=types["Annual leave"], year=today.year).update(
+            allowance=Decimal("22"), note="2 days carried over from last year"
+        )
+        for email, type_name, first, last, status, decider, reason, note in LEAVE:
+            start, end = today + timedelta(days=first), today + timedelta(days=last)
+            days = count_days(start, end).days or Decimal("1")
+            LeaveRequest.objects.create(
+                user=users[email], leave_type=types[type_name], start_date=start, end_date=end, days=days, reason=reason,
+                status=status, decided_by=users[decider] if decider else None,
+                decided_at=timezone.now() if decider else None, decision_note=note,
             )
 
     def _seed_calendar(self):

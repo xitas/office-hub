@@ -11,7 +11,7 @@ class OrganizationSettingsSerializer(serializers.ModelSerializer):
         fields = [
             "org_name", "currency", "date_format", "timezone", "week_start", "time_format", "default_language",
             "staff_can_import_contacts", "staff_can_export_contacts",
-            "office_opens", "office_closes", "booking_max_minutes", "booking_horizon_days", "updated_at",
+            "office_opens", "office_closes", "booking_max_minutes", "booking_horizon_days", "working_days", "updated_at",
         ]
         extra_kwargs = {
             "booking_max_minutes": {"min_value": 15, "max_value": 24 * 60},
@@ -36,6 +36,11 @@ class OrganizationSettingsSerializer(serializers.ModelSerializer):
         if "booking_max_minutes" in attrs and attrs["booking_max_minutes"] % 15:
             raise serializers.ValidationError({"booking_max_minutes": [_("Use a multiple of 15 minutes.")]})
         return attrs
+
+    def validate_working_days(self, value):
+        if not isinstance(value, list) or not value or any(not isinstance(d, int) or d < 0 or d > 6 for d in value):
+            raise serializers.ValidationError(_("Choose at least one working day."))
+        return sorted(set(value))
 
     def validate_timezone(self, value):
         from zoneinfo import available_timezones

@@ -24,6 +24,10 @@ class TimeStampedModel(models.Model):
         abstract = True
 
 
+def default_working_days():
+    return [0, 1, 2, 3, 4]  # Monday to Friday
+
+
 class OrganizationSettings(models.Model):
     """Singleton (pk=1) holding office-wide preferences."""
 
@@ -55,6 +59,8 @@ class OrganizationSettings(models.Model):
     # Booking limits for everyone except admins.
     booking_max_minutes = models.PositiveIntegerField(default=480)
     booking_horizon_days = models.PositiveIntegerField(default=60)
+    # Working week (0 = Monday … 6 = Sunday): leave counts only these days (and not office holidays).
+    working_days = models.JSONField(default=default_working_days)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

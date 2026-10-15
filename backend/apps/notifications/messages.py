@@ -208,7 +208,48 @@ def _holiday_added(params: dict) -> tuple[str, str]:
     return _("Office holiday: %(title)s") % params, _event_detail(params)
 
 
+def _leave_detail(params: dict) -> str:
+    from datetime import date
+
+    from django.utils import translation
+
+    lang = translation.get_language() or ""
+    kind = params.get("type_ur") if params.get("type_ur") and lang.startswith("ur") else params.get("type", "")
+    try:
+        first, last = date.fromisoformat(params.get("start", "")), date.fromisoformat(params.get("end", ""))
+    except ValueError:
+        return kind
+    when = f"{first:%d/%m/%Y}" if first == last else f"{first:%d/%m/%Y}–{last:%d/%m/%Y}"
+    days = _("%(n)s days") % {"n": params.get("days", "")}
+    if params.get("half_day"):
+        days = _("half a day (morning)") if params["half_day"] == "morning" else _("half a day (afternoon)")
+    return f"{kind} · {when} · {days}"
+
+
+def _leave_request(params: dict) -> tuple[str, str]:
+    return _("%(name)s asks for leave") % params, _leave_detail(params)
+
+
+def _leave_approved(params: dict) -> tuple[str, str]:
+    return _("Leave approved"), _leave_detail(params)
+
+
+def _leave_rejected(params: dict) -> tuple[str, str]:
+    body = _leave_detail(params)
+    if params.get("note"):
+        body += "\n" + _("Note: %(note)s") % {"note": params["note"]}
+    return _("Leave not approved"), body
+
+
+def _leave_cancelled(params: dict) -> tuple[str, str]:
+    return _("Leave cancelled: %(name)s") % params, _leave_detail(params)
+
+
 RENDERERS = {
+    "leave_request": _leave_request,
+    "leave_approved": _leave_approved,
+    "leave_rejected": _leave_rejected,
+    "leave_cancelled": _leave_cancelled,
     "meeting_invite": _meeting_invite,
     "meeting_changed": _meeting_changed,
     "meeting_cancelled": _meeting_cancelled,

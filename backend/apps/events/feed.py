@@ -12,7 +12,7 @@ from apps.tasks.models import Task
 from . import rules
 from .models import Event
 
-LAYERS = ("meetings", "events", "holidays", "tasks", "bookings")
+LAYERS = ("meetings", "events", "holidays", "tasks", "bookings", "leave")
 MAX_DAYS = 62
 
 
@@ -114,5 +114,20 @@ def calendar_items(user, first: date, last: date, layers=LAYERS, today: date | N
             .select_related("resource", "booked_by")
         )
         items += [_booking_item(b) for b in mine]
+    if "leave" in layers:
+        from apps.leave import rules as leave_rules
+        from apps.leave.integration import type_name
+
+        away = (
+            leave_rules.department_leave(user).filter(start_date__lte=last, end_date__gte=first)
+            .select_related("user", "leave_type")
+        )
+        for r in away:
+            s, e = datetime.combine(r.start_date, time.min, tzinfo=tz), datetime.combine(r.end_date + timedelta(days=1), time.min, tzinfo=tz)
+            items.append({
+                "key": f"leave:{r.pk}", "type": "leave", "id": r.pk, "title": r.user.full_name, "subtitle": type_name(r.leave_type),
+                "start": s.isoformat(), "end": e.isoformat(), "all_day": True, "half_day": r.half_day,
+                "start_date": r.start_date.isoformat(), "end_date": r.end_date.isoformat(), "url": "/leave?tab=team",
+            })
     items.sort(key=lambda i: (not i["all_day"], i["start"], i["title"]))
     return items

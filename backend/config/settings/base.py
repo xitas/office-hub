@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "apps.announcements",
     "apps.bookings",
     "apps.events",
+    "apps.leave",
 ]
 
 MIDDLEWARE = [

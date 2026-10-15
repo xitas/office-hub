@@ -21,7 +21,7 @@ LIMITS = {
     "board": 13,
     "calendar": 5,
     "workload": 1,
-    "dashboard": 21,  # Phase 4: "My bookings today" (1 query) and "Today's meetings and bookings" (meetings + bookings, 2)
+    "dashboard": 23,  # Phase 4: "My bookings today" (1), "Today's meetings and bookings" (2), "Pending approvals" (leave + bookings, 2)
     "contact_tasks": 3,
     "company_tasks": 3,
     "contact_timeline": 6,

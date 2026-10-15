@@ -21,6 +21,7 @@ const DEFAULT_SETTINGS: OrgSettings = {
   office_closes: '18:00:00',
   booking_max_minutes: 480,
   booking_horizon_days: 60,
+  working_days: [0, 1, 2, 3, 4],
   updated_at: '',
 }
 
@@ -44,6 +45,17 @@ function toDate(value: DateInput): Date | null {
 
 /** Keeps "9:00 AM" in that order inside right-to-left (Urdu) text, wherever it is shown (Unicode isolate). */
 const ltr = (text: string) => `\u2066${text}\u2069`
+
+/** Keeps an Urdu time ("صبح 9:00") together as right-to-left text. */
+const rtl = (text: string) => `\u2067${text}\u2069`
+
+/** صبح 5–12, دوپہر 12–16, شام 16–20, رات 20–5: the same bands as the server's emails and notifications. */
+export function urduDayPeriod(hour: number) {
+  if (hour >= 5 && hour < 12) return 'صبح'
+  if (hour >= 12 && hour < 16) return 'دوپہر'
+  if (hour >= 16 && hour < 20) return 'شام'
+  return 'رات'
+}
 
 export function buildFormatter(settings: OrgSettings, language: string, timeFormat: TimeFormat = settings.time_format) {
   const locale = LOCALES[language] ?? 'en-PK'
@@ -85,15 +97,23 @@ export function buildFormatter(settings: OrgSettings, language: string, timeForm
     }
   }
 
+  /** "9:00 AM" / "14:00"; in Urdu with the 12-hour clock, the part of the day first: "صبح 9:00". */
+  const formatClock = (h: number, m: number) => {
+    if (hourCycle === 'h12' && language === 'ur') return rtl(`${urduDayPeriod(h)} ${h % 12 || 12}:${String(m).padStart(2, '0')}`)
+    return ltr(new Intl.DateTimeFormat(locale, { timeZone: 'UTC', hour: 'numeric', minute: '2-digit', hourCycle }).format(new Date(Date.UTC(2000, 0, 1, h, m))))
+  }
+
   const time = (value: DateInput) => {
     const d = toDate(value)
-    return d ? ltr(new Intl.DateTimeFormat(locale, { timeZone, hour: 'numeric', minute: '2-digit', hourCycle }).format(d)) : '—'
+    if (!d) return '—'
+    const [h, m] = new Intl.DateTimeFormat('en-GB', { timeZone, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(d).split(':').map(Number)
+    return formatClock(h, m)
   }
 
   /** A wall-clock time "HH:MM" (office time: timelines, time pickers) in the chosen 12- or 24-hour clock. */
   const clock = (hhmm: string) => {
     const [h, m] = hhmm.split(':').map(Number)
-    return ltr(new Intl.DateTimeFormat(locale, { timeZone: 'UTC', hour: 'numeric', minute: '2-digit', hourCycle }).format(new Date(Date.UTC(2000, 0, 1, h, m))))
+    return formatClock(h, m)
   }
 
   const dateTime = (value: DateInput) => {

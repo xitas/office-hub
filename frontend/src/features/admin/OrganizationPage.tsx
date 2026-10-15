@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
 import { api, apiError } from '@/lib/api'
 import { buildFormatter, ORG_SETTINGS_KEY, useOrgSettings } from '@/lib/format'
+import { weekdayName } from '@/lib/tasks'
 import type { OrgSettings } from '@/lib/types'
 
 const DATE_FORMATS: OrgSettings['date_format'][] = ['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD', 'DD MMM YYYY']
@@ -187,6 +188,26 @@ function OrgForm({ initial }: { initial: OrgSettings }) {
               className="font-latin"
               required
             />
+            <div className="grid gap-1.5 sm:col-span-2">
+              <span className="text-sm font-medium">{t('admin.org.workingDays')}</span>
+              <div className="flex flex-wrap gap-1.5" role="group" aria-label={t('admin.org.workingDays')}>
+                {[0, 1, 2, 3, 4, 5, 6].map((d) => {
+                  const on = form.working_days.includes(d)
+                  return (
+                    <button
+                      key={d}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => set('working_days', on ? form.working_days.filter((x) => x !== d) : [...form.working_days, d].sort())}
+                      className={on ? 'rounded-full border border-primary bg-primary px-3 py-1 text-xs text-primary-foreground' : 'rounded-full border px-3 py-1 text-xs hover:bg-muted'}
+                    >
+                      {weekdayName(d, i18n.language === 'ur' ? 'ur-PK' : 'en-GB', 'short')}
+                    </button>
+                  )
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground">{errors.working_days ?? t('admin.org.workingDaysHint')}</p>
+            </div>
           </fieldset>
           <fieldset className="grid gap-3 border-t pt-4 sm:col-span-2">
             <legend className="sr-only">{t('admin.org.staffAccess')}</legend>

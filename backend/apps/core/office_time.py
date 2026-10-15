@@ -7,7 +7,7 @@ from datetime import date, datetime, time
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from django.conf import settings
-from django.utils import timezone
+from django.utils import timezone, translation
 
 
 def office_tz() -> ZoneInfo:
@@ -36,7 +36,21 @@ def clock(moment: datetime | time) -> str:
     if OrganizationSettings.cached().time_format == "24h":
         return t.strftime("%H:%M")
     hour = t.hour % 12 or 12
+    if (translation.get_language() or "").startswith("ur"):
+        # Urdu says the part of the day before the time ("صبح 9:00", "شام 5:30"), as in everyday speech and writing.
+        return f"{urdu_day_period(t.hour)} {hour}:{t.minute:02d}"
     return f"{hour}:{t.minute:02d} {'am' if t.hour < 12 else 'pm'}"
+
+
+def urdu_day_period(hour: int) -> str:
+    """صبح 5–12, دوپہر 12–16, شام 16–20, رات 20–5 (the same bands the frontend uses)."""
+    if 5 <= hour < 12:
+        return "صبح"
+    if 12 <= hour < 16:
+        return "دوپہر"
+    if 16 <= hour < 20:
+        return "شام"
+    return "رات"
 
 
 def office_datetime(day: date, at: time) -> datetime:

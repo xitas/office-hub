@@ -1,4 +1,4 @@
-import { CalendarCheck, CalendarDays, CheckSquare, ChevronLeft, ChevronRight, DoorOpen, PartyPopper, Plus, Users } from 'lucide-react'
+import { CalendarCheck, CalendarDays, CheckSquare, ChevronLeft, ChevronRight, DoorOpen, Palmtree, PartyPopper, Plus, Users } from 'lucide-react'
 import { isSameMonth, parseISO } from 'date-fns'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -34,7 +34,7 @@ const LOCALES: Record<string, string> = { en: 'en-PK', ur: 'ur-PK' }
 const LAYERS_KEY = 'crm.calendar.layers'
 const MONTH_CHIPS = 3
 const HOUR_PX = 48
-const ICONS = { meeting: Users, event: PartyPopper, holiday: CalendarDays, task: CheckSquare, booking: DoorOpen }
+const ICONS = { meeting: Users, event: PartyPopper, holiday: CalendarDays, task: CheckSquare, booking: DoorOpen, leave: Palmtree }
 
 function loadLayers(): CalendarLayer[] {
   try {
@@ -131,7 +131,7 @@ export function CalendarPage() {
       >
         <Icon className="size-3 shrink-0" />
         {time && <span dir="ltr" className="shrink-0 font-latin opacity-80">{time}</span>}
-        <span dir="auto" className="min-w-0 flex-1 truncate">{item.title}</span>
+        <span dir="auto" className="min-w-0 flex-1 truncate">{item.subtitle ? `${item.title} · ${item.subtitle}` : item.title}</span>
       </button>
     )
   }
@@ -410,10 +410,10 @@ function DayView({
     <div className="grid gap-2 p-3">
       {allDay.length > 0 && <div className="grid gap-1">{allDay.map((i) => chip(i))}</div>}
       <div className="relative flex">
-        <div className="w-16 shrink-0">
+        <div className="w-20 shrink-0">
           {hours.map((h) => (
             <div key={h} className="text-end text-[11px] text-muted-foreground font-latin" style={{ height: HOUR_PX }} dir="ltr">
-              <span className="relative -top-2 pe-2">{fmt.clock(`${String(h).padStart(2, '0')}:00`)}</span>
+              <span className="relative -top-2 whitespace-nowrap pe-2">{fmt.clock(`${String(h).padStart(2, '0')}:00`)}</span>
             </div>
           ))}
         </div>
@@ -442,7 +442,8 @@ function DayView({
                 width: `${100 / p.cols}%`,
               }}
             >
-              <div className="h-full [&>button]:h-full [&>button]:items-start">{chip(p.item)}</div>
+              {/* An opaque backing, so the hour lines don't show through the tinted item. */}
+              <div className="h-full rounded-md bg-card [&>button]:h-full [&>button]:items-start">{chip(p.item)}</div>
             </div>
           ))}
         </div>

@@ -77,6 +77,8 @@ export interface OrgSettings {
   office_closes: string
   booking_max_minutes: number
   booking_horizon_days: number
+  /** Working week, 0 = Monday … 6 = Sunday: leave counts only these days. */
+  working_days: number[]
   updated_at: string
 }
 

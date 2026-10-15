@@ -39,7 +39,8 @@ PERMISSIONS: dict[str, dict[str, set[str]]] = {
     "resources": {"view": ALL, "create": ADMIN_ONLY, "edit": ADMIN_ONLY, "delete": ADMIN_ONLY},
     # Anyone organizes meetings; events (managers, admins) and holidays (admins) are checked per item.
     "calendar": {"view": ALL, "create": ALL, "edit": ALL, "delete": ALL},
-    "leave": {"view": ALL, "create": ALL, "edit": ALL, "delete": ALL, "approve": MGMT},
+    # Everyone requests leave; managers approve their department's; admins approve anyone's and manage types and allowances.
+    "leave": {"view": ALL, "create": ALL, "edit": ALL, "delete": ALL, "approve": MGMT, "manage": ADMIN_ONLY},
     "attendance": {"view": ALL, "create": ALL, "edit": MGMT},
     "inventory": {"view": ALL, "create": MGMT, "edit": MGMT, "delete": ADMIN_ONLY, "request": ALL, "approve": MGMT},
     "expenses": {"view": ALL, "create": ALL, "edit": ALL, "delete": ALL, "approve": MGMT},
