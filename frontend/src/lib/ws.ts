@@ -86,6 +86,10 @@ export function useRealtime() {
             void queryClient.invalidateQueries({ queryKey: ['bookings'] })
           if (['approval_request', 'approval_result'].includes(event.notification.type)) void queryClient.invalidateQueries({ queryKey: ['leave'] })
           if (['attendance', 'approval_result'].includes(event.notification.type)) void queryClient.invalidateQueries({ queryKey: ['attendance'] })
+          if (['low_stock', 'approval_request', 'approval_result'].includes(event.notification.type)) {
+            void queryClient.invalidateQueries({ queryKey: ['supplies'] })
+            void queryClient.invalidateQueries({ queryKey: ['expenses'] })
+          }
           if (['meeting', 'office_event', 'approval_result'].includes(event.notification.type))
             void queryClient.invalidateQueries({ queryKey: ['calendar'] })
           toast(event.notification.title, { description: event.notification.body || undefined })

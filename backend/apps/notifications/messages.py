@@ -286,7 +286,97 @@ def _attendance_corrected(params: dict) -> tuple[str, str]:
     return _("Attendance corrected"), body
 
 
+def _item_name(params: dict) -> str:
+    from django.utils import translation
+
+    urdu = (translation.get_language() or "").startswith("ur")
+    return params.get("item_ur") if urdu and params.get("item_ur") else params.get("item", "")
+
+
+def _purchase_detail(params: dict) -> str:
+    return f"{_item_name(params)} · {params.get('quantity', '')} {params.get('unit', '')}".strip()
+
+
+def _with_note(body: str, params: dict, key="note") -> str:
+    if params.get(key):
+        body += "\n" + _("Note: %(note)s") % {"note": params[key]}
+    return body
+
+
+def _low_stock(params: dict) -> tuple[str, str]:
+    return _("Low stock: %(item)s") % {"item": _item_name(params)}, _(
+        "%(quantity)s %(unit)s left (reorder level %(level)s)."
+    ) % {"quantity": params.get("quantity", ""), "unit": params.get("unit", ""), "level": params.get("level", "")}
+
+
+def _purchase_request(params: dict) -> tuple[str, str]:
+    return _("%(name)s asks to buy supplies") % params, _with_note(_purchase_detail(params), {"note": params.get("reason", "")})
+
+
+def _purchase_approved(params: dict) -> tuple[str, str]:
+    return _("Purchase request approved"), _with_note(_purchase_detail(params), params)
+
+
+def _purchase_rejected(params: dict) -> tuple[str, str]:
+    return _("Purchase request not approved"), _with_note(_purchase_detail(params), params)
+
+
+def _purchase_received(params: dict) -> tuple[str, str]:
+    return _("Your supplies have arrived"), _purchase_detail(params)
+
+
+def _purchase_cancelled(params: dict) -> tuple[str, str]:
+    return _("Purchase request cancelled: %(name)s") % params, _purchase_detail(params)
+
+
+def _expense_detail(params: dict) -> str:
+    from datetime import date
+
+    from apps.expenses.services import money
+
+    try:
+        day = date.fromisoformat(params.get("date", "")).strftime("%d/%m/%Y")
+    except ValueError:
+        day = ""
+    try:
+        amount = money(params.get("amount", "0"), params.get("currency", ""))
+    except ArithmeticError:
+        amount = ""
+    return " · ".join(x for x in (params.get("title", ""), amount, day) if x)
+
+
+def _expense_claim(params: dict) -> tuple[str, str]:
+    return _("%(name)s claims an expense") % params, _expense_detail(params)
+
+
+def _expense_approved(params: dict) -> tuple[str, str]:
+    return _("Expense approved"), _with_note(_expense_detail(params), params)
+
+
+def _expense_rejected(params: dict) -> tuple[str, str]:
+    return _("Expense not approved"), _with_note(_expense_detail(params), params)
+
+
+def _expense_paid(params: dict) -> tuple[str, str]:
+    return _("Expense paid"), _with_note(_expense_detail(params), params, "payment_note")
+
+
+def _expense_cancelled(params: dict) -> tuple[str, str]:
+    return _("Expense claim cancelled: %(name)s") % params, _expense_detail(params)
+
+
 RENDERERS = {
+    "low_stock": _low_stock,
+    "purchase_request": _purchase_request,
+    "purchase_approved": _purchase_approved,
+    "purchase_rejected": _purchase_rejected,
+    "purchase_received": _purchase_received,
+    "purchase_cancelled": _purchase_cancelled,
+    "expense_claim": _expense_claim,
+    "expense_approved": _expense_approved,
+    "expense_rejected": _expense_rejected,
+    "expense_paid": _expense_paid,
+    "expense_cancelled": _expense_cancelled,
     "attendance_check_in": _attendance_check_in,
     "attendance_check_out": _attendance_check_out,
     "attendance_corrected": _attendance_corrected,

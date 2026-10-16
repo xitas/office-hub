@@ -59,6 +59,8 @@ INSTALLED_APPS = [
     "apps.events",
     "apps.leave",
     "apps.attendance",
+    "apps.inventory",
+    "apps.expenses",
 ]
 
 MIDDLEWARE = [
@@ -191,6 +193,9 @@ SPECTACULAR_SETTINGS = {
         "NotificationTypeEnum": "apps.notifications.models.NotificationType",
         # Announcement audience and resource "bookable by" share one choice set (everyone / departments).
         "AudienceEnum": "apps.announcements.models.Announcement.Audience",
+        "SupplyCategoryEnum": "apps.inventory.models.SupplyItem.Category",
+        "StockChangeKindEnum": "apps.inventory.models.StockMovement.Kind",
+        "ExpenseCategoryEnum": "apps.expenses.models.Expense.Category",
     },
 }
 

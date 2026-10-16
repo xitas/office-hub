@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { ErrorState, FormDialog, FormField, PageHeader, SimpleSelect } from '@/components/common'
+import { MonthNav } from '@/components/common/MonthNav'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -35,12 +36,6 @@ import { CheckInCard } from './CheckInCard'
 
 type Tab = 'me' | 'team' | 'month'
 const LETTER: Record<string, string> = { present: 'P', field: 'F', remote: 'R', leave: 'L', off: '', not_in: '·', absent: 'A', upcoming: '' }
-
-function shiftMonth(month: string, by: number) {
-  const [y, m] = month.split('-').map(Number)
-  const d = new Date(Date.UTC(y, m - 1 + by, 1))
-  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
-}
 
 /** Attendance: my month (with check-in), my team's day (with corrections), and the team's month grid. */
 export function AttendancePage() {
@@ -83,23 +78,6 @@ export function AttendancePage() {
         <TeamMonth month={month} onMonth={(m) => set({ month: m })} />
       )}
     </>
-  )
-}
-
-function MonthNav({ month, onMonth }: { month: string; onMonth: (m: string) => void }) {
-  const { t, i18n } = useTranslation()
-  const label = new Intl.DateTimeFormat(i18n.language === 'ur' ? 'ur-PK' : 'en-PK', { month: 'long', year: 'numeric', timeZone: 'UTC', numberingSystem: 'latn' })
-    .format(new Date(`${month}-15T12:00:00Z`))
-  return (
-    <div className="flex items-center gap-1">
-      <Button variant="outline" size="icon" aria-label={t('attendance.previous')} onClick={() => onMonth(shiftMonth(month, -1))}>
-        <ChevronLeft className="size-4 rtl:rotate-180" />
-      </Button>
-      <span className="min-w-36 text-center text-sm font-medium">{label}</span>
-      <Button variant="outline" size="icon" aria-label={t('attendance.next')} onClick={() => onMonth(shiftMonth(month, 1))}>
-        <ChevronRight className="size-4 rtl:rotate-180" />
-      </Button>
-    </div>
   )
 }
 

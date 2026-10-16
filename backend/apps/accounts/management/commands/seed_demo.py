@@ -240,6 +240,39 @@ LEAVE = [
 ]
 
 
+# Supplies: (name, Urdu name, category, unit, quantity, reorder level, location)
+SUPPLIES = [
+    ("A4 paper", "اے فور کاغذ", "stationery", "ream", 14, 10, "Store room"),
+    ("Ballpoint pens (blue)", "بال پوائنٹ پین (نیلے)", "stationery", "box", 3, 4, "Store room"),
+    ("Stapler pins", "اسٹیپلر پنیں", "stationery", "box", 9, 3, "Store room"),
+    ("Whiteboard markers", "وائٹ بورڈ مارکر", "stationery", "packet", 6, 3, "Store room"),
+    ("Printer toner (HP 26A)", "پرنٹر ٹونر (HP 26A)", "printing", "cartridge", 1, 2, "Admin office"),
+    ("Tea bags", "ٹی بیگ", "kitchen", "box", 2, 3, "Kitchen"),
+    ("Sugar", "چینی", "kitchen", "kg", 5, 2, "Kitchen"),
+    ("Tissue boxes", "ٹشو باکس", "cleaning", "box", 8, 6, "Store room"),
+    ("Hand wash", "ہینڈ واش", "cleaning", "bottle", 4, 2, "Washrooms"),
+    ("First aid kit refill", "ابتدائی طبی امداد کا سامان", "first_aid", "kit", 1, 1, "Reception"),
+]
+# Purchase requests: (person, item (or a new thing), quantity, unit, reason, cost, status, decided by, note, days ago)
+PURCHASES = [
+    (HAMZA, "Ballpoint pens (blue)", 5, "", "We're down to the last box.", None, "pending", None, "", 1),
+    (USMAN, "Tea bags", 6, "", "", "2700", "pending", None, "", 0),
+    (FATIMA, "Printer toner (HP 26A)", 2, "", "Proposal printing this month.", "38000", "approved", SALES_MGR, "", 3),
+    (ZAINAB, "A4 paper", 10, "", "Month-end printing.", "16500", "received", ADMIN, "", 9),
+    (HAMZA, "Ergonomic chair", 1, "piece", "Back pain from the old chair.", "45000", "rejected", SALES_MGR, "Not this quarter; we'll look at chairs for everyone in January.", 6),
+]
+# Expense claims: (person, title, category, amount, days ago, status, decided by, note, paid note, receipt)
+EXPENSES = [
+    (HAMZA, "Taxi to Packages Ltd", "travel", "1450", 1, "pending", None, "", "", True),
+    (ZAINAB, "Printer repair", "repairs", "3500", 2, "pending", None, "", "", True),
+    (OPS_MGR, "Courier charges", "other", "950", 3, "pending", None, "", "", False),
+    (USMAN, "Fuel for site visits", "fuel", "6500", 5, "approved", OPS_MGR, "", "", True),
+    (FATIMA, "Client lunch, Lahore", "client", "8200", 8, "paid", SALES_MGR, "", "Bank transfer, ref 55120", True),
+    (USMAN, "Parking fees", "travel", "300", 6, "rejected", OPS_MGR, "Please add parking to the fuel claim.", "", False),
+    (SALES_MGR, "Internet bill (sales office)", "bills", "4999", 24, "paid", ADMIN, "", "Cash", True),
+]
+
+
 # Calendar: (kind, title, organizer, attendees, departments (events), day offset, start, end (None = all day), room, location)
 CALENDAR = [
     ("meeting", "Daily sales stand-up", SALES_MGR, [HAMZA, FATIMA], [], 0, "09:30", "09:45", None, "Sales corner"),
@@ -347,6 +380,8 @@ class Command(BaseCommand):
         self._seed_calendar()
         self._seed_leave()
         self._seed_attendance()
+        self._seed_supplies()
+        self._seed_expenses()
 
         self.stdout.write(self.style.SUCCESS("Demo data ready. All demo users share the password: " + DEMO_PASSWORD))
         for email, name, role, dept, _ in USERS:
@@ -447,6 +482,72 @@ class Command(BaseCommand):
                 end = None if offset == 0 else datetime.combine(day, org.office_closes, tzinfo=tz) + timedelta(minutes=rng.randint(-30, 45))
                 Attendance.objects.create(user=user, date=day, check_in=start, check_out=end, mode=mode,
                                           note="Client sites in Gulberg" if mode == "field" else "")
+
+    def _seed_supplies(self):
+        """Office supplies (a few low on stock), their stock history and purchase requests in each state
+        (skipped once any item exists). Created directly: no notifications."""
+        from apps.inventory.models import PurchaseRequest, StockMovement, SupplyItem
+
+        if SupplyItem.objects.exists():
+            return
+        users = {u.email: u for u in User.objects.all()}
+        admin = users[ADMIN]
+        items = {}
+        for name, name_ur, category, unit, quantity, level, location in SUPPLIES:
+            item = SupplyItem.objects.create(
+                name=name, name_ur=name_ur, category=category, unit=unit, quantity=quantity, reorder_level=level,
+                location=location, created_by=admin,
+            )
+            opening = StockMovement.objects.create(
+                item=item, kind="adjusted", change=quantity + 4, quantity_after=quantity + 4, note="Opening count", by=admin,
+            )
+            used = StockMovement.objects.create(item=item, kind="used", change=-4, quantity_after=quantity, by=users[OPS_MGR])
+            StockMovement.objects.filter(pk=opening.pk).update(created_at=timezone.now() - timedelta(days=20))
+            StockMovement.objects.filter(pk=used.pk).update(created_at=timezone.now() - timedelta(days=4))
+            items[name] = item
+        for person, what, quantity, unit, reason, cost, status, decider, note, ago in PURCHASES:
+            item = items.get(what)
+            at = timezone.now() - timedelta(days=ago, hours=2)
+            req = PurchaseRequest.objects.create(
+                item=item, item_name=what, quantity=quantity, unit=unit or (item.unit if item else ""), reason=reason,
+                estimated_cost=cost, requested_by=users[person], status=status, decided_by=users.get(decider),
+                decided_at=at + timedelta(hours=3) if decider else None, decision_note=note,
+            )
+            if status == "received":
+                item.quantity += quantity
+                item.save(update_fields=["quantity"])
+                StockMovement.objects.create(item=item, kind="received", change=quantity, quantity_after=item.quantity,
+                                             note=f"Purchase request #{req.pk}", purchase_request=req, by=admin)
+                PurchaseRequest.objects.filter(pk=req.pk).update(received_by=admin, received_at=at + timedelta(days=2), received_quantity=quantity)
+            PurchaseRequest.objects.filter(pk=req.pk).update(created_at=at)
+
+    def _seed_expenses(self):
+        """Expense claims in each state, most with a receipt image (skipped once any exists). No notifications."""
+        from decimal import Decimal
+
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        from apps.core.office_time import office_today
+        from apps.expenses.models import Expense
+        from apps.expenses.services import save_receipts
+
+        if Expense.objects.exists():
+            return
+        users = {u.email: u for u in User.objects.all()}
+        currency = OrganizationSettings.get_solo().currency
+        today = office_today()
+        for person, title, category, amount, ago, status, decider, note, paid_note, receipt in EXPENSES:
+            decided = timezone.now() - timedelta(days=max(ago - 1, 0), hours=1) if decider else None
+            expense = Expense.objects.create(
+                user=users[person], title=title, category=category, amount=Decimal(amount), currency=currency,
+                spent_on=today - timedelta(days=ago), status=status, decided_by=users.get(decider), decided_at=decided,
+                decision_note=note, paid_by=users[ADMIN] if status == "paid" else None,
+                paid_at=decided + timedelta(hours=5) if status == "paid" else None, payment_note=paid_note,
+            )
+            if receipt:
+                upload = SimpleUploadedFile("receipt.png", _receipt_image(title, amount, currency), content_type="image/png")
+                save_receipts(expense, users[person], [upload])
+            Expense.objects.filter(pk=expense.pk).update(created_at=timezone.now() - timedelta(days=ago, hours=-2))
 
     def _seed_leave(self):
         """Leave types, this year's balances (one with carried-over days) and a few requests
@@ -769,3 +870,21 @@ class Command(BaseCommand):
             task = Task.objects.filter(title=title, series__isnull=True).exclude(due_date__isnull=True).first()
             if task is not None:
                 schedule.start_series(task, {"interval": 1, **rule}, task.created_by)
+
+
+def _receipt_image(title: str, amount: str, currency: str) -> bytes:
+    """A small made-up till receipt (PNG) for the demo claims."""
+    import io
+
+    from PIL import Image, ImageDraw
+
+    img = Image.new("RGB", (240, 320), "white")
+    draw = ImageDraw.Draw(img)
+    lines = ["RECEIPT", "", title[:28], "", f"Total: {currency} {amount}", "", "Thank you"]
+    for n, line in enumerate(lines):
+        draw.text((16, 20 + n * 24), line, fill="black")
+    for y in range(200, 300, 12):
+        draw.line((16, y, 224, y), fill=(210, 210, 210))
+    out = io.BytesIO()
+    img.save(out, "PNG")
+    return out.getvalue()

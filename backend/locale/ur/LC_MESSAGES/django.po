@@ -1793,3 +1793,192 @@ msgstr "آپ نے آج حاضری نہیں لگائی۔ دفتر %(time)s پر �
 
 msgid "attendance"
 msgstr "حاضری"
+
+msgid "Stationery"
+msgstr "اسٹیشنری"
+
+msgid "Printing and IT"
+msgstr "پرنٹنگ اور آئی ٹی"
+
+msgid "Cleaning"
+msgstr "صفائی"
+
+msgid "Kitchen and refreshments"
+msgstr "کچن اور چائے پانی"
+
+msgid "First aid"
+msgstr "ابتدائی طبی امداد"
+
+msgid "supply item"
+msgstr "سامان"
+
+msgid "supply items"
+msgstr "سامان"
+
+msgid "purchase request"
+msgstr "خریداری کی درخواست"
+
+msgid "purchase requests"
+msgstr "خریداری کی درخواستیں"
+
+msgid "stock movement"
+msgstr "اسٹاک میں تبدیلی"
+
+msgid "stock movements"
+msgstr "اسٹاک میں تبدیلیاں"
+
+msgid "Approved, to buy"
+msgstr "منظور، خریدنا ہے"
+
+msgid "Received"
+msgstr "موصول"
+
+msgid "Taken out"
+msgstr "نکالا گیا"
+
+msgid "Count corrected"
+msgstr "گنتی درست کی گئی"
+
+msgid "Low-stock alerts (supplies)"
+msgstr "کم اسٹاک کی اطلاعات (سامان)"
+
+msgid "The count can't be below zero."
+msgstr "گنتی صفر سے کم نہیں ہو سکتی۔"
+
+msgid "Give a quantity of at least 1."
+msgstr "کم از کم 1 کی تعداد لکھیں۔"
+
+msgid "Only %(n)s in stock."
+msgstr "اسٹاک میں صرف %(n)s ہیں۔"
+
+msgid "This item isn't stocked any more."
+msgstr "یہ سامان اب نہیں رکھا جاتا۔"
+
+msgid "Say what to buy."
+msgstr "بتائیں کیا خریدنا ہے۔"
+
+msgid "Purchase request #%(n)s"
+msgstr "خریداری کی درخواست #%(n)s"
+
+msgid "Opening count"
+msgstr "ابتدائی گنتی"
+
+msgid "This item has a history. Mark it as no longer stocked instead."
+msgstr "اس سامان کا ریکارڈ موجود ہے۔ اسے حذف کرنے کے بجائے غیر فعال کریں۔"
+
+msgid "Stock updated"
+msgstr "اسٹاک اپ ڈیٹ کیا گیا"
+
+msgid "This request can't be cancelled."
+msgstr "یہ درخواست منسوخ نہیں ہو سکتی۔"
+
+msgid "Only approved requests can be marked received."
+msgstr "صرف منظور شدہ درخواستیں موصول درج ہو سکتی ہیں۔"
+
+msgid "Give the item a name."
+msgstr "سامان کا نام لکھیں۔"
+
+msgid "Supplies"
+msgstr "سامان"
+
+msgid "Low stock: %(item)s"
+msgstr "اسٹاک کم: %(item)s"
+
+msgid "%(quantity)s %(unit)s left (reorder level %(level)s)."
+msgstr "%(quantity)s %(unit)s باقی ہیں (دوبارہ منگوانے کی حد %(level)s)۔"
+
+msgid "%(name)s asks to buy supplies"
+msgstr "%(name)s سامان خریدنے کی درخواست کرتے ہیں"
+
+msgid "Purchase request approved"
+msgstr "خریداری کی درخواست منظور ہو گئی"
+
+msgid "Purchase request not approved"
+msgstr "خریداری کی درخواست منظور نہیں ہوئی"
+
+msgid "Your supplies have arrived"
+msgstr "آپ کا سامان آ گیا ہے"
+
+msgid "Purchase request cancelled: %(name)s"
+msgstr "خریداری کی درخواست منسوخ: %(name)s"
+
+msgid "Travel and transport"
+msgstr "سفر اور ٹرانسپورٹ"
+
+msgid "Fuel"
+msgstr "پیٹرول"
+
+msgid "Meals"
+msgstr "کھانا"
+
+msgid "Client entertainment"
+msgstr "کلائنٹ کی مہمان نوازی"
+
+msgid "Office supplies"
+msgstr "دفتری سامان"
+
+msgid "Bills and utilities"
+msgstr "بل"
+
+msgid "Repairs and maintenance"
+msgstr "مرمت اور دیکھ بھال"
+
+msgid "Approved, to pay"
+msgstr "منظور، ادائیگی باقی"
+
+msgid "Paid"
+msgstr "ادا شدہ"
+
+msgid "expense"
+msgstr "اخراجات"
+
+msgid "expenses"
+msgstr "اخراجات"
+
+msgid "expense receipt"
+msgstr "اخراجات کی رسید"
+
+msgid "expense receipts"
+msgstr "اخراجات کی رسیدیں"
+
+msgid "The day it was spent can't be in the future."
+msgstr "خرچ کی تاریخ مستقبل کی نہیں ہو سکتی۔"
+
+msgid "Claims can go back one year at most."
+msgstr "زیادہ سے زیادہ ایک سال پرانا خرچ درج ہو سکتا ہے۔"
+
+msgid "Give an amount above zero."
+msgstr "صفر سے زیادہ رقم لکھیں۔"
+
+msgid "A claim can have up to %(n)s receipts."
+msgstr "ایک دعوے کے ساتھ زیادہ سے زیادہ %(n)s رسیدیں ہو سکتی ہیں۔"
+
+msgid "Only a claim that's still waiting can be changed, by the person who made it."
+msgstr "صرف زیرِ غور دعویٰ، اور وہ بھی دعویٰ کرنے والا ہی، بدل سکتا ہے۔"
+
+msgid "You can't decide on this claim."
+msgstr "آپ اس دعوے کا فیصلہ نہیں کر سکتے۔"
+
+msgid "This claim can't be cancelled."
+msgstr "یہ دعویٰ منسوخ نہیں ہو سکتا۔"
+
+msgid "Only admins mark approved claims paid."
+msgstr "صرف ایڈمن منظور شدہ دعووں کو ادا شدہ درج کرتے ہیں۔"
+
+msgid "Expense"
+msgstr "اخراجات"
+
+msgid "%(name)s claims an expense"
+msgstr "%(name)s نے اخراجات کا دعویٰ کیا"
+
+msgid "Expense approved"
+msgstr "اخراجات منظور ہو گئے"
+
+msgid "Expense not approved"
+msgstr "اخراجات منظور نہیں ہوئے"
+
+msgid "Expense paid"
+msgstr "اخراجات ادا کر دیے گئے"
+
+msgid "Expense claim cancelled: %(name)s"
+msgstr "اخراجات کا دعویٰ منسوخ: %(name)s"

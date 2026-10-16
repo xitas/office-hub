@@ -21,7 +21,9 @@ LIMITS = {
     "board": 13,
     "calendar": 5,
     "workload": 1,
-    "dashboard": 23,  # Phase 4: "My bookings today" (1), "Today's meetings and bookings" (2), "Pending approvals" (leave + bookings, 2)
+    # Phase 4: "My bookings today" (1), "Today's meetings and bookings" (2), "Pending approvals" (1: leave, bookings,
+    # expenses and purchase requests in one UNION query). Attendance and low stock load from their own endpoints.
+    "dashboard": 22,
     "contact_tasks": 3,
     "company_tasks": 3,
     "contact_timeline": 6,

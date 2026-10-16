@@ -20,6 +20,8 @@ api_v1 = [
     path("", include("apps.events.urls")),
     path("", include("apps.leave.urls")),
     path("", include("apps.attendance.urls")),
+    path("", include("apps.inventory.urls")),
+    path("", include("apps.expenses.urls")),
 ]
 
 urlpatterns = [
