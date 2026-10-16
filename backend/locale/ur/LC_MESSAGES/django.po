@@ -1982,3 +1982,77 @@ msgstr "اخراجات ادا کر دیے گئے"
 
 msgid "Expense claim cancelled: %(name)s"
 msgstr "اخراجات کا دعویٰ منسوخ: %(name)s"
+
+msgid "weekly goal"
+msgstr "ہفتہ وار ہدف"
+
+msgid "weekly goals"
+msgstr "ہفتہ وار اہداف"
+
+msgid "goal update"
+msgstr "ہدف کی پیش رفت"
+
+msgid "goal updates"
+msgstr "ہدف کی پیش رفت"
+
+msgid "Weekly goals"
+msgstr "ہفتہ وار اہداف"
+
+msgid "The owner has to be in the goal's department."
+msgstr "ذمہ دار کو ہدف کے شعبے سے ہونا چاہیے۔"
+
+msgid "This person's account is not active."
+msgstr "اس فرد کا اکاؤنٹ فعال نہیں۔"
+
+msgid "Progress can't be below zero."
+msgstr "پیش رفت صفر سے کم نہیں ہو سکتی۔"
+
+msgid "That's far beyond the target. Check the number."
+msgstr "یہ ہدف سے بہت زیادہ ہے۔ عدد دوبارہ دیکھیں۔"
+
+msgid "Give the goal a title."
+msgstr "ہدف کا عنوان لکھیں۔"
+
+msgid "Give the new progress or the change."
+msgstr "نئی پیش رفت یا تبدیلی لکھیں۔"
+
+msgid "You can plan goals for your own department only."
+msgstr "آپ صرف اپنے شعبے کے اہداف بنا سکتے ہیں۔"
+
+msgid "Plan this week or a later one."
+msgstr "اس ہفتے یا آئندہ ہفتوں کے اہداف بنائیں۔"
+
+msgid "You can't change this goal."
+msgstr "آپ یہ ہدف تبدیل نہیں کر سکتے۔"
+
+msgid "You can't delete this goal."
+msgstr "آپ یہ ہدف حذف نہیں کر سکتے۔"
+
+msgid "Only the goal's owner, its department's managers and admins record progress."
+msgstr "صرف ہدف کا ذمہ دار، اس شعبے کے مینیجر اور ایڈمن پیش رفت درج کرتے ہیں۔"
+
+msgid "Progress updated"
+msgstr "پیش رفت درج کی گئی"
+
+msgid "Goal carried over"
+msgstr "ہدف اگلے ہفتے منتقل کیا گیا"
+
+msgid "Only admins copy every department's goals at once."
+msgstr "صرف ایڈمن تمام شعبوں کے اہداف ایک ساتھ منتقل کر سکتے ہیں۔"
+
+msgid "Week of %(date)s"
+msgstr "%(date)s سے شروع ہونے والا ہفتہ"
+
+msgid "New weekly goal for you"
+msgstr "آپ کے لیے نیا ہفتہ وار ہدف"
+
+msgid "Goal reached: %(title)s"
+msgstr "ہدف پورا ہو گیا: %(title)s"
+
+msgid "%(count)s of your goals for this week isn't done yet: %(titles)s. The office closes at %(time)s today."
+msgid_plural "%(count)s of your goals for this week aren't done yet: %(titles)s. The office closes at %(time)s today."
+msgstr[0] "اس ہفتے کا آپ کا ایک ہدف ابھی پورا نہیں ہوا: %(titles)s۔ دفتر آج %(time)s بند ہو گا۔"
+msgstr[1] "اس ہفتے کے آپ کے %(count)s اہداف ابھی پورے نہیں ہوئے: %(titles)s۔ دفتر آج %(time)s بند ہو گا۔"
+
+msgid "This week's goals"
+msgstr "اس ہفتے کے اہداف"

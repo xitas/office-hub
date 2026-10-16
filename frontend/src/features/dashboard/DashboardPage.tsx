@@ -28,6 +28,7 @@ import type { ActivityItem, DashboardData, DashboardListItem } from '@/lib/types
 import { cn } from '@/lib/utils'
 import { ClientActivityWidget, ContactsByStatusWidget } from './ContactWidgets'
 import { CheckInCard } from '@/features/attendance/CheckInCard'
+import { WeeklyGoalsCard } from '@/features/planning/WeeklyGoalsCard'
 import { LowStockCard } from '@/features/supplies/LowStockCard'
 import { AnnouncementsWidget } from './AnnouncementsWidget'
 import { FollowUpsWidget } from './FollowUpsWidget'
@@ -58,6 +59,7 @@ export function DashboardPage() {
   const fmt = useFormat()
   const canAttend = usePermission('attendance.view')
   const canStock = usePermission('inventory.edit')
+  const canPlan = usePermission('planning.view')
   const firstName = me.full_name.split(' ')[0]
   // Widgets whose module isn't released yet (value null) collapse into one compact card.
   const live = data ? LIST_WIDGETS.filter((w) => data[w.key] !== null) : []
@@ -87,6 +89,8 @@ export function DashboardPage() {
             {canAttend && <CheckInCard />}
             {/* Also loaded on its own (/inventory/items/?low=1). */}
             {canStock && <LowStockCard />}
+            {/* Also loaded on its own (/planning/goals/). */}
+            {canPlan && <WeeklyGoalsCard />}
             {live.map((w) => (
               <ListWidget
                 key={w.key}

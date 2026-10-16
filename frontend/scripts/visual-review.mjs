@@ -418,6 +418,93 @@ async function rolePages(browser, role, vpName, vp, data) {
         await page.keyboard.press('Escape')
       }
 
+      // Phase 4: office planning (bookings, calendar, leave, attendance, supplies, expenses, weekly plan)
+      const manages = role !== 'staff'
+      const dialog = async (button, name) => {
+        await page.getByRole('button', { name: button }).first().click()
+        await page.waitForSelector('[role=dialog] input, [role=dialog] [role=combobox]')
+        await page.waitForTimeout(400)
+        await s(name, { fullPage: false })
+        await page.keyboard.press('Escape')
+        await page.waitForSelector('[role=dialog]', { state: 'detached' })
+      }
+      await go('/bookings')
+      await page.waitForSelector('main h1')
+      await s('bookings')
+      if (!isPhone) {
+        await go('/bookings?view=week')
+        await page.waitForSelector('main h1')
+        await s('bookings-week')
+      }
+      await go('/bookings/mine')
+      await page.waitForSelector('main h1')
+      await s('bookings-mine')
+      if (manages) {
+        await go('/bookings/mine?tab=approvals')
+        await page.waitForSelector('main h1')
+        await s('bookings-approvals')
+      }
+      await go('/resources')
+      await page.waitForSelector('main li')
+      await s('resources')
+      for (const view of ['month', 'week', 'day']) {
+        await go(`/calendar?view=${view}`)
+        await page.waitForSelector('main h1')
+        await page.waitForTimeout(400)
+        await s(`calendar-${view}`)
+      }
+      await go('/calendar?new=1')
+      await page.waitForSelector('[role=dialog] input')
+      await page.waitForTimeout(400)
+      await s('dialog-meeting', { fullPage: false })
+      await page.keyboard.press('Escape')
+      await go('/leave')
+      await page.waitForSelector('main h1')
+      await s('leave')
+      await dialog(/^(Request leave|چھٹی کی درخواست)$/, 'dialog-leave-request')
+      await go('/leave?tab=team')
+      await page.waitForSelector('main h1')
+      await s('leave-team')
+      if (role === 'admin') {
+        await go('/leave?tab=settings')
+        await page.waitForSelector('main li')
+        await s('leave-settings')
+      }
+      await go('/attendance')
+      await page.waitForSelector('main ul li')
+      await s('attendance')
+      if (manages) {
+        await go('/attendance?tab=team')
+        await page.waitForSelector('main ul li')
+        await s('attendance-team')
+        await go('/attendance?tab=month')
+        await page.waitForSelector('main table')
+        await s('attendance-month')
+      }
+      await go('/supplies')
+      await page.waitForSelector('main ul li')
+      await s('supplies')
+      await dialog(/^(Request supplies|سامان کی درخواست)$/, 'dialog-supplies-request')
+      await go('/supplies?tab=requests')
+      await page.waitForSelector('main h1')
+      await s('supplies-requests')
+      await go('/expenses')
+      await page.waitForSelector('main h1')
+      await s('expenses')
+      await dialog(/^(New claim|نیا دعویٰ)$/, 'dialog-expense-claim')
+      if (manages) {
+        await go('/expenses?tab=approvals')
+        await page.waitForSelector('main h1')
+        await s('expenses-approvals')
+        await go('/expenses?tab=team')
+        await page.waitForSelector('main h1')
+        await s('expenses-team')
+      }
+      await go('/planning')
+      await page.waitForSelector('main h1')
+      await s('planning')
+      if (manages) await dialog(/^(Add goal|ہدف شامل کریں)$/, 'dialog-goal')
+
       await go('/contacts/import')
       await page.waitForSelector('#import-file', { state: 'attached' })
       await s('import-upload')

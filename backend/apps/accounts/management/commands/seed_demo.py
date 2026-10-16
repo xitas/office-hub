@@ -273,6 +273,21 @@ EXPENSES = [
 ]
 
 
+# Weekly goals: (weeks from this one, department (None = office), title, owner, target, unit, progress, created by)
+GOALS = [
+    (0, "Sales", "Send quotations to new leads", HAMZA, 5, "quotations", 3, SALES_MGR),
+    (0, "Sales", "Follow up on overdue payments", FATIMA, 4, "clients", 4, SALES_MGR),
+    (0, "Sales", "Book product demos", None, 3, "demos", 1, SALES_MGR),
+    (0, "Operations", "Complete site visits in Gulberg", USMAN, 6, "visits", 2, OPS_MGR),
+    (0, "Operations", "Restock store room", OPS_MGR, 100, "%", 60, OPS_MGR),
+    (0, "Accounts", "Close September accounts", ZAINAB, 100, "%", 80, ADMIN),
+    (0, None, "Office fire drill", None, 1, "", 0, ADMIN),
+    (-1, "Sales", "Send quotations to new leads", HAMZA, 5, "quotations", 5, SALES_MGR),
+    (-1, "Sales", "Update the price list", FATIMA, 1, "", 0, SALES_MGR),
+    (-1, "Operations", "Complete site visits in Gulberg", USMAN, 6, "visits", 4, OPS_MGR),
+]
+
+
 # Calendar: (kind, title, organizer, attendees, departments (events), day offset, start, end (None = all day), room, location)
 CALENDAR = [
     ("meeting", "Daily sales stand-up", SALES_MGR, [HAMZA, FATIMA], [], 0, "09:30", "09:45", None, "Sales corner"),
@@ -382,6 +397,7 @@ class Command(BaseCommand):
         self._seed_attendance()
         self._seed_supplies()
         self._seed_expenses()
+        self._seed_planning()
 
         self.stdout.write(self.style.SUCCESS("Demo data ready. All demo users share the password: " + DEMO_PASSWORD))
         for email, name, role, dept, _ in USERS:
@@ -548,6 +564,32 @@ class Command(BaseCommand):
                 upload = SimpleUploadedFile("receipt.png", _receipt_image(title, amount, currency), content_type="image/png")
                 save_receipts(expense, users[person], [upload])
             Expense.objects.filter(pk=expense.pk).update(created_at=timezone.now() - timedelta(days=ago, hours=-2))
+
+    def _seed_planning(self):
+        """This week's and last week's goals per department, with progress (skipped once any goal exists).
+        Last week has unfinished goals to carry over. Created directly: no notifications."""
+        from apps.core.office_time import office_today
+        from apps.planning.models import GoalUpdate, WeeklyGoal
+        from apps.planning.services import week_start_of
+
+        if WeeklyGoal.objects.exists():
+            return
+        users = {u.email: u for u in User.objects.all()}
+        departments = {d.name: d for d in Department.objects.all()}
+        this_week = week_start_of(office_today())
+        for position, (weeks, dept, title, owner, target, unit, progress, creator) in enumerate(GOALS):
+            week = this_week + timedelta(days=7 * weeks)
+            goal = WeeklyGoal.objects.create(
+                week_start=week, department=departments.get(dept), title=title, owner=users.get(owner), target=target,
+                unit=unit, current=progress, position=position, created_by=users[creator],
+                completed_at=timezone.now() - timedelta(days=1) if progress >= target else None,
+            )
+            if progress:
+                by = users.get(owner) or users[creator]
+                first = GoalUpdate.objects.create(goal=goal, before=0, after=progress // 2, by=by, note="")
+                last = GoalUpdate.objects.create(goal=goal, before=progress // 2, after=progress, by=by, note="")
+                GoalUpdate.objects.filter(pk=first.pk).update(created_at=timezone.now() - timedelta(days=2))
+                GoalUpdate.objects.filter(pk=last.pk).update(created_at=timezone.now() - timedelta(hours=20))
 
     def _seed_leave(self):
         """Leave types, this year's balances (one with carried-over days) and a few requests

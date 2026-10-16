@@ -192,7 +192,7 @@ function RequestRow({ req: r, showName = false }: { req: LeaveRequest; showName?
     <li>
       <Card className="gap-2 py-3">
         <CardContent className="flex flex-wrap items-center gap-3 px-4">
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 basis-64">
             <p className="flex flex-wrap items-center gap-2">
               {showName && <bdi className="font-medium">{r.user_name}</bdi>}
               <span className={cn(!showName && 'font-medium')}>{typeName(r, i18n.language)}</span>
