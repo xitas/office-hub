@@ -23,9 +23,9 @@ jobs:
       - name: Migrations are up to date, then tests
         run: docker compose -f docker-compose.test.yml run --rm tests
       - name: Dependency audit
-        run: >-
-          docker compose -f docker-compose.test.yml run --rm --no-deps --entrypoint sh tests -c
-          "pip install -q pip-audit -c requirements.lock && pip-audit -r requirements.txt"
+        # The audit service in docker-compose.test.yml (also run by .\scripts\test-ci.ps1) holds the command
+        # and its documented advisory exceptions.
+        run: docker compose -f docker-compose.test.yml run --rm --no-deps audit
       - name: Remove test containers
         if: always()
         run: docker compose -f docker-compose.test.yml down -v

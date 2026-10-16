@@ -1,11 +1,13 @@
 <#
 .SYNOPSIS
-  Run the backend tests exactly as CI does (docker-compose.test.yml), so "passes here" means "passes in CI".
+  Run the backend tests and the dependency audit exactly as CI does (docker-compose.test.yml), so "passes here"
+  means "passes in CI".
 
 .DESCRIPTION
   Same containers as the GitHub Actions job: the pinned Python image, the packages in
   backend\requirements.lock, PostgreSQL 17 and Redis (throwaway, no host ports), no backend\.env,
-  UTC clock. Needs Docker Desktop. The first run downloads the images and packages; later runs reuse them.
+  UTC clock. Then the dependency audit (the compose "audit" service, which holds the documented advisory
+  exceptions). Needs Docker Desktop. The first run downloads the images and packages; later runs reuse them.
 
 .PARAMETER Lock
   Regenerate backend\requirements.lock from requirements*.txt inside the same image (after changing them).
@@ -38,6 +40,9 @@ try {
         exit 0
     }
     docker compose -f $compose run --rm tests @PytestArgs
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    Write-Host 'Dependency audit' -ForegroundColor Cyan
+    docker compose -f $compose run --rm --no-deps audit
     exit $LASTEXITCODE
 } finally {
     docker compose -f $compose down -v *> $null

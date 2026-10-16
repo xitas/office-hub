@@ -56,5 +56,30 @@ services:
         pytest --create-db -rs -p no:cacheprovider "$$@"
       - tests
 
+  # Dependency audit of backend/requirements.txt. CI and .\scripts\test-ci.ps1 both run this service,
+  # so this is the only place advisory exceptions live. Add one only for an advisory that can't affect
+  # this app and has no fixed release, with the reason, the date and a link, and remove it once fixed.
+  audit:
+    image: python:3.13.16-slim
+    working_dir: /app/backend
+    volumes:
+      - .:/app
+      - pip-cache:/root/.cache/pip
+    environment:
+      PYTHONDONTWRITEBYTECODE: "1"
+      PIP_ROOT_USER_ACTION: ignore
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+    entrypoint:
+      - sh
+      - -c
+      # CVE-2026-106454 (GHSA-8pqf-f4m5-798g), added 2026-10-16: ReDoS in twisted.mail.imap4 (the IMAP
+      # server's wildcardToRegexp) in Twisted 26.4.0, which comes in through Daphne. The app never imports
+      # or runs twisted.mail or any IMAP code (Daphne uses only Twisted's networking, web, logging and TLS),
+      # so it can't be reached here. No fixed Twisted release exists yet: remove this exception and upgrade
+      # Twisted when one is published (see PLAN.md). https://github.com/advisories/GHSA-8pqf-f4m5-798g
+      - >-
+        pip install -q pip-audit -c requirements.lock &&
+        pip-audit -r requirements.txt --ignore-vuln CVE-2026-106454
+
 volumes:
   pip-cache:
