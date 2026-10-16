@@ -454,7 +454,7 @@ function RequestRow({ req: r, showName }: { req: PurchaseRequest; showName: bool
     <li>
       <Card className="gap-2 py-3">
         <CardContent className="flex flex-wrap items-center gap-3 px-4">
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 basis-64">
             <p className="flex flex-wrap items-center gap-2">
               <span className="font-medium">{itemName(r, i18n.language)}</span>
               <span className="text-muted-foreground"><span className="font-latin">× {r.received_quantity ?? r.quantity}</span> <bdi>{r.unit}</bdi></span>

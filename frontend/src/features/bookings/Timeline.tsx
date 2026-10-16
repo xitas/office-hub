@@ -157,7 +157,7 @@ export function Timeline({
                     >
                       <bdi className="block truncate font-medium">{b.title}</bdi>
                       <span className="block truncate opacity-80">
-                        <span dir="ltr" className="font-latin">{fmt.clock(timeOf(start))}–{fmt.clock(timeOf(end))}</span> · <bdi>{b.booked_by_name}</bdi>
+                        <span>{fmt.clock(timeOf(start))}–{fmt.clock(timeOf(end))}</span> · <bdi>{b.booked_by_name}</bdi>
                       </span>
                     </button>
                   )

@@ -77,6 +77,10 @@ export const router = createBrowserRouter([
             lazy: () => import('@/features/expenses/ExpensesPage').then((m) => ({ Component: m.ExpensesPage })),
           },
           {
+            path: 'planning',
+            lazy: () => import('@/features/planning/PlanningPage').then((m) => ({ Component: m.PlanningPage })),
+          },
+          {
             path: 'calendar',
             lazy: () => import('@/features/calendar/CalendarPage').then((m) => ({ Component: m.CalendarPage })),
           },

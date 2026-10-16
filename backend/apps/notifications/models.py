@@ -23,6 +23,7 @@ class NotificationType(models.TextChoices):
     OFFICE_EVENT = "office_event", _("Office events and holidays")
     ATTENDANCE = "attendance", _("Attendance reminders and corrections")
     LOW_STOCK = "low_stock", _("Low-stock alerts (supplies)")
+    PLANNING = "planning", _("Weekly goals")
     VISIT = "visit", _("Field visit updates")
     SYSTEM = "system", _("System and security")
 

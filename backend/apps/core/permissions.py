@@ -45,6 +45,7 @@ PERMISSIONS: dict[str, dict[str, set[str]]] = {
     "attendance": {"view": ALL, "create": ALL, "edit": MGMT},
     "inventory": {"view": ALL, "create": MGMT, "edit": MGMT, "delete": ADMIN_ONLY, "request": ALL, "approve": MGMT},
     "expenses": {"view": ALL, "create": ALL, "edit": ALL, "delete": ALL, "approve": MGMT},
+    # Managers plan their department's week, admins anyone's; goal owners (any role) record progress.
     "planning": {"view": ALL, "create": MGMT, "edit": MGMT, "delete": MGMT},
     # Phase 5
     "visits": {"view": ALL, "create": ALL, "edit": ALL, "delete": MGMT, "view_map": MGMT},

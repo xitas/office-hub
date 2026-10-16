@@ -33,7 +33,8 @@
     "leave": "Leave",
     "attendance": "Attendance",
     "supplies": "Supplies",
-    "expenses": "Expenses"
+    "expenses": "Expenses",
+    "planning": "Weekly plan"
   },
   "common": {
     "save": "Save",
@@ -418,7 +419,8 @@
     "meeting": "Meeting invitations, changes and reminders",
     "office_event": "Office events and holidays",
     "attendance": "Attendance reminders and corrections",
-    "low_stock": "Low-stock alerts (supplies)"
+    "low_stock": "Low-stock alerts (supplies)",
+    "planning": "Weekly goals"
   },
   "companies": {
     "title": "Companies",
@@ -1925,5 +1927,58 @@
     "addReceipt": "Add receipt",
     "receiptsHint": "Photos or PDFs of the receipt, up to {{n}} files of {{mb}} MB each.",
     "removeReceipt": "Remove {{name}}"
+  },
+  "planning": {
+    "title": "Weekly plan",
+    "subtitle": "Each team's goals for the week, and how far they've got.",
+    "addGoal": "Add goal",
+    "editGoal": "Edit {{title}}",
+    "previousWeek": "Previous week",
+    "nextWeek": "Next week",
+    "thisWeek": "This week",
+    "allTeams": "All teams",
+    "wholeOffice": "Whole office",
+    "carryOver": "Copy unfinished to next week",
+    "carriedToast_one": "{{count}} goal copied to next week",
+    "carriedToast_other": "{{count}} goals copied to next week",
+    "nothingToCarry": "Nothing left to copy",
+    "noGoals": "No goals for this week",
+    "noGoalsHint": "Add the goals your team is working towards this week.",
+    "goalsDone": "Goals reached",
+    "averageProgress": "Average progress",
+    "doneOf": "{{done}} of {{total}} reached",
+    "carried": "Carried over",
+    "state": {
+      "done": "Reached",
+      "onTrack": "On track",
+      "behind": "Behind",
+      "notReached": "Not reached",
+      "upcoming": "Not started"
+    },
+    "noOwner": "No owner",
+    "record": "Update progress",
+    "progressSaved": "Progress saved",
+    "progressOf": "Now {{current}} of {{target}} {{unit}}",
+    "addOne": "+1",
+    "progressNow": "Progress so far ({{unit}})",
+    "units": "units",
+    "note": "Note",
+    "notePlaceholder": "What was done (optional)",
+    "history": "History",
+    "noHistory": "No updates yet",
+    "deleteTitle": "Delete this goal?",
+    "deleteText": "Its progress history is deleted with it.",
+    "goal": "Goal",
+    "goalPlaceholder": "e.g. Send quotations to new leads",
+    "target": "Target",
+    "unit": "Unit",
+    "unitHint": "quotations, visits, %… (optional)",
+    "team": "Team",
+    "owner": "Owner",
+    "week": "Week",
+    "weekHint": "Any day of the week",
+    "details": "Details (optional)",
+    "cardTitle": "This week's goals",
+    "open": "Open"
   }
 }

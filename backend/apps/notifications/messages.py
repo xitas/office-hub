@@ -9,6 +9,7 @@ from contextlib import nullcontext
 
 from django.utils import translation
 from django.utils.translation import gettext as _
+from django.utils.translation import ngettext
 
 
 def _account_updated(params: dict) -> tuple[str, str]:
@@ -365,7 +366,48 @@ def _expense_cancelled(params: dict) -> tuple[str, str]:
     return _("Expense claim cancelled: %(name)s") % params, _expense_detail(params)
 
 
+def _goal_progress(params: dict) -> str:
+    unit = f" {params['unit']}" if params.get("unit") else ""
+    return f"{params.get('title', '')} · {params.get('current', 0)}/{params.get('target', 0)}{unit}"
+
+
+def _goal_week(params: dict) -> str:
+    from datetime import date
+
+    try:
+        return _("Week of %(date)s") % {"date": date.fromisoformat(params.get("week", "")).strftime("%d/%m/%Y")}
+    except ValueError:
+        return ""
+
+
+def _goal_assigned(params: dict) -> tuple[str, str]:
+    return _("New weekly goal for you"), f"{_goal_progress(params)} · {_goal_week(params)}"
+
+
+def _goal_done(params: dict) -> tuple[str, str]:
+    return _("Goal reached: %(title)s") % params, f"{_goal_progress(params)} · {_goal_week(params)}"
+
+
+def _goal_reminder(params: dict) -> tuple[str, str]:
+    from django.utils.dateparse import parse_datetime
+
+    from apps.core.office_time import clock
+
+    closes = parse_datetime(params.get("closes", "") or "")
+    count = int(params.get("count", 0) or 0)
+    titles = ", ".join(params.get("titles") or [])
+    body = ngettext(
+        "%(count)s of your goals for this week isn't done yet: %(titles)s. The office closes at %(time)s today.",
+        "%(count)s of your goals for this week aren't done yet: %(titles)s. The office closes at %(time)s today.",
+        count,
+    ) % {"count": count, "titles": titles, "time": clock(closes) if closes else ""}
+    return _("This week's goals"), body
+
+
 RENDERERS = {
+    "goal_assigned": _goal_assigned,
+    "goal_done": _goal_done,
+    "goal_reminder": _goal_reminder,
     "low_stock": _low_stock,
     "purchase_request": _purchase_request,
     "purchase_approved": _purchase_approved,

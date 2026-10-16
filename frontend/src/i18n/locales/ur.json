@@ -33,7 +33,8 @@
     "leave": "چھٹیاں",
     "attendance": "حاضری",
     "supplies": "سامان",
-    "expenses": "اخراجات"
+    "expenses": "اخراجات",
+    "planning": "ہفتہ وار منصوبہ"
   },
   "common": {
     "save": "محفوظ کریں",
@@ -418,7 +419,8 @@
     "meeting": "میٹنگ کے دعوت نامے، تبدیلیاں اور یاد دہانیاں",
     "office_event": "دفتری ایونٹس اور چھٹیاں",
     "attendance": "حاضری کی یاد دہانیاں اور درستیاں",
-    "low_stock": "کم اسٹاک کی اطلاعات (سامان)"
+    "low_stock": "کم اسٹاک کی اطلاعات (سامان)",
+    "planning": "ہفتہ وار اہداف"
   },
   "companies": {
     "title": "کمپنیاں",
@@ -1925,5 +1927,58 @@
     "addReceipt": "رسید شامل کریں",
     "receiptsHint": "رسید کی تصویر یا PDF، زیادہ سے زیادہ {{n}} فائلیں، ہر ایک {{mb}} MB تک۔",
     "removeReceipt": "{{name}} ہٹائیں"
+  },
+  "planning": {
+    "title": "ہفتہ وار منصوبہ",
+    "subtitle": "ہر ٹیم کے اس ہفتے کے اہداف، اور اب تک کی پیش رفت۔",
+    "addGoal": "ہدف شامل کریں",
+    "editGoal": "{{title}} میں ترمیم",
+    "previousWeek": "پچھلا ہفتہ",
+    "nextWeek": "اگلا ہفتہ",
+    "thisWeek": "یہ ہفتہ",
+    "allTeams": "تمام ٹیمیں",
+    "wholeOffice": "پورا دفتر",
+    "carryOver": "نامکمل اہداف اگلے ہفتے منتقل کریں",
+    "carriedToast_one": "{{count}} ہدف اگلے ہفتے منتقل ہو گیا",
+    "carriedToast_other": "{{count}} اہداف اگلے ہفتے منتقل ہو گئے",
+    "nothingToCarry": "منتقل کرنے کو کچھ نہیں",
+    "noGoals": "اس ہفتے کوئی ہدف نہیں",
+    "noGoalsHint": "اپنی ٹیم کے اس ہفتے کے اہداف شامل کریں۔",
+    "goalsDone": "پورے ہوئے اہداف",
+    "averageProgress": "اوسط پیش رفت",
+    "doneOf": "{{total}} میں سے {{done}} پورے",
+    "carried": "پچھلے ہفتے سے",
+    "state": {
+      "done": "پورا",
+      "onTrack": "درست سمت میں",
+      "behind": "پیچھے",
+      "notReached": "پورا نہیں ہوا",
+      "upcoming": "شروع نہیں ہوا"
+    },
+    "noOwner": "کوئی ذمہ دار نہیں",
+    "record": "پیش رفت درج کریں",
+    "progressSaved": "پیش رفت محفوظ ہو گئی",
+    "progressOf": "اب {{target}} {{unit}} میں سے {{current}}",
+    "addOne": "+1",
+    "progressNow": "اب تک کی پیش رفت ({{unit}})",
+    "units": "اکائیاں",
+    "note": "نوٹ",
+    "notePlaceholder": "کیا کام ہوا (اختیاری)",
+    "history": "ریکارڈ",
+    "noHistory": "ابھی کوئی اندراج نہیں",
+    "deleteTitle": "یہ ہدف حذف کریں؟",
+    "deleteText": "اس کی پیش رفت کا ریکارڈ بھی حذف ہو جائے گا۔",
+    "goal": "ہدف",
+    "goalPlaceholder": "مثلاً نئے کلائنٹس کو کوٹیشن بھیجیں",
+    "target": "ہدف کی تعداد",
+    "unit": "اکائی",
+    "unitHint": "کوٹیشن، وزٹ، %… (اختیاری)",
+    "team": "ٹیم",
+    "owner": "ذمہ دار",
+    "week": "ہفتہ",
+    "weekHint": "ہفتے کا کوئی بھی دن",
+    "details": "تفصیل (اختیاری)",
+    "cardTitle": "اس ہفتے کے اہداف",
+    "open": "کھولیں"
   }
 }
