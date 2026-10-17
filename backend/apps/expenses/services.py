@@ -68,14 +68,14 @@ def save_receipts(expense, uploader, files, keep=0):
         receipt.save()
 
 
-def claim(user, *, title, category, amount, spent_on, description="", files=()) -> Expense:
+def claim(user, *, title, category, amount, spent_on, description="", files=(), vendor=None) -> Expense:
     _check(spent_on, amount)
     approvers = rules.approvers_for(user)
     auto = not approvers  # an admin with no other admin to ask
     with transaction.atomic():
         expense = Expense.objects.create(
             user=user, title=title.strip()[:120], category=category, amount=amount,
-            currency=OrganizationSettings.cached().currency, spent_on=spent_on, description=description.strip(),
+            currency=OrganizationSettings.cached().currency, spent_on=spent_on, description=description.strip(), vendor=vendor,
             status=Expense.Status.APPROVED if auto else Expense.Status.PENDING,
             decided_by=user if auto else None, decided_at=timezone.now() if auto else None,
         )

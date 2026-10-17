@@ -8,7 +8,7 @@ from apps.core.office_time import office_today
 from apps.core.permissions import has_perm
 
 from .models import TimelineEntry
-from .registry import auto_entry
+from .registry import auto_entry, target_name, target_path
 from .serializers import entry_data
 
 LIMIT = 8
@@ -62,22 +62,21 @@ def follow_ups_due(user, limit=FOLLOW_UP_LIMIT):
     entries = (
         TimelineEntry.objects.filter(follow_up_on__isnull=False, follow_up_done_at__isnull=True, follow_up_on__lte=today + timedelta(days=FOLLOW_UP_DAYS))
         .filter(mine)
-        .select_related("contact", "company")
+        .select_related("contact", "company", "vendor")
         .prefetch_related("follow_up_tasks")
         .order_by("follow_up_on", "pk")[:limit]
     )
     items = []
     for e in entries:
         task = next(iter(e.follow_up_tasks.all()), None)
-        target = e.contact or e.company
         items.append({
             "id": e.pk,
             "kind": e.kind,
-            "title": e.contact.full_name if e.contact else e.company.name,
+            "title": target_name(e),
             "summary": (e.summary or "").strip().split("\n")[0][:120],
             "due_date": e.follow_up_on,
             "is_overdue": e.follow_up_on < today,
-            "url": f"/tasks/{task.pk}" if task else (f"/contacts/{target.pk}" if e.contact else f"/companies/{target.pk}"),
+            "url": f"/tasks/{task.pk}" if task else target_path(e),
             "task_id": task.pk if task else None,
         })
     return items

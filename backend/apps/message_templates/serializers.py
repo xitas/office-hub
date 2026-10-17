@@ -62,7 +62,10 @@ class MessageTemplateSerializer(serializers.ModelSerializer):
 
 
 class FillSerializer(serializers.Serializer):
+    """Fill for a contact, or for a vendor (its contact person and details stand in for the contact's)."""
+
     contact = serializers.IntegerField(required=False, allow_null=True)
+    vendor = serializers.IntegerField(required=False, allow_null=True)
 
 
 class PreviewSerializer(FillSerializer):

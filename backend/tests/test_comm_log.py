@@ -206,7 +206,7 @@ def test_log_export_follows_contacts_export_permission(client_for, people, crm, 
     text = res.content.decode("utf-8")
     assert text.startswith("﻿")  # Excel opens Urdu correctly
     lines = text.strip().splitlines()
-    assert lines[0].lstrip("﻿").startswith("Date,Type,Direction,Contact,Company,Subject,Summary")
+    assert lines[0].lstrip("﻿").startswith("Date,Type,Direction,Contact,Company,Vendor,Subject,Summary")
     assert len(lines) == 3 and "Discussed order" in text and "Prefers mornings" not in text and "Site visit" not in text
     assert AuditLog.objects.filter(action="export", object_repr="communication log (2)").exists()
 

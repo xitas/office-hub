@@ -15,6 +15,9 @@ export interface SupplyItem {
   reorder_level: number
   location: string
   notes: string
+  /** Where it's usually bought. */
+  supplier: number | null
+  supplier_name: string | null
   is_active: boolean
   is_low: boolean
   /** Purchase requests waiting or approved (not received yet). */
@@ -46,6 +49,9 @@ export interface PurchaseRequest {
   unit: string
   reason: string
   estimated_cost: string | null
+  /** Where to buy it (or where it was bought). */
+  vendor: number | null
+  vendor_name: string | null
   requested_by: number
   requested_by_name: string
   department_name: string | null

@@ -59,7 +59,7 @@ class ExpenseViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.
         if getattr(self, "swagger_fake_view", False):
             return Expense.objects.none()
         user = self.request.user
-        qs = rules.visible_expenses(user).select_related("user__department", "decided_by", "paid_by").prefetch_related("receipts")
+        qs = rules.visible_expenses(user).select_related("user__department", "vendor", "decided_by", "paid_by").prefetch_related("receipts")
         if self.action != "list":
             return qs
         params = self.request.query_params

@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from apps.contacts.visibility import visible_contacts
 from apps.core.audit import AuditedViewSetMixin, log_action
 from apps.core.models import AuditLog
-from apps.core.permissions import ModulePermission
+from apps.core.permissions import ModulePermission, has_perm
 
 from . import placeholders, rules
 from .models import MessageTemplate
@@ -144,6 +144,15 @@ class MessageTemplateViewSet(
         # Only contacts the user can see; anyone else looks like an unknown id.
         return get_object_or_404(visible_contacts(self.request.user).select_related("company"), pk=contact_id)
 
+    def _recipient(self, data):
+        """The contact, or a vendor standing in for one (every vendor is visible to everyone who may see vendors)."""
+        if data.get("vendor") is not None and has_perm(self.request.user, "vendors", "view"):
+            from apps.vendors.models import Vendor
+            from apps.vendors.services import as_contact
+
+            return as_contact(get_object_or_404(Vendor.objects.filter(is_active=True), pk=data["vendor"]))
+        return self._contact(data.get("contact"))
+
     @extend_schema(request=FillSerializer, responses={200: dict})
     @action(detail=True, methods=["post"])
     def fill(self, request, pk=None):
@@ -151,8 +160,7 @@ class MessageTemplateViewSet(
         template = self.get_object()
         data = FillSerializer(data=request.data)
         data.is_valid(raise_exception=True)
-        contact = self._contact(data.validated_data.get("contact"))
-        return Response(filled(template.subject, template.body, contact, request.user))
+        return Response(filled(template.subject, template.body, self._recipient(data.validated_data), request.user))
 
     @extend_schema(request=PreviewSerializer, responses={200: dict})
     @action(detail=False, methods=["post"])
@@ -160,8 +168,8 @@ class MessageTemplateViewSet(
         """Fill text that isn't saved yet (the editor's preview)."""
         data = PreviewSerializer(data=request.data)
         data.is_valid(raise_exception=True)
-        contact = self._contact(data.validated_data.get("contact"))
-        return Response(filled(data.validated_data["subject"], data.validated_data["body"], contact, request.user))
+        recipient = self._recipient(data.validated_data)
+        return Response(filled(data.validated_data["subject"], data.validated_data["body"], recipient, request.user))
 
     @extend_schema(responses={200: dict})
     @action(detail=False, methods=["get"])

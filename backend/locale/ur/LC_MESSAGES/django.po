@@ -2056,3 +2056,48 @@ msgstr[1] "اس ہفتے کے آپ کے %(count)s اہداف ابھی پورے �
 
 msgid "This week's goals"
 msgstr "اس ہفتے کے اہداف"
+
+msgid "vendor category"
+msgstr "وینڈر کی قسم"
+
+msgid "vendor categories"
+msgstr "وینڈر کی اقسام"
+
+msgid "vendor"
+msgstr "وینڈر"
+
+msgid "vendors"
+msgstr "وینڈر"
+
+msgid "Vendor"
+msgstr "وینڈر"
+
+msgid "New vendors in the directory"
+msgstr "فہرست میں نئے وینڈر"
+
+msgid "Give the category a name."
+msgstr "قسم کا نام لکھیں۔"
+
+msgid "Give the vendor a name."
+msgstr "وینڈر کا نام لکھیں۔"
+
+msgid "Only managers and admins change this."
+msgstr "یہ صرف مینیجر اور ایڈمن تبدیل کر سکتے ہیں۔"
+
+msgid "Give at least a phone number, email or address."
+msgstr "کم از کم فون نمبر، ای میل یا پتا لکھیں۔"
+
+msgid "This vendor is used in supplies, requests, expenses or the timeline. Mark it inactive instead."
+msgstr "یہ وینڈر سامان، درخواستوں، اخراجات یا ریکارڈ میں استعمال ہوا ہے۔ حذف کرنے کے بجائے اسے غیر فعال کریں۔"
+
+msgid "Vendors use this category. Make it inactive instead."
+msgstr "وینڈر یہ قسم استعمال کرتے ہیں۔ حذف کرنے کے بجائے اسے غیر فعال کریں۔"
+
+msgid "New vendor: %(name)s"
+msgstr "نیا وینڈر: %(name)s"
+
+msgid "Pass a contact, a company or a vendor."
+msgstr "رابطہ، کمپنی یا وینڈر بتائیں۔"
+
+msgid "Choose a contact, a company or a vendor."
+msgstr "رابطہ، کمپنی یا وینڈر منتخب کریں۔"

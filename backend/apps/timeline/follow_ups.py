@@ -17,7 +17,9 @@ TITLE_LENGTH = 200
 
 
 def task_title(entry) -> str:
-    target = entry.contact.full_name if entry.contact else entry.company.name
+    from .registry import target_name
+
+    target = target_name(entry)
     first_line = (entry.summary or "").strip().split("\n")[0].strip()
     title = _("Follow up with %(name)s") % {"name": target}
     if first_line:

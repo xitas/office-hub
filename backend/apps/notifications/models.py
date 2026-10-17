@@ -24,6 +24,7 @@ class NotificationType(models.TextChoices):
     ATTENDANCE = "attendance", _("Attendance reminders and corrections")
     LOW_STOCK = "low_stock", _("Low-stock alerts (supplies)")
     PLANNING = "planning", _("Weekly goals")
+    VENDOR = "vendor", _("New vendors in the directory")
     VISIT = "visit", _("Field visit updates")
     SYSTEM = "system", _("System and security")
 

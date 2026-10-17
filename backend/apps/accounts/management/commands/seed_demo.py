@@ -288,6 +288,50 @@ GOALS = [
 ]
 
 
+# Vendor categories: (name, Urdu name)
+VENDOR_CATEGORIES = [
+    ("Stationery and printing", "اسٹیشنری اور پرنٹنگ"),
+    ("IT and electronics", "آئی ٹی اور الیکٹرانکس"),
+    ("Courier and delivery", "کورئیر اور ترسیل"),
+    ("Cleaning and maintenance", "صفائی اور دیکھ بھال"),
+    ("Catering and refreshments", "کھانا اور چائے پانی"),
+    ("Vehicle repair and fuel", "گاڑی کی مرمت اور ایندھن"),
+    ("Electricians and plumbers", "الیکٹریشن اور پلمبر"),
+]
+# Vendors: (name, categories, contact person, phone, city, areas, payment terms, rating, preferred, notes)
+VENDORS = [
+    ("Al-Noor Printers", ["Stationery and printing"], "Imran Butt", "0300-1112233", "Lahore", "Gulberg, Model Town, Johar Town",
+     "Cash on delivery", 5, True, "Visiting cards in 2 days; toner refills too."),
+    ("Hall Road Computers", ["IT and electronics"], "Kashif Mehmood", "0321-4445566", "Lahore", "Hall Road (pick-up)",
+     "Cash", 4, True, "Printer repairs and toner. Ask for Kashif."),
+    ("TCS Express (Gulberg)", ["Courier and delivery"], "Front desk", "042-111-123-456", "Lahore", "All Lahore, nationwide",
+     "Monthly account", 4, False, ""),
+    ("Sparkle Cleaning Services", ["Cleaning and maintenance"], "Naveed Akhtar", "0333-7788990", "Lahore", "Gulberg, DHA",
+     "30 days credit", 3, False, "Weekly deep clean on Saturdays."),
+    ("Chai Wala Catering", ["Catering and refreshments"], "Asif", "0345-2223344", "Lahore", "Gulberg",
+     "Weekly bill", 4, False, "Tea, sugar and snacks; delivers by 10 am."),
+    ("Bismillah Auto Workshop", ["Vehicle repair and fuel"], "Ustad Rafiq", "0302-9988776", "Lahore", "Ferozepur Road",
+     "Cash", 3, False, "Services the Corolla."),
+    ("Raza Electric Works", ["Electricians and plumbers"], "Shahid Raza", "0311-5544332", "Lahore", "Gulberg, Garden Town",
+     "Cash", 4, False, "Comes the same day for urgent work."),
+    ("Paper House Karachi", ["Stationery and printing"], "Salman Qureshi", "0300-2223334", "Karachi", "Saddar, Clifton",
+     "15 days credit", None, False, "For the Karachi office."),
+]
+# Which supplies each vendor usually provides
+VENDOR_SUPPLIES = {
+    "Al-Noor Printers": ["A4 paper", "Ballpoint pens (blue)", "Stapler pins", "Whiteboard markers"],
+    "Hall Road Computers": ["Printer toner (HP 26A)"],
+    "Chai Wala Catering": ["Tea bags", "Sugar"],
+    "Sparkle Cleaning Services": ["Tissue boxes", "Hand wash"],
+}
+# Logged calls and notes with vendors: (vendor, kind, by, days ago, summary)
+VENDOR_LOG = [
+    ("Al-Noor Printers", "call", OPS_MGR, 6, "Asked for the new rate card for visiting cards; sending it on WhatsApp."),
+    ("Hall Road Computers", "note", ADMIN, 3, "Toner price went up to Rs 19,000 a cartridge."),
+    ("Sparkle Cleaning Services", "whatsapp", OPS_MGR, 1, "Confirmed Saturday's deep clean at 10 am."),
+]
+
+
 # Calendar: (kind, title, organizer, attendees, departments (events), day offset, start, end (None = all day), room, location)
 CALENDAR = [
     ("meeting", "Daily sales stand-up", SALES_MGR, [HAMZA, FATIMA], [], 0, "09:30", "09:45", None, "Sales corner"),
@@ -398,6 +442,7 @@ class Command(BaseCommand):
         self._seed_supplies()
         self._seed_expenses()
         self._seed_planning()
+        self._seed_vendors()
 
         self.stdout.write(self.style.SUCCESS("Demo data ready. All demo users share the password: " + DEMO_PASSWORD))
         for email, name, role, dept, _ in USERS:
@@ -590,6 +635,43 @@ class Command(BaseCommand):
                 last = GoalUpdate.objects.create(goal=goal, before=progress // 2, after=progress, by=by, note="")
                 GoalUpdate.objects.filter(pk=first.pk).update(created_at=timezone.now() - timedelta(days=2))
                 GoalUpdate.objects.filter(pk=last.pk).update(created_at=timezone.now() - timedelta(hours=20))
+
+    def _seed_vendors(self):
+        """Vendor categories and the office's usual vendors, linked to the supplies they provide, to purchase
+        requests and expense claims, with a few logged calls and notes (skipped once any vendor exists). Quiet."""
+        from apps.expenses.models import Expense
+        from apps.inventory.models import PurchaseRequest, SupplyItem
+        from apps.timeline.models import TimelineEntry
+        from apps.vendors.models import Vendor, VendorCategory
+
+        if Vendor.objects.exists():
+            return
+        users = {u.email: u for u in User.objects.all()}
+        categories = {}
+        for position, (name, name_ur) in enumerate(VENDOR_CATEGORIES):
+            categories[name] = VendorCategory.objects.get_or_create(name=name, defaults={"name_ur": name_ur, "position": position})[0]
+        vendors = {}
+        for name, cats, person, phone, city, areas, terms, rating, preferred, notes in VENDORS:
+            vendor = Vendor.objects.create(
+                name=name, contact_person=person, phone=phone, city=city, areas=areas, payment_terms=terms, rating=rating,
+                preferred=preferred, notes=notes, created_by=users[ADMIN], updated_by=users[ADMIN],
+            )
+            vendor.categories.set([categories[c] for c in cats])
+            Vendor.objects.filter(pk=vendor.pk).update(created_at=timezone.now() - timedelta(days=60))  # the office's usual vendors
+            vendors[name] = vendor
+        for vendor, items in VENDOR_SUPPLIES.items():
+            SupplyItem.objects.filter(name__in=items).update(supplier=vendors[vendor])
+        for req in PurchaseRequest.objects.select_related("item__supplier"):
+            supplier = req.item.supplier if req.item else None
+            if supplier:
+                PurchaseRequest.objects.filter(pk=req.pk).update(vendor=supplier)
+        paid_to = {"Printer repair": "Hall Road Computers", "Fuel for site visits": "Bismillah Auto Workshop", "Courier charges": "TCS Express (Gulberg)"}
+        for title, vendor in paid_to.items():
+            Expense.objects.filter(title=title).update(vendor=vendors[vendor])
+        for vendor, kind, by, ago, summary in VENDOR_LOG:
+            details = {"call": {"direction": "out", "outcome": "connected"}, "whatsapp": {"direction": "out"}}.get(kind, {})
+            entry = TimelineEntry.objects.create(kind=kind, vendor=vendors[vendor], summary=summary, details=details, created_by=users[by])
+            TimelineEntry.objects.filter(pk=entry.pk).update(occurred_at=timezone.now() - timedelta(days=ago, hours=2))
 
     def _seed_leave(self):
         """Leave types, this year's balances (one with carried-over days) and a few requests

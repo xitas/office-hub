@@ -246,7 +246,7 @@ def digest_for(user, today, now=None):
             created_by=user, follow_up_on__lte=today, follow_up_on__gte=today - FOLLOW_UP_LOOKBACK, follow_up_tasks__isnull=True,
             follow_up_done_at__isnull=True,
         )
-        .select_related("contact", "company")
+        .select_related("contact", "company", "vendor")
         .order_by("follow_up_on")[:20]
     )
     return due_today, overdue, follow_ups
@@ -270,9 +270,10 @@ def render_digest(user, today, due_today, overdue, follow_ups) -> tuple[str, str
             lines.append("")
         if follow_ups:
             lines.append(_("Client follow-ups (%(count)s):") % {"count": len(follow_ups)})
+            from apps.timeline import registry as timeline_registry
+
             for e in follow_ups:
-                who = e.contact.full_name if e.contact else e.company.name
-                path = f"/contacts/{e.contact_id}" if e.contact_id else f"/companies/{e.company_id}"
+                who, path = timeline_registry.target_name(e), timeline_registry.target_path(e)
                 summary = (e.summary or "").strip().splitlines()[0][:80] if e.summary else ""
                 lines.append(f"  • {who}{': ' + summary if summary else ''} ({e.follow_up_on:%d/%m/%Y}) — {base}{path}")
             lines.append("")

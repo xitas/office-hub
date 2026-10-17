@@ -39,6 +39,8 @@ interface Props {
   initialSubject?: string
   /** The contact being logged on: "From template" fills in their details. */
   contactId?: number
+  /** Or the vendor: its contact person and details fill the template. */
+  vendorId?: number
   onSubmit: (input: Partial<EntryInput>) => Promise<unknown>
   onCancel?: () => void
   /** Prefix for element ids, so two forms can sit on one page. */
@@ -56,6 +58,7 @@ export function EntryForm({
   initialSummary,
   initialSubject,
   contactId,
+  vendorId,
   onSubmit,
   onCancel,
   idPrefix = 'entry',
@@ -144,7 +147,7 @@ export function EntryForm({
   // "From template": the summary (and an email's subject) start from a template filled for this contact.
   const fromTemplate = async (template: MessageTemplate) => {
     try {
-      const filled = await fillTemplate(template.id, contactId)
+      const filled = await fillTemplate(template.id, contactId, vendorId)
       setSummary(filled.body)
       if (kind === 'email' && filled.subject) setSubject(filled.subject)
       recordTemplateUse(template.id)

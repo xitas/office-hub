@@ -43,7 +43,7 @@ def _date(params, name):
 def log_queryset(user, params):
     """Logged communications the user can see, newest first, filtered by the query parameters:
     `type` (comma-separated kinds), `direction` (in/out), `logged_by`, `contact`, `company` (also its
-    contacts' entries), `date_from` / `date_to` (office dates), `follow_up` (any/open/done/none), `q`."""
+    contacts' entries), `vendor`, `date_from` / `date_to` (office dates), `follow_up` (any/open/done/none), `q`."""
     from .views import visible_entries
 
     qs = visible_entries(user).filter(kind__in=LOG_KINDS)
@@ -64,6 +64,8 @@ def log_queryset(user, params):
         qs = qs.filter(contact_id=contact)
     if (company := _int(params, "company")) is not None:
         qs = qs.filter(Q(company_id=company) | Q(contact__company_id=company))
+    if (vendor := _int(params, "vendor")) is not None:
+        qs = qs.filter(vendor_id=vendor)
     tz = office_tz()
     if (day := _date(params, "date_from")) is not None:
         qs = qs.filter(occurred_at__gte=datetime.combine(day, time.min, tzinfo=tz))
@@ -100,12 +102,12 @@ def export_log(request, queryset):
     directions = dict(CallDetailsSerializer.DIRECTIONS)
     outcomes = dict(CallDetailsSerializer.OUTCOMES)
     writer = CsvWriter(header=[
-        _("Date"), _("Type"), _("Direction"), _("Contact"), _("Company"), _("Subject"), _("Summary"), _("Call outcome"),
+        _("Date"), _("Type"), _("Direction"), _("Contact"), _("Company"), _("Vendor"), _("Subject"), _("Summary"), _("Call outcome"),
         _("Logged by"), _("Follow-up date"), _("Follow-up"), _("Follow-up task for"),
     ])
     tz = office_tz()
     count = 0
-    for e in queryset.select_related("contact__company", "company", "created_by"):
+    for e in queryset.select_related("contact__company", "company", "vendor", "created_by"):
         entry_type = registry.get_type(e.kind)
         task = next(iter(e.follow_up_tasks.all()), None)
         if not e.follow_up_on:
@@ -123,6 +125,7 @@ def export_log(request, queryset):
             str(directions.get(e.details.get("direction"), "")),
             e.contact.full_name if e.contact else "",
             company.name if company else "",
+            e.vendor.name if e.vendor_id else "",
             e.details.get("subject", ""),
             e.summary,
             str(outcomes.get(e.details.get("outcome"), "")),

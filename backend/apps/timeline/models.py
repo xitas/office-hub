@@ -21,6 +21,8 @@ class TimelineEntry(models.Model):
     company = models.ForeignKey(
         "contacts.Company", null=True, blank=True, on_delete=models.CASCADE, related_name="timeline_entries"
     )
+    # Calls, messages and notes with a supplier (Phase 5); vendors are shared office-wide.
+    vendor = models.ForeignKey("vendors.Vendor", null=True, blank=True, on_delete=models.CASCADE, related_name="timeline_entries")
     summary = models.TextField()
     details = models.JSONField(default=dict, blank=True)
     occurred_at = models.DateTimeField(default=timezone.now, db_index=True)
@@ -42,7 +44,11 @@ class TimelineEntry(models.Model):
         verbose_name_plural = _("timeline entries")
         constraints = [
             models.CheckConstraint(
-                condition=(Q(contact__isnull=False) & Q(company__isnull=True)) | (Q(contact__isnull=True) & Q(company__isnull=False)),
+                condition=(
+                    (Q(contact__isnull=False) & Q(company__isnull=True) & Q(vendor__isnull=True))
+                    | (Q(contact__isnull=True) & Q(company__isnull=False) & Q(vendor__isnull=True))
+                    | (Q(contact__isnull=True) & Q(company__isnull=True) & Q(vendor__isnull=False))
+                ),
                 name="timeline_entry_one_target",
             )
         ]
@@ -52,4 +58,4 @@ class TimelineEntry(models.Model):
 
     @property
     def target(self):
-        return self.contact or self.company
+        return self.contact or self.company or self.vendor

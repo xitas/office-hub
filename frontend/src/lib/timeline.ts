@@ -74,9 +74,23 @@ export interface TimelineItem {
   editable: boolean
   contact: RecordRef | null
   company: RecordRef | null
+  /** Calls, messages and notes with a supplier (vendors are shared office-wide). */
+  vendor?: RecordRef | null
 }
 
-export type TimelineTarget = { contact: number } | { company: number }
+export type TimelineTarget = { contact: number } | { company: number } | { vendor: number }
+
+/** The page of the record a target points at. */
+export function targetPath(target: TimelineTarget) {
+  if ('contact' in target) return `/contacts/${target.contact}`
+  return 'company' in target ? `/companies/${target.company}` : `/vendors/${target.vendor}`
+}
+
+/** A stable key for a target ("contact-3", "vendor-7"). */
+export function targetKey(target: TimelineTarget) {
+  if ('contact' in target) return `contact-${target.contact}`
+  return 'company' in target ? `company-${target.company}` : `vendor-${target.vendor}`
+}
 
 export interface EntryInput {
   kind: EntryKind
@@ -97,6 +111,7 @@ export interface LogFilters {
   logged_by?: string
   contact?: string
   company?: string
+  vendor?: string
   date_from?: string
   date_to?: string
   follow_up?: string

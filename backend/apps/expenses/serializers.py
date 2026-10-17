@@ -3,6 +3,8 @@ from decimal import Decimal
 from django.urls import reverse
 from rest_framework import serializers
 
+from apps.vendors.models import Vendor
+
 from . import rules
 from .models import Expense
 
@@ -25,6 +27,7 @@ class ExpenseSerializer(serializers.ModelSerializer):
     department_name = serializers.CharField(source="user.department.name", read_only=True, default=None)
     decided_by_name = serializers.CharField(source="decided_by.full_name", read_only=True, default=None)
     paid_by_name = serializers.CharField(source="paid_by.full_name", read_only=True, default=None)
+    vendor_name = serializers.CharField(source="vendor.name", read_only=True, default=None)
     receipts = serializers.SerializerMethodField()
     can_edit = serializers.SerializerMethodField()
     can_cancel = serializers.SerializerMethodField()
@@ -35,7 +38,7 @@ class ExpenseSerializer(serializers.ModelSerializer):
         model = Expense
         fields = [
             "id", "user", "user_name", "department_name", "title", "category", "amount", "currency", "spent_on",
-            "description", "status", "decided_by_name", "decided_at", "decision_note", "paid_by_name", "paid_at",
+            "description", "vendor", "vendor_name", "status", "decided_by_name", "decided_at", "decision_note", "paid_by_name", "paid_at",
             "payment_note", "receipts", "can_edit", "can_cancel", "can_decide", "can_pay", "created_at",
         ]
         read_only_fields = fields
@@ -67,6 +70,7 @@ class ExpenseInputSerializer(serializers.Serializer):
     amount = serializers.DecimalField(max_digits=12, decimal_places=2, min_value=Decimal("0.01"), max_value=Decimal("10000000"))
     spent_on = serializers.DateField()
     description = serializers.CharField(required=False, allow_blank=True, max_length=2000, default="")
+    vendor = serializers.PrimaryKeyRelatedField(queryset=Vendor.objects.filter(is_active=True), required=False, allow_null=True, default=None)
     remove_receipts = serializers.ListField(child=serializers.IntegerField(), required=False, default=list)
 
     def validate_title(self, value):

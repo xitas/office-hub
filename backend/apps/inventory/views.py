@@ -30,6 +30,7 @@ OPEN = (PurchaseRequest.Status.PENDING, PurchaseRequest.Status.APPROVED)
     OpenApiParameter("q", str, description="Name"),
     OpenApiParameter("category", str),
     OpenApiParameter("low", bool, description="Only items at or below their reorder level"),
+    OpenApiParameter("supplier", int, description="Items usually bought from this vendor"),
     OpenApiParameter("inactive", bool, description="Include items no longer stocked (managers, admins)"),
 ]))
 class SupplyItemViewSet(AuditedViewSetMixin, viewsets.ModelViewSet):
@@ -45,7 +46,9 @@ class SupplyItemViewSet(AuditedViewSetMixin, viewsets.ModelViewSet):
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
             return SupplyItem.objects.none()
-        qs = SupplyItem.objects.annotate(open_requests=Count("purchase_requests", filter=Q(purchase_requests__status__in=OPEN)))
+        qs = SupplyItem.objects.select_related("supplier").annotate(
+            open_requests=Count("purchase_requests", filter=Q(purchase_requests__status__in=OPEN))
+        )
         params = self.request.query_params
         if not (rules.can_manage(self.request.user) and params.get("inactive") in ("1", "true")) and self.action == "list":
             qs = qs.filter(is_active=True)
@@ -55,6 +58,8 @@ class SupplyItemViewSet(AuditedViewSetMixin, viewsets.ModelViewSet):
             qs = qs.filter(Q(name__icontains=q) | Q(name_ur__icontains=q))
         if c := params.get("category"):
             qs = qs.filter(category=c)
+        if (s := params.get("supplier")) and s.isdigit():
+            qs = qs.filter(supplier_id=int(s))
         if params.get("low") in ("1", "true"):
             qs = qs.filter(quantity__lte=F("reorder_level"))
         return qs.order_by("name")
@@ -115,7 +120,7 @@ class PurchaseRequestViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, v
         if getattr(self, "swagger_fake_view", False):
             return PurchaseRequest.objects.none()
         user = self.request.user
-        qs = rules.visible_requests(user).select_related("requested_by__department", "item", "decided_by", "received_by")
+        qs = rules.visible_requests(user).select_related("requested_by__department", "item", "vendor", "decided_by", "received_by")
         if self.action != "list":
             return qs
         params = self.request.query_params

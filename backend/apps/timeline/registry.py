@@ -51,11 +51,26 @@ def providers() -> dict[str, Callable]:
     return dict(_providers)
 
 
-def target_ref(contact=None, company=None) -> dict:
+def target_ref(contact=None, company=None, vendor=None) -> dict:
     return {
         "contact": {"id": contact.pk, "name": contact.full_name} if contact else None,
         "company": {"id": company.pk, "name": company.name} if company else None,
+        "vendor": {"id": vendor.pk, "name": vendor.name} if vendor else None,
     }
+
+
+def target_name(entry) -> str:
+    """Who an entry is about: the contact, the company or the vendor."""
+    if entry.contact_id:
+        return entry.contact.full_name
+    return entry.company.name if entry.company_id else entry.vendor.name
+
+
+def target_path(entry) -> str:
+    """The page of the record an entry belongs to."""
+    if entry.contact_id:
+        return f"/contacts/{entry.contact_id}"
+    return f"/companies/{entry.company_id}" if entry.company_id else f"/vendors/{entry.vendor_id}"
 
 
 def auto_entry(*, uid: str, kind: str, occurred_at, summary: str, user=None, details=None, contact=None, company=None) -> dict:

@@ -29,6 +29,8 @@ class SupplyItem(models.Model):
     reorder_level = models.PositiveIntegerField(default=0, help_text="Low stock at or below this quantity")
     location = models.CharField(max_length=100, blank=True)
     notes = models.CharField(max_length=300, blank=True)
+    supplier = models.ForeignKey("vendors.Vendor", null=True, blank=True, on_delete=models.SET_NULL, related_name="supplies",
+                                 help_text="Where it's usually bought")
     is_active = models.BooleanField(default=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -61,6 +63,8 @@ class PurchaseRequest(models.Model):
     unit = models.CharField(max_length=30, blank=True)
     reason = models.CharField(max_length=500, blank=True)
     estimated_cost = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    vendor = models.ForeignKey("vendors.Vendor", null=True, blank=True, on_delete=models.SET_NULL, related_name="purchase_requests",
+                               help_text="Where to buy it (or where it was bought)")
     requested_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="purchase_requests")
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING, db_index=True)
     decided_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")

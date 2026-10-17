@@ -69,11 +69,12 @@ def _announce_low(pk, actor_pk):
 # ================================================================ purchase requests
 
 
-def request_purchase(user, *, item=None, item_name="", quantity: int, unit="", reason="", estimated_cost=None) -> PurchaseRequest:
+def request_purchase(user, *, item=None, item_name="", quantity: int, unit="", reason="", estimated_cost=None, vendor=None) -> PurchaseRequest:
     if item is not None:
         if not item.is_active:
             raise SupplyError({"item": _("This item isn't stocked any more.")})
         item_name, unit = item.name, unit or item.unit
+        vendor = vendor or item.supplier  # where it's usually bought, unless the requester names another
     item_name = item_name.strip()
     if not item_name:
         raise SupplyError({"item_name": _("Say what to buy.")})
@@ -81,7 +82,7 @@ def request_purchase(user, *, item=None, item_name="", quantity: int, unit="", r
     with transaction.atomic():
         req = PurchaseRequest.objects.create(
             item=item, item_name=item_name[:100], quantity=quantity, unit=unit.strip()[:30], reason=reason.strip()[:500],
-            estimated_cost=estimated_cost, requested_by=user,
+            estimated_cost=estimated_cost, vendor=vendor, requested_by=user,
             status=PurchaseRequest.Status.APPROVED if auto else PurchaseRequest.Status.PENDING,
             decided_by=user if auto else None, decided_at=timezone.now() if auto else None,
         )
@@ -122,8 +123,9 @@ def cancel(user, req) -> PurchaseRequest:
     return req
 
 
-def receive(user, req, *, quantity=None, add_to_stock=True, note="") -> PurchaseRequest:
-    """Mark an approved request received. Adds it to stock (a new item is added to the list) unless told not to."""
+def receive(user, req, *, quantity=None, add_to_stock=True, note="", vendor=None) -> PurchaseRequest:
+    """Mark an approved request received. Adds it to stock (a new item is added to the list) unless told not to;
+    `vendor` records where it was bought (and becomes a new item's usual supplier)."""
     if not rules.can_receive(user, req):
         raise PermissionError
     quantity = quantity or req.quantity
@@ -134,12 +136,14 @@ def receive(user, req, *, quantity=None, add_to_stock=True, note="") -> Purchase
         if add_to_stock:
             item = req.item
             if item is None:
-                item = SupplyItem.objects.create(name=req.item_name, unit=req.unit or "piece", category=SupplyItem.Category.OTHER, created_by=user)
+                item = SupplyItem.objects.create(name=req.item_name, unit=req.unit or "piece", category=SupplyItem.Category.OTHER,
+                                                 supplier=vendor or req.vendor, created_by=user)
                 req.item = item
             change_stock(user, item, StockMovement.Kind.RECEIVED, quantity, note or _("Purchase request #%(n)s") % {"n": req.pk}, purchase_request=req)
         req.status = PurchaseRequest.Status.RECEIVED
+        req.vendor = vendor or req.vendor
         req.received_by, req.received_at, req.received_quantity = user, timezone.now(), quantity
-        req.save(update_fields=["item", "status", "received_by", "received_at", "received_quantity", "updated_at"])
+        req.save(update_fields=["item", "vendor", "status", "received_by", "received_at", "received_quantity", "updated_at"])
         pk = req.pk
         transaction.on_commit(lambda: _announce(pk, "purchase_received", user.pk))
     return req

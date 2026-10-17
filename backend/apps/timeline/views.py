@@ -8,7 +8,7 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from apps.contacts.visibility import visible_companies, visible_contacts
 from apps.core.audit import AuditedViewSetMixin
-from apps.core.permissions import ModulePermission
+from apps.core.permissions import ModulePermission, has_perm
 
 from . import follow_ups, registry
 from .log import export_log, log_queryset
@@ -17,16 +17,19 @@ from .serializers import TimelineEntrySerializer, can_modify, entry_data
 
 
 def visible_entries(user):
-    """Stored entries on contacts/companies the user can see."""
-    return TimelineEntry.objects.filter(
-        Q(contact__in=visible_contacts(user)) | Q(company__in=visible_companies(user))
-    ).select_related("contact", "company", "created_by").prefetch_related("follow_up_tasks__assignees")
+    """Stored entries on contacts/companies the user can see, and on vendors (shared office-wide)."""
+    q = Q(contact__in=visible_contacts(user)) | Q(company__in=visible_companies(user))
+    if has_perm(user, "vendors", "view"):
+        q |= Q(vendor__isnull=False)
+    return TimelineEntry.objects.filter(q).select_related("contact", "company", "vendor", "created_by").prefetch_related(
+        "follow_up_tasks__assignees"
+    )
 
 
 class TimelineViewSet(
     AuditedViewSetMixin, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet
 ):
-    """Interaction timeline of one contact or company.
+    """Interaction timeline of one contact, company or vendor.
 
     The list merges stored entries (notes, calls, meetings, ...) with automatic ones (status
     changes, record created) from registered providers, newest first. A company's timeline also
@@ -64,6 +67,7 @@ class TimelineViewSet(
             OpenApiParameter("logged_by", int),
             OpenApiParameter("contact", int),
             OpenApiParameter("company", int, description="The company's entries and its contacts'"),
+            OpenApiParameter("vendor", int),
             OpenApiParameter("date_from", str),
             OpenApiParameter("date_to", str),
             OpenApiParameter("follow_up", str, enum=["any", "open", "done", "none"]),
@@ -76,7 +80,7 @@ class TimelineViewSet(
     def log(self, request):
         """Communication log: every call, meeting, email, WhatsApp message and note on the contacts
         and companies you can see, newest first, with filters."""
-        qs = log_queryset(request.user, request.query_params).select_related("contact", "company", "created_by__department")
+        qs = log_queryset(request.user, request.query_params).select_related("contact", "company", "vendor", "created_by__department")
         page = self.paginate_queryset(qs)
         return self.get_paginated_response([entry_data(e, request.user) for e in page])
 
@@ -101,6 +105,7 @@ class TimelineViewSet(
         parameters=[
             OpenApiParameter("contact", int),
             OpenApiParameter("company", int),
+            OpenApiParameter("vendor", int),
             OpenApiParameter("type", str, description="Comma-separated kinds, e.g. note,call"),
             OpenApiParameter("page", int),
         ],
@@ -109,9 +114,12 @@ class TimelineViewSet(
     def list(self, request):
         user = request.user
         params = request.query_params
-        contact_id, company_id = params.get("contact"), params.get("company")
-        if bool(contact_id) == bool(company_id):
-            raise ValidationError({"detail": _("Pass either contact or company.")})
+        contact_id, company_id, vendor_id = params.get("contact"), params.get("company"), params.get("vendor")
+        if sum(bool(x) for x in (contact_id, company_id, vendor_id)) != 1:
+            raise ValidationError({"detail": _("Pass a contact, a company or a vendor.")})
+        kinds = {k for k in params.get("type", "").split(",") if k}
+        if vendor_id:
+            return self._vendor_timeline(request, vendor_id, kinds)
         try:
             if contact_id:
                 contact = get_object_or_404(visible_contacts(user), pk=int(contact_id))
@@ -123,7 +131,6 @@ class TimelineViewSet(
         except ValueError:
             raise ValidationError({"detail": _("Invalid id.")})
 
-        kinds = {k for k in params.get("type", "").split(",") if k}
         stored = TimelineEntry.objects.filter(
             Q(contact_id__in=contact_ids) | Q(company_id__in=company_ids)
         ).select_related("contact", "company", "created_by__department").prefetch_related("follow_up_tasks__assignees")
@@ -136,4 +143,20 @@ class TimelineViewSet(
         entries.sort(key=lambda e: (e["occurred_at"], e["created_at"]), reverse=True)
 
         page = self.paginate_queryset(entries)
+        return self.get_paginated_response(page)
+
+    def _vendor_timeline(self, request, vendor_id, kinds):
+        """A vendor's logged calls, messages and notes (vendors have no automatic entries)."""
+        from apps.vendors.models import Vendor
+
+        if not has_perm(request.user, "vendors", "view"):
+            raise PermissionDenied
+        try:
+            vendor = get_object_or_404(Vendor.objects.all(), pk=int(vendor_id))
+        except ValueError:
+            raise ValidationError({"detail": _("Invalid id.")})
+        stored = vendor.timeline_entries.select_related("vendor", "created_by__department").prefetch_related("follow_up_tasks__assignees")
+        if kinds:
+            stored = stored.filter(kind__in=kinds)
+        page = self.paginate_queryset([entry_data(e, request.user) for e in stored])
         return self.get_paginated_response(page)

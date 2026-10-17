@@ -26,6 +26,8 @@ import { PlaceholderWarnings } from './TemplateEditor'
 
 interface Recipient {
   id: number
+  /** A vendor rather than a contact: its contact person and details fill the template. */
+  isVendor?: boolean
   full_name: string
   company_name?: string | null
   phone?: string
@@ -33,7 +35,7 @@ interface Recipient {
   email?: string
 }
 
-/** "WhatsApp with template" and "Email with template" for a contact. */
+/** "WhatsApp with template" and "Email with template" for a contact (or a vendor). */
 export function TemplateSendButtons({ contact }: { contact: Recipient }) {
   const { t } = useTranslation()
   const [channel, setChannel] = useState<'whatsapp' | 'email' | null>(null)
@@ -68,7 +70,7 @@ function SendDialog({ contact, channel, onClose }: { contact: Recipient; channel
   const [body, setBody] = useState('')
 
   const fill = useMutation({
-    mutationFn: (template: MessageTemplate) => fillTemplate(template.id, contact.id),
+    mutationFn: (template: MessageTemplate) => (contact.isVendor ? fillTemplate(template.id, null, contact.id) : fillTemplate(template.id, contact.id)),
     onSuccess: (result, template) => {
       setChosen(template)
       setFilled(result)
@@ -78,7 +80,9 @@ function SendDialog({ contact, channel, onClose }: { contact: Recipient; channel
     onError: (e) => toast.error(apiError(e).message),
   })
 
-  const record = { target: { contact: contact.id }, name: contact.full_name, hint: contact.company_name ?? '', type: 'contact' as const }
+  const record = contact.isVendor
+    ? { target: { vendor: contact.id }, name: contact.full_name, hint: contact.company_name ?? '', type: 'vendor' as const }
+    : { target: { contact: contact.id }, name: contact.full_name, hint: contact.company_name ?? '', type: 'contact' as const }
   const send = () => {
     if (!chosen) return
     recordTemplateUse(chosen.id)

@@ -404,7 +404,17 @@ def _goal_reminder(params: dict) -> tuple[str, str]:
     return _("This week's goals"), body
 
 
+def _vendor_added(params: dict) -> tuple[str, str]:
+    from django.utils import translation
+
+    urdu = (translation.get_language() or "").startswith("ur")
+    categories = params.get("categories_ur" if urdu else "categories") or []
+    detail = " · ".join(x for x in (", ".join(categories), params.get("city", "")) if x)
+    return _("New vendor: %(name)s") % {"name": params.get("name", "")}, detail
+
+
 RENDERERS = {
+    "vendor_added": _vendor_added,
     "goal_assigned": _goal_assigned,
     "goal_done": _goal_done,
     "goal_reminder": _goal_reminder,

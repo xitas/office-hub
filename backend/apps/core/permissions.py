@@ -49,7 +49,9 @@ PERMISSIONS: dict[str, dict[str, set[str]]] = {
     "planning": {"view": ALL, "create": MGMT, "edit": MGMT, "delete": MGMT},
     # Phase 5
     "visits": {"view": ALL, "create": ALL, "edit": ALL, "delete": MGMT, "view_map": MGMT},
-    "vendors": {"view": ALL, "create": ALL, "edit": ALL, "delete": MGMT},
+    # One shared directory: anyone adds and corrects vendors; managers and admins mark them preferred or inactive
+    # and delete unused ones; admins manage the service categories.
+    "vendors": {"view": ALL, "create": ALL, "edit": ALL, "delete": MGMT, "manage": ADMIN_ONLY},
     "errands": {"view": ALL, "create": ALL, "edit": ALL, "delete": MGMT},
     # Phase 6
     "reports": {"view": MGMT, "export": MGMT},

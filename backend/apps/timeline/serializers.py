@@ -7,7 +7,8 @@ from rest_framework import serializers
 from apps.accounts.models import User
 from apps.contacts.models import Company, Contact
 from apps.contacts.visibility import visible_companies, visible_contacts
-from apps.core.permissions import ADMIN, MANAGER
+from apps.core.permissions import ADMIN, MANAGER, has_perm
+from apps.vendors.models import Vendor
 
 from . import registry
 from .models import TimelineEntry
@@ -38,6 +39,7 @@ class TimelineEntrySerializer(serializers.ModelSerializer):
     kind = serializers.CharField(max_length=40)
     contact = serializers.PrimaryKeyRelatedField(queryset=Contact.objects.none(), required=False, allow_null=True)
     company = serializers.PrimaryKeyRelatedField(queryset=Company.objects.none(), required=False, allow_null=True)
+    vendor = serializers.PrimaryKeyRelatedField(queryset=Vendor.objects.none(), required=False, allow_null=True)
     summary = serializers.CharField(max_length=5000, required=False, allow_blank=True)
     details = serializers.JSONField(required=False)
     # With a follow-up date a task is created for it: for whoever logged it, or `follow_up_assignee`;
@@ -50,7 +52,7 @@ class TimelineEntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = TimelineEntry
         fields = [
-            "kind", "contact", "company", "summary", "details", "occurred_at", "follow_up_on", "follow_up_assignee",
+            "kind", "contact", "company", "vendor", "summary", "details", "occurred_at", "follow_up_on", "follow_up_assignee",
             "follow_up_skip",
         ]
 
@@ -61,6 +63,8 @@ class TimelineEntrySerializer(serializers.ModelSerializer):
             # Entries can only be added to records the user can see; others look like unknown ids.
             fields["contact"].queryset = visible_contacts(request.user)
             fields["company"].queryset = visible_companies(request.user)
+            if has_perm(request.user, "vendors", "view"):
+                fields["vendor"].queryset = Vendor.objects.filter(is_active=True)
         return fields
 
     def validate_kind(self, value):
@@ -80,14 +84,14 @@ class TimelineEntrySerializer(serializers.ModelSerializer):
         instance = self.instance
         if instance is not None:
             # The record an entry belongs to is fixed once it is logged.
-            for field in ("contact", "company"):
+            for field in ("contact", "company", "vendor"):
                 if field in attrs and attrs[field] != getattr(instance, field):
                     raise serializers.ValidationError({field: _("An entry cannot be moved to another record.")})
             kind = instance.kind
         else:
             kind = attrs.get("kind")
-            if bool(attrs.get("contact")) == bool(attrs.get("company")):
-                raise serializers.ValidationError(_("Choose either a contact or a company."))
+            if sum(bool(attrs.get(f)) for f in ("contact", "company", "vendor")) != 1:
+                raise serializers.ValidationError(_("Choose a contact, a company or a vendor."))
         entry_type = registry.get_type(kind)
 
         summary = attrs.get("summary", instance.summary if instance else "").strip()
@@ -151,5 +155,5 @@ def entry_data(entry, user) -> dict:
         "created_at": entry.created_at,
         "updated_at": entry.updated_at,
         "editable": can_modify(user, entry),
-        **registry.target_ref(entry.contact, entry.company),
+        **registry.target_ref(entry.contact, entry.company, entry.vendor),
     }

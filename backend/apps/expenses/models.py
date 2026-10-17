@@ -42,6 +42,8 @@ class Expense(models.Model):
     currency = models.CharField(max_length=3)
     spent_on = models.DateField()
     description = models.TextField(blank=True)
+    vendor = models.ForeignKey("vendors.Vendor", null=True, blank=True, on_delete=models.SET_NULL, related_name="expenses",
+                               help_text="Who was paid (optional)")
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING, db_index=True)
     decided_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
     decided_at = models.DateTimeField(null=True, blank=True)

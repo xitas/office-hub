@@ -34,7 +34,8 @@
     "attendance": "Attendance",
     "supplies": "Supplies",
     "expenses": "Expenses",
-    "planning": "Weekly plan"
+    "planning": "Weekly plan",
+    "vendors": "Vendors"
   },
   "common": {
     "save": "Save",
@@ -208,7 +209,8 @@
       "tasks": "Tasks",
       "messages": "Messages",
       "files": "Files",
-      "companies": "Companies"
+      "companies": "Companies",
+      "vendors": "Vendors"
     },
     "allMessages": "Search all messages"
   },
@@ -420,7 +422,8 @@
     "office_event": "Office events and holidays",
     "attendance": "Attendance reminders and corrections",
     "low_stock": "Low-stock alerts (supplies)",
-    "planning": "Weekly goals"
+    "planning": "Weekly goals",
+    "vendor": "New vendors in the directory"
   },
   "companies": {
     "title": "Companies",
@@ -1192,7 +1195,7 @@
   },
   "log": {
     "title": "Communication log",
-    "subtitle": "Every call, meeting, email, WhatsApp message and note with your clients.",
+    "subtitle": "Every call, meeting, email, WhatsApp message and note with your clients and vendors.",
     "add": "Log",
     "addHint": "Pick a contact or company, then log what happened.",
     "exportHint": "Download this list (with its filters) as a CSV file for Excel",
@@ -1851,7 +1854,13 @@
     "lowStock": "Low on stock",
     "open": "Open",
     "allStocked": "Everything is above its reorder level.",
-    "requested": "Requested"
+    "requested": "Requested",
+    "supplier": "Usual supplier",
+    "from": "From {{name}}",
+    "whereToBuy": "Where to buy (optional)",
+    "usualSupplier": "Usually from {{name}}",
+    "anyShop": "Any shop",
+    "boughtFrom": "Bought from"
   },
   "expenses": {
     "title": "Expenses",
@@ -1926,7 +1935,9 @@
     "receipts": "Receipts",
     "addReceipt": "Add receipt",
     "receiptsHint": "Photos or PDFs of the receipt, up to {{n}} files of {{mb}} MB each.",
-    "removeReceipt": "Remove {{name}}"
+    "removeReceipt": "Remove {{name}}",
+    "paidTo": "Paid to (optional)",
+    "paidToName": "Paid to {{name}}"
   },
   "planning": {
     "title": "Weekly plan",
@@ -1980,5 +1991,64 @@
     "details": "Details (optional)",
     "cardTitle": "This week's goals",
     "open": "Open"
+  },
+  "vendors": {
+    "title": "Vendors",
+    "subtitle": "Local suppliers and service people the office uses, with how to reach them.",
+    "add": "Add vendor",
+    "addHint": "Anyone can add a vendor; managers and admins are told so they can check it.",
+    "addedToast": "Vendor added",
+    "editTitle": "Change {{name}}",
+    "edit": "Change",
+    "search": "Search by name, phone or area",
+    "allCategories": "All services",
+    "allCities": "All cities",
+    "preferredOnly": "Preferred only",
+    "showInactive": "Show vendors no longer used",
+    "none": "None",
+    "noneHint": "Add the shops and service people the office calls on.",
+    "preferred": "Preferred",
+    "inactive": "No longer used",
+    "stars_one": "{{count}} star",
+    "stars_other": "{{count}} stars",
+    "whatsappHint": "If different from the phone",
+    "areasHint": "e.g. Gulberg, DHA, Model Town",
+    "paymentTermsHint": "e.g. Cash on delivery, 30 days credit",
+    "fields": {
+      "name": "Name",
+      "categories": "Services",
+      "contact_person": "Contact person",
+      "phone": "Phone",
+      "whatsapp": "WhatsApp",
+      "email": "Email",
+      "website": "Website",
+      "address": "Address",
+      "city": "City",
+      "areas": "Areas served",
+      "payment_terms": "Payment terms",
+      "rating": "Rating",
+      "notes": "Notes",
+      "preferred": "Preferred vendor",
+      "active": "Still used"
+    },
+    "categories": "Service categories",
+    "categoriesHint": "Shown on vendors and used to filter them. A category in use can be switched off but not deleted.",
+    "categoryName": "Name",
+    "categoryNameUr": "Urdu name",
+    "addCategory": "Add",
+    "vendorCount_one": "{{count}} vendor",
+    "vendorCount_other": "{{count}} vendors",
+    "categoryActive": "{{name}} in use",
+    "deleteCategory": "Delete {{name}}",
+    "deleteTitle": "Delete {{name}}?",
+    "deleteText": "Only a vendor nothing refers to can be deleted. Otherwise mark it as no longer used.",
+    "supplies": "Supplies from this vendor",
+    "noSupplies": "No supplies list this vendor as their usual supplier.",
+    "purchases": "Purchase requests",
+    "noPurchases": "No purchase requests name this vendor.",
+    "expenses": "Expense claims",
+    "spentThisYear_one": "This year, approved and paid ({{count}} claim):",
+    "spentThisYear_other": "This year, approved and paid ({{count}} claims):",
+    "privacyHint": "You see the requests and claims you are allowed to see; expense claims stay private to the claimant, their managers and admins."
   }
 }

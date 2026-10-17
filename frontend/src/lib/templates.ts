@@ -78,8 +78,9 @@ export function usePlaceholders() {
   })
 }
 
-export async function fillTemplate(id: number, contact?: number | null) {
-  return (await api.post<FilledTemplate>(`/templates/${id}/fill/`, { contact: contact ?? null })).data
+/** Fill a template for a contact, or for a vendor (its contact person and details stand in for the contact's). */
+export async function fillTemplate(id: number, contact?: number | null, vendor?: number | null) {
+  return (await api.post<FilledTemplate>(`/templates/${id}/fill/`, { contact: contact ?? null, vendor: vendor ?? null })).data
 }
 
 /** Count one use (sent, inserted or copied); errors are ignored, it's only for sorting. */

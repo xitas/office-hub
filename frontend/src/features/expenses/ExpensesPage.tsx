@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Ban, Banknote, Check, Download, FileImage, FileText, Loader2, Paperclip, Pencil, Plus, ReceiptText, X } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { EmptyState, ErrorState, FormDialog, FormField, PageHeader, SimpleSelect } from '@/components/common'
 import { MonthNav } from '@/components/common/MonthNav'
@@ -33,6 +33,7 @@ import { ATTACHMENT_ACCEPT, ATTACHMENT_MAX_MB, formatBytes } from '@/lib/tasks'
 import { downloadFile } from '@/lib/transfer'
 import { useAuthedBlobUrl } from '@/lib/useAuthedBlob'
 import { useMe } from '@/lib/auth'
+import { VendorSelect } from '@/features/vendors/VendorDialog'
 import { cn } from '@/lib/utils'
 
 type Tab = 'mine' | 'approvals' | 'team' | 'to_pay'
@@ -209,6 +210,7 @@ function ClaimRow({ expense: e, showName }: { expense: Expense; showName: boolea
               </p>
               <p className="mt-0.5 text-sm text-muted-foreground">
                 {t(`expenses.categories.${e.category}`)} · {fmt.date(`${e.spent_on}T12:00:00`)}
+                {e.vendor_name && <> · <Link to={`/vendors/${e.vendor}`} className="text-primary hover:underline">{t('expenses.paidToName', { name: e.vendor_name })}</Link></>}
                 {showName && e.department_name && <> · <bdi>{e.department_name}</bdi></>}
                 {!e.receipts.length && <> · <span className="text-amber-700 dark:text-amber-300">{t('expenses.noReceipt')}</span></>}
               </p>
@@ -387,6 +389,7 @@ function ClaimDialog({ expense, onClose }: { expense?: Expense; onClose: () => v
     spent_on: expense?.spent_on ?? today,
     description: expense?.description ?? '',
   })
+  const [vendor, setVendor] = useState<number | null>(expense?.vendor ?? null)
   const [files, setFiles] = useState<File[]>([])
   const [removed, setRemoved] = useState<number[]>([])
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -397,6 +400,7 @@ function ClaimDialog({ expense, onClose }: { expense?: Expense; onClose: () => v
     mutationFn: async () => {
       const body = new FormData()
       for (const [k, v] of Object.entries(form)) body.append(k, v)
+      body.append('vendor', vendor ? String(vendor) : '')
       files.forEach((f) => body.append('files', f))
       removed.forEach((id) => body.append('remove_receipts', String(id)))
       return expense ? api.patch(`/expenses/claims/${expense.id}/`, body) : api.post('/expenses/claims/', body)
@@ -444,6 +448,9 @@ function ClaimDialog({ expense, onClose }: { expense?: Expense; onClose: () => v
             <Input id="ex-date" type="date" max={today} value={form.spent_on} onChange={(ev) => set('spent_on', ev.target.value)} className="font-latin" />
           </FormField>
         </div>
+        <FormField id="ex-vendor" label={t('expenses.paidTo')}>
+          <VendorSelect id="ex-vendor" value={vendor} onChange={setVendor} />
+        </FormField>
         <FormField id="ex-desc" label={t('expenses.description')}>
           <Textarea id="ex-desc" value={form.description} dir="auto" maxLength={2000} onChange={(ev) => set('description', ev.target.value)} className="min-h-16" />
         </FormField>

@@ -1,4 +1,4 @@
-import { Building2, X } from 'lucide-react'
+import { Building2, Store, X } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
@@ -6,7 +6,7 @@ import { FormDialog, UserAvatar } from '@/components/common'
 import { CreatedPanel } from '@/components/common/CreatedPanel'
 import { RecordPicker, type Picked } from '@/components/common/RecordPicker'
 import { Button } from '@/components/ui/button'
-import { useAddEntry, type EntryKind } from '@/lib/timeline'
+import { targetPath, useAddEntry, type EntryKind } from '@/lib/timeline'
 import { EntryForm } from './EntryForm'
 
 /** Quick add → Note (and "Log" on the communication log, and "Log this call" after calling):
@@ -62,7 +62,7 @@ export function QuickNoteDialog({
           message={t(kinds.length === 1 && kinds[0] === 'note' ? 'timeline.noteSaved' : 'timeline.entrySaved', { name: saved.name })}
           onOpen={() => {
             close(false)
-            navigate('contact' in saved.target ? `/contacts/${saved.target.contact}` : `/companies/${saved.target.company}`)
+            navigate(targetPath(saved.target))
           }}
           onAnother={() => {
             setSaved(null)
@@ -77,7 +77,7 @@ export function QuickNoteDialog({
               <UserAvatar name={picked.name} className="size-8" />
             ) : (
               <span className="flex size-8 items-center justify-center rounded-full bg-muted">
-                <Building2 className="size-4 text-muted-foreground" />
+                {picked.type === 'vendor' ? <Store className="size-4 text-muted-foreground" /> : <Building2 className="size-4 text-muted-foreground" />}
               </span>
             )}
             <div className="min-w-0 flex-1">
@@ -96,6 +96,7 @@ export function QuickNoteDialog({
             initialSummary={initialSummary}
             initialSubject={initialSubject}
             contactId={'contact' in picked.target ? picked.target.contact : undefined}
+            vendorId={'vendor' in picked.target ? picked.target.vendor : undefined}
             autoFocus
             onCancel={() => close(false)}
             onSubmit={async (input) => {

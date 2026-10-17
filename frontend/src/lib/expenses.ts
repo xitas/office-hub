@@ -28,6 +28,9 @@ export interface Expense {
   currency: string
   spent_on: string
   description: string
+  /** Who was paid. */
+  vendor: number | null
+  vendor_name: string | null
   status: ExpenseStatus
   decided_by_name: string | null
   decided_at: string | null

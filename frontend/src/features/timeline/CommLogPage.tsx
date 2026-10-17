@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Building2, Download, History, Loader2, Plus, Search, UserRound, X } from 'lucide-react'
+import { Building2, Download, History, Loader2, Plus, Search, Store, UserRound, X } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
@@ -281,7 +281,9 @@ function LogRow({ item }: { item: TimelineItem }) {
     ? { to: `/contacts/${item.contact.id}`, name: item.contact.name, icon: UserRound }
     : item.company
       ? { to: `/companies/${item.company.id}`, name: item.company.name, icon: Building2 }
-      : null
+      : item.vendor
+        ? { to: `/vendors/${item.vendor.id}`, name: item.vendor.name, icon: Store }
+        : null
   return (
     <li className="flex gap-3 px-4 py-3">
       <span className={cn('flex size-8 shrink-0 items-center justify-center rounded-full', KIND_STYLES[item.kind] ?? KIND_STYLES.status)}>

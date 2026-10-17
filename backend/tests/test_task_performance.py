@@ -29,7 +29,7 @@ LIMITS = {
     "contact_timeline": 6,
     "company_timeline": 8,
     "pipeline": 7,
-    "search": 7,
+    "search": 8,  # one query per searchable kind (Phase 5 added vendors)
     "detail": 2,
     "activity": 6,
 }

@@ -6,16 +6,17 @@ import { UserAvatar } from '@/components/common'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { api } from '@/lib/api'
-import type { TimelineTarget } from '@/lib/timeline'
+import { targetKey, type TimelineTarget } from '@/lib/timeline'
 import type { Company, Contact, Paginated } from '@/lib/types'
 import { useDebouncedValue } from '@/lib/useDebouncedValue'
 
-/** A contact or company chosen in the picker (only records the user can see are offered). */
+/** A contact or company chosen in the picker (only records the user can see are offered), or a vendor
+ *  (from its own page: after calling a vendor, the app offers to log it). */
 export interface Picked {
   target: TimelineTarget
   name: string
   hint: string
-  type: 'contact' | 'company'
+  type: 'contact' | 'company' | 'vendor'
 }
 
 const LIMIT = 6
@@ -97,7 +98,7 @@ function PickList({ title, items, onPick }: { title: string; items: Picked[]; on
       <p className="mb-1 px-1 text-xs font-medium text-muted-foreground">{title}</p>
       <ul className="divide-y rounded-lg border">
         {items.map((item) => (
-          <li key={`${item.type}-${'contact' in item.target ? item.target.contact : item.target.company}`}>
+          <li key={targetKey(item.target)}>
             <button
               type="button"
               onClick={() => onPick(item)}

@@ -335,6 +335,7 @@ def test_seed_adds_timeline_once(db):
     assert TimelineEntry.objects.filter(company__isnull=False).exists()
     assert set(TimelineEntry.objects.values_list("kind", flat=True)) == {"note", "call", "meeting", "email", "whatsapp"}
     now = timezone.now()
-    for entry in TimelineEntry.objects.select_related("contact", "company"):
+    for entry in TimelineEntry.objects.select_related("contact", "company", "vendor"):
         assert entry.target.created_at < entry.occurred_at < now
-        assert entry.created_by_id == entry.target.assigned_to_id
+        if entry.vendor_id is None:  # clients' entries are logged by whoever looks after them; vendors are shared
+            assert entry.created_by_id == entry.target.assigned_to_id

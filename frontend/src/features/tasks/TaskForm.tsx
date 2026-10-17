@@ -84,7 +84,9 @@ export function TaskForm({
   const [saving, setSaving] = useState(false)
 
   const pick = (p: Picked) => {
-    setLinked('contact' in p.target ? { type: 'contact', id: p.target.contact, name: p.name } : { type: 'company', id: p.target.company, name: p.name })
+    // The picker here offers contacts and companies only.
+    if ('contact' in p.target) setLinked({ type: 'contact', id: p.target.contact, name: p.name })
+    else if ('company' in p.target) setLinked({ type: 'company', id: p.target.company, name: p.name })
     setPicking(false)
   }
 

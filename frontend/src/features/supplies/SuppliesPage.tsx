@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { AlertTriangle, ArrowDownUp, Ban, Check, Package, Pencil, Plus, Search, ShoppingCart, Truck, X } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { EmptyState, ErrorState, FormDialog, FormField, PageHeader, SimpleSelect } from '@/components/common'
 import { Badge } from '@/components/ui/badge'
@@ -30,6 +30,7 @@ import {
   type SupplyItem,
 } from '@/lib/supplies'
 import { useDebouncedValue } from '@/lib/useDebouncedValue'
+import { VendorSelect } from '@/features/vendors/VendorDialog'
 import { cn } from '@/lib/utils'
 
 type Tab = 'stock' | 'requests'
@@ -154,6 +155,11 @@ function Stock({ canManage, highlight, onRequest }: { canManage: boolean; highli
                           {t(`supplies.categories.${item.category}`)}
                           {item.location && <> · <bdi>{item.location}</bdi></>}
                         </p>
+                        {item.supplier_name && (
+                          <Link to={`/vendors/${item.supplier}`} className="block truncate text-xs text-primary hover:underline">
+                            {t('supplies.from', { name: item.supplier_name })}
+                          </Link>
+                        )}
                       </div>
                       {item.is_low && item.is_active && (
                         <Badge variant="outline" className="shrink-0 border-amber-500/50 font-normal text-amber-700 dark:text-amber-300">
@@ -305,6 +311,7 @@ function ItemDialog({ item, onClose }: { item?: SupplyItem; onClose: () => void 
     reorder_level: String(item?.reorder_level ?? 5),
     location: item?.location ?? '',
     notes: item?.notes ?? '',
+    supplier: item?.supplier ?? (null as number | null),
     is_active: item?.is_active ?? true,
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -382,6 +389,9 @@ function ItemDialog({ item, onClose }: { item?: SupplyItem; onClose: () => void 
         </FormField>
         <FormField id="it-loc" label={t('supplies.location')}>
           <Input id="it-loc" value={form.location} dir="auto" maxLength={100} onChange={(e) => set('location', e.target.value)} />
+        </FormField>
+        <FormField id="it-supplier" label={t('supplies.supplier')} className="sm:col-span-2">
+          <VendorSelect id="it-supplier" value={form.supplier} onChange={(v) => set('supplier', v)} />
         </FormField>
         <FormField id="it-notes" label={t('supplies.notes')} className="sm:col-span-2">
           <Input id="it-notes" value={form.notes} dir="auto" maxLength={300} onChange={(e) => set('notes', e.target.value)} />
@@ -465,6 +475,7 @@ function RequestRow({ req: r, showName }: { req: PurchaseRequest; showName: bool
               {showName && <><bdi>{r.requested_by_name}</bdi>{r.department_name && <> · <bdi>{r.department_name}</bdi></>} · </>}
               {fmt.date(r.created_at)}
               {r.estimated_cost && <> · {t('supplies.about', { amount: fmt.currency(r.estimated_cost) })}</>}
+              {r.vendor_name && <> · <Link to={`/vendors/${r.vendor}`} className="text-primary hover:underline">{t('supplies.from', { name: r.vendor_name })}</Link></>}
             </p>
             {r.reason && <p className="mt-1 text-sm [unicode-bidi:plaintext]">{r.reason}</p>}
             {r.decision_note && <p className="mt-1 text-xs text-muted-foreground">{t('supplies.decisionNote', { name: r.decided_by_name ?? '', note: r.decision_note })}</p>}
@@ -530,8 +541,9 @@ function ReceiveDialog({ req, onClose }: { req: PurchaseRequest; onClose: () => 
   const refresh = useRefresh()
   const [quantity, setQuantity] = useState(String(req.quantity))
   const [addToStock, setAddToStock] = useState(true)
+  const [vendor, setVendor] = useState<number | null>(req.vendor)
   const save = useMutation({
-    mutationFn: async () => api.post(`/inventory/requests/${req.id}/receive/`, { quantity: Number(quantity), add_to_stock: addToStock }),
+    mutationFn: async () => api.post(`/inventory/requests/${req.id}/receive/`, { quantity: Number(quantity), add_to_stock: addToStock, vendor }),
     onSuccess: () => {
       refresh()
       toast.success(t('supplies.receivedToast'))
@@ -555,6 +567,9 @@ function ReceiveDialog({ req, onClose }: { req: PurchaseRequest; onClose: () => 
         <FormField id="rc-qty" label={t('supplies.receivedQuantity')} hint={t('supplies.ordered', { n: req.quantity, unit: req.unit })}>
           <Input id="rc-qty" type="number" min={1} value={quantity} onChange={(e) => setQuantity(e.target.value)} className="font-latin sm:w-40" />
         </FormField>
+        <FormField id="rc-vendor" label={t('supplies.boughtFrom')}>
+          <VendorSelect id="rc-vendor" value={vendor} onChange={setVendor} />
+        </FormField>
         <label className="flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm">
           <span>
             {t('supplies.addToStock')}
@@ -577,6 +592,7 @@ function RequestDialog({ item, onClose }: { item?: SupplyItem; onClose: () => vo
   const [unit, setUnit] = useState('')
   const [reason, setReason] = useState('')
   const [cost, setCost] = useState('')
+  const [vendor, setVendor] = useState<number | null | undefined>(undefined)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const chosen = (items ?? []).find((i) => String(i.id) === choice)
   const save = useMutation({
@@ -588,6 +604,7 @@ function RequestDialog({ item, onClose }: { item?: SupplyItem; onClose: () => vo
         unit: chosen ? '' : unit,
         reason,
         estimated_cost: cost || null,
+        vendor: vendor === undefined ? (chosen?.supplier ?? null) : vendor,
       }),
     onSuccess: () => {
       refresh()
@@ -640,6 +657,9 @@ function RequestDialog({ item, onClose }: { item?: SupplyItem; onClose: () => vo
             <Input id="pr-cost" type="number" min={0} step="0.01" value={cost} onChange={(e) => setCost(e.target.value)} className="font-latin" />
           </FormField>
         </div>
+        <FormField id="pr-vendor" label={t('supplies.whereToBuy')} hint={chosen?.supplier_name ? t('supplies.usualSupplier', { name: chosen.supplier_name }) : undefined}>
+          <VendorSelect id="pr-vendor" value={vendor === undefined ? (chosen?.supplier ?? null) : vendor} onChange={setVendor} noneLabel={t('supplies.anyShop')} />
+        </FormField>
         <FormField id="pr-reason" label={t('supplies.reason')}>
           <Textarea id="pr-reason" value={reason} dir="auto" maxLength={500} onChange={(e) => setReason(e.target.value)} className="min-h-16" />
         </FormField>
