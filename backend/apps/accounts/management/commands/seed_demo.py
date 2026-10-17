@@ -332,6 +332,24 @@ VENDOR_LOG = [
 ]
 
 
+# Field visits: (title, purpose, person, companions, target ("company"/"contact"/"vendor"/"place", name), day offset, start, end,
+#                status, latitude, longitude, task title, note)
+VISITS = [
+    ("Quarterly review at Saba Software", "meeting", HAMZA, [SALES_MGR], ("company", "Saba Software House"), 0, "15:00", "16:00",
+     "planned", "31.469400", "74.272800", "Quarterly review with Saba Software", ""),
+    ("Collect cheque from Hira Rana", "collection", FATIMA, [], ("contact", "Hira Rana"), 1, "11:00", "11:30",
+     "pending", None, None, "", ""),
+    ("Site survey, Gulberg branch", "site", USMAN, [OPS_MGR], ("place", "Gulberg III branch site"), 1, "10:00", "12:30",
+     "planned", "31.511600", "74.343400", "", ""),
+    ("Car service", "other", USMAN, [], ("vendor", "Bismillah Auto Workshop"), -3, "09:30", "11:00",
+     "done", None, None, "", "Oil and brakes done; next service at 85,000 km."),
+    ("Deliver samples to Saba Software", "delivery", HAMZA, [], ("company", "Saba Software House"), -5, "14:00", "14:45",
+     "done", "31.469400", "74.272800", "", "Handed over to reception."),
+    ("Printer check at Al-Noor", "support", ZAINAB, [], ("vendor", "Al-Noor Printers"), -1, "12:00", "12:30",
+     "cancelled", None, None, "", "They came to the office instead."),
+]
+
+
 # Calendar: (kind, title, organizer, attendees, departments (events), day offset, start, end (None = all day), room, location)
 CALENDAR = [
     ("meeting", "Daily sales stand-up", SALES_MGR, [HAMZA, FATIMA], [], 0, "09:30", "09:45", None, "Sales corner"),
@@ -443,6 +461,7 @@ class Command(BaseCommand):
         self._seed_expenses()
         self._seed_planning()
         self._seed_vendors()
+        self._seed_visits()
 
         self.stdout.write(self.style.SUCCESS("Demo data ready. All demo users share the password: " + DEMO_PASSWORD))
         for email, name, role, dept, _ in USERS:
@@ -672,6 +691,48 @@ class Command(BaseCommand):
             details = {"call": {"direction": "out", "outcome": "connected"}, "whatsapp": {"direction": "out"}}.get(kind, {})
             entry = TimelineEntry.objects.create(kind=kind, vendor=vendors[vendor], summary=summary, details=details, created_by=users[by])
             TimelineEntry.objects.filter(pk=entry.pk).update(occurred_at=timezone.now() - timedelta(days=ago, hours=2))
+
+    def _seed_visits(self):
+        """Field visits in each state (one waiting for approval, some with a pin, one carrying out a task, two to
+        vendors), today, tomorrow and in the past week (skipped once any exists). Quiet: no notifications."""
+        from datetime import datetime
+
+        from apps.contacts.models import Company, Contact
+        from apps.core.office_time import office_today, office_tz
+        from apps.tasks.models import Task
+        from apps.vendors.models import Vendor
+        from apps.visits.models import Visit
+
+        if Visit.objects.exists():
+            return
+        users = {u.email: u for u in User.objects.all()}
+        tz, today = office_tz(), office_today()
+        for title, purpose, person, companions, (kind, name), offset, start, end, status, lat, lng, task, note in VISITS:
+            target, address, city = {}, "", "Lahore"
+            if kind == "company":
+                record = Company.objects.filter(name=name).first()
+                target, address, city = {"company": record}, record.address if record else "", (record.city if record else "") or city
+            elif kind == "contact":
+                first, _, last = name.partition(" ")
+                record = Contact.objects.filter(first_name=first, last_name=last).first()
+                target, address, city = {"contact": record}, record.address if record else "", (record.city if record else "") or city
+            elif kind == "vendor":
+                record = Vendor.objects.filter(name=name).first()
+                target, address, city = {"vendor": record}, record.areas if record else "", (record.city if record else "") or city
+            else:
+                target, address = {"place_name": name}, "Main Boulevard, Gulberg III"
+            day = today + timedelta(days=offset)
+            begins = datetime.combine(day, datetime.strptime(start, "%H:%M").time(), tzinfo=tz)
+            ends = datetime.combine(day, datetime.strptime(end, "%H:%M").time(), tzinfo=tz)
+            closed = status in ("done", "cancelled")
+            visit = Visit.objects.create(
+                title=title, purpose=purpose, address=address, city=city, latitude=lat, longitude=lng, start=begins, end=ends,
+                assigned_to=users[person], status=status, created_by=users[OPS_MGR if person == USMAN else person],
+                task=Task.objects.filter(title=task).first() if task else None,
+                decided_by=users[SALES_MGR] if status == "planned" and person in (HAMZA, FATIMA) else None,
+                closed_by=users[person] if closed else None, closed_at=ends if closed else None, close_note=note, **target,
+            )
+            visit.companions.set([users[c] for c in companions])
 
     def _seed_leave(self):
         """Leave types, this year's balances (one with carried-over days) and a few requests

@@ -88,6 +88,7 @@ export function useRealtime() {
           if (['attendance', 'approval_result'].includes(event.notification.type)) void queryClient.invalidateQueries({ queryKey: ['attendance'] })
           if (event.notification.type === 'planning') void queryClient.invalidateQueries({ queryKey: ['planning'] })
           if (event.notification.type === 'vendor') void queryClient.invalidateQueries({ queryKey: ['vendors'] })
+          if (['visit', 'approval_request', 'approval_result'].includes(event.notification.type)) void queryClient.invalidateQueries({ queryKey: ['visits'] })
           if (['low_stock', 'approval_request', 'approval_result'].includes(event.notification.type)) {
             void queryClient.invalidateQueries({ queryKey: ['supplies'] })
             void queryClient.invalidateQueries({ queryKey: ['expenses'] })

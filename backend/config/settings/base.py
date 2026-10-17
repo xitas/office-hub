@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     "apps.expenses",
     "apps.planning",
     "apps.vendors",
+    "apps.visits",
 ]
 
 MIDDLEWARE = [
@@ -205,5 +206,7 @@ CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS")
 CORS_ALLOW_CREDENTIALS = True
 
 FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:5173")
+# Address search (Phase 5): Nominatim asks for a contact email in the User-Agent. Set it in .env; never hard-code it.
+NOMINATIM_CONTACT_EMAIL = env("NOMINATIM_CONTACT_EMAIL", default="")
 vars().update(env.email_url("EMAIL_URL", default="consolemail://"))
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="Office CRM <noreply@example.com>")

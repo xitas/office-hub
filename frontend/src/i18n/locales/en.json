@@ -343,7 +343,9 @@
       "lateAfter": "Late after (minutes)",
       "lateAfterHint": "Minutes after the office opens before a check-in counts as late.",
       "attendanceReminders": "Attendance reminders",
-      "attendanceRemindersHint": "Remind people who haven't checked in, or forgot to check out, on working days."
+      "attendanceRemindersHint": "Remind people who haven't checked in, or forgot to check out, on working days.",
+      "visitsNeedApproval": "Staff visits need approval",
+      "visitsNeedApprovalHint": "A staff member's own field visit waits for their department manager (admins when there is none). Managers and admins plan visits directly."
     },
     "audit": {
       "title": "Audit log",
@@ -576,7 +578,8 @@
       "imported": "Imported",
       "task": "Tasks",
       "email": "Emails",
-      "whatsapp": "WhatsApp"
+      "whatsapp": "WhatsApp",
+      "visit": "Visits"
     },
     "placeholders": {
       "note": "Write a note…",
@@ -668,7 +671,12 @@
     "followUpTaskFor": "Task for {{names}}",
     "followUpTaskLink": "Open the task",
     "followUpNoTask": "No task",
-    "entrySaved": "Logged for {{name}}"
+    "entrySaved": "Logged for {{name}}",
+    "visitEvents": {
+      "planned": "Visit planned",
+      "done": "Visited",
+      "cancelled": "Visit cancelled"
+    }
   },
   "transfer": {
     "import": "Import",
@@ -1595,7 +1603,8 @@
       "holidays": "Holidays",
       "tasks": "My tasks",
       "bookings": "My bookings",
-      "leave": "Team leave"
+      "leave": "Team leave",
+      "visits": "My visits"
     },
     "nothing": "Nothing on this day",
     "more_one": "+{{count}} more",
@@ -2050,5 +2059,99 @@
     "spentThisYear_one": "This year, approved and paid ({{count}} claim):",
     "spentThisYear_other": "This year, approved and paid ({{count}} claims):",
     "privacyHint": "You see the requests and claims you are allowed to see; expense claims stay private to the claimant, their managers and admins."
+  },
+  "visits": {
+    "title": "Field visits",
+    "subtitle": "Visits to clients, vendors and sites: who goes where, and when.",
+    "plan": "Plan visit",
+    "editTitle": "Change visit",
+    "send": "Ask for approval",
+    "approvalHint": "Your manager will be asked to approve this visit.",
+    "plannedToast": "Visit planned",
+    "requestedToast": "Visit sent for approval",
+    "tabs": {
+      "mine": "Upcoming",
+      "past": "Past",
+      "team": "Team",
+      "approvals": "To approve"
+    },
+    "noUpcoming": "No visits coming up.",
+    "noPast": "No past visits.",
+    "noTeam": "No visits this week.",
+    "nothingToApprove": "Nothing to approve right now.",
+    "everyone": "Everyone",
+    "status": {
+      "pending": "Waiting for approval",
+      "planned": "Planned",
+      "done": "Done",
+      "cancelled": "Cancelled",
+      "rejected": "Not approved"
+    },
+    "notClosed": "Not marked done",
+    "purposes": {
+      "meeting": "Client meeting",
+      "delivery": "Delivery or pickup",
+      "site": "Site survey",
+      "collection": "Payment collection",
+      "support": "Service or support",
+      "other": "Other"
+    },
+    "approve": "Approve",
+    "reject": "Reject",
+    "markDone": "Done",
+    "cancel": "Cancel visit",
+    "approvedToast": "Visit approved",
+    "closeToast": "Visit marked done",
+    "cancelToast": "Visit cancelled",
+    "rejectToast": "Visit not approved",
+    "closeTitle": "Done: {{title}}",
+    "cancelTitle": "Cancel {{title}}?",
+    "rejectTitle": "Not approve {{title}}?",
+    "closeConfirm": "Mark done",
+    "cancelConfirm": "Cancel visit",
+    "rejectConfirm": "Not approve",
+    "closeNote": "How it went (optional)",
+    "cancelNote": "Why (optional; the people going are told)",
+    "rejectNote": "Why not? (optional, they see it)",
+    "what": "What for",
+    "whatPlaceholder": "e.g. Quarterly review with the purchase manager",
+    "purpose": "Purpose",
+    "whoOrWhere": "Who or where",
+    "where": {
+      "client": "Client",
+      "vendor": "Vendor",
+      "place": "Other place"
+    },
+    "chooseVendor": "Choose a vendor",
+    "placePlaceholder": "e.g. Gulberg branch site",
+    "address": "Address",
+    "city": "City",
+    "date": "Date",
+    "from": "From",
+    "to": "To",
+    "when": "When",
+    "who": "Who goes",
+    "companions": "Going along",
+    "pin": "Pin (optional)",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "useMyLocation": "Use my location",
+    "pinHint": "Where the place is, for the map later. Use your location only when you are at the place.",
+    "locationSet_one": "Location set (within {{count}} metre)",
+    "locationSet_other": "Location set (within {{count}} metres)",
+    "noLocation": "Your location isn't available. Allow it in the browser, or type the pin.",
+    "forTask": "For task",
+    "unlinkTask": "Not for this task",
+    "notes": "Notes",
+    "decision": "Decided by",
+    "closed": "Closed",
+    "plannedBy": "Planned by",
+    "notFound": "This visit isn't available.",
+    "noneForTask": "No visits for this task yet.",
+    "today": "My visits today",
+    "todayTeam": "Visits today",
+    "noneToday": "No visits today.",
+    "open": "Open",
+    "pinShort": "Pin"
   }
 }

@@ -83,6 +83,8 @@ export interface OrgSettings {
   late_after_minutes: number
   /** Remind people who forgot to check in or out. */
   attendance_reminders: boolean
+  /** A staff member's own field visit waits for a department manager's approval. */
+  visits_need_approval: boolean
   updated_at: string
 }
 

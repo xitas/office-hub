@@ -48,6 +48,8 @@ PERMISSIONS: dict[str, dict[str, set[str]]] = {
     # Managers plan their department's week, admins anyone's; goal owners (any role) record progress.
     "planning": {"view": ALL, "create": MGMT, "edit": MGMT, "delete": MGMT},
     # Phase 5
+    # Staff plan their own visits (approved by their manager when the Organization setting is on); managers plan
+    # their department's, admins anyone's. Who may change, close or decide one is checked per visit.
     "visits": {"view": ALL, "create": ALL, "edit": ALL, "delete": MGMT, "view_map": MGMT},
     # One shared directory: anyone adds and corrects vendors; managers and admins mark them preferred or inactive
     # and delete unused ones; admins manage the service categories.

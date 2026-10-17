@@ -234,6 +234,15 @@ function OrgForm({ initial }: { initial: OrgSettings }) {
               </div>
               <Switch id="org-att-reminders" checked={form.attendance_reminders} onCheckedChange={(v) => set('attendance_reminders', v)} />
             </div>
+            <div className="flex items-start justify-between gap-4 sm:col-span-2">
+              <div className="grid gap-0.5">
+                <label htmlFor="org-visit-approval" className="text-sm">
+                  {t('admin.org.visitsNeedApproval')}
+                </label>
+                <p className="text-xs text-muted-foreground">{t('admin.org.visitsNeedApprovalHint')}</p>
+              </div>
+              <Switch id="org-visit-approval" checked={form.visits_need_approval} onCheckedChange={(v) => set('visits_need_approval', v)} />
+            </div>
           </fieldset>
           <fieldset className="grid gap-3 border-t pt-4 sm:col-span-2">
             <legend className="sr-only">{t('admin.org.staffAccess')}</legend>

@@ -23,6 +23,8 @@ export interface TodayData {
   me: AttendanceDay
   can_check_in: boolean
   can_check_out: boolean
+  /** Planned field visits I go on today (the card then suggests "on a field visit"). */
+  visits_today?: number
   /** Managers and admins: their team's counts today. */
   team?: Counts
 }

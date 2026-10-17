@@ -146,7 +146,7 @@ class TimelineViewSet(
         return self.get_paginated_response(page)
 
     def _vendor_timeline(self, request, vendor_id, kinds):
-        """A vendor's logged calls, messages and notes (vendors have no automatic entries)."""
+        """A vendor's logged calls, messages and notes, and automatic entries such as visits."""
         from apps.vendors.models import Vendor
 
         if not has_perm(request.user, "vendors", "view"):
@@ -158,5 +158,10 @@ class TimelineViewSet(
         stored = vendor.timeline_entries.select_related("vendor", "created_by__department").prefetch_related("follow_up_tasks__assignees")
         if kinds:
             stored = stored.filter(kind__in=kinds)
-        page = self.paginate_queryset([entry_data(e, request.user) for e in stored])
+        entries = [entry_data(e, request.user) for e in stored]
+        for kind, provider in registry.vendor_providers().items():
+            if not kinds or kind in kinds:
+                entries += provider(request.user, vendor.pk)
+        entries.sort(key=lambda e: (e["occurred_at"], e["created_at"]), reverse=True)
+        page = self.paginate_queryset(entries)
         return self.get_paginated_response(page)

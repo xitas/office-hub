@@ -1,6 +1,6 @@
-"""One list for the calendar: meetings, office events and holidays, plus my task deadlines and my
-bookings (made by me or with me; a meeting's room booking shows as the meeting). Fixed number of
-queries whatever the range holds."""
+"""One list for the calendar: meetings, office events and holidays, plus my task deadlines, my
+bookings (made by me or with me; a meeting's room booking shows as the meeting), team leave and my
+field visits. Fixed number of queries whatever the range holds."""
 from datetime import date, datetime, time, timedelta
 
 from django.db.models import Count, Q
@@ -12,7 +12,7 @@ from apps.tasks.models import Task
 from . import rules
 from .models import Event
 
-LAYERS = ("meetings", "events", "holidays", "tasks", "bookings", "leave")
+LAYERS = ("meetings", "events", "holidays", "tasks", "bookings", "leave", "visits")
 MAX_DAYS = 62
 
 
@@ -129,5 +129,12 @@ def calendar_items(user, first: date, last: date, layers=LAYERS, today: date | N
                 "start": s.isoformat(), "end": e.isoformat(), "all_day": True, "half_day": r.half_day,
                 "start_date": r.start_date.isoformat(), "end_date": r.end_date.isoformat(), "url": "/leave?tab=team",
             })
+    if "visits" in layers:
+        from apps.core.permissions import has_perm
+
+        if has_perm(user, "visits", "view"):
+            from apps.visits.integration import calendar_items as visit_items
+
+            items += visit_items(user, start, end)
     items.sort(key=lambda i: (not i["all_day"], i["start"], i["title"]))
     return items

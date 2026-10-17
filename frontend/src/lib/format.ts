@@ -24,6 +24,7 @@ const DEFAULT_SETTINGS: OrgSettings = {
   working_days: [0, 1, 2, 3, 4],
   late_after_minutes: 15,
   attendance_reminders: true,
+  visits_need_approval: true,
   updated_at: '',
 }
 

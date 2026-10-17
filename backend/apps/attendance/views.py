@@ -1,7 +1,8 @@
 """Attendance API: my day and month, check in/out, the team's day and month, corrections."""
 import calendar
-from datetime import date
+from datetime import date, timedelta
 
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils.dateparse import parse_date
 from django.utils.translation import gettext as _
@@ -80,6 +81,15 @@ class TodayView(APIView):
         me = att.compute([request.user.pk], today, today)[(request.user.pk, today)]
         data = {"date": today.isoformat(), "me": day_data(me),
                 "can_check_in": me["check_in"] is None, "can_check_out": me["check_in"] is not None and me["check_out"] is None}
+        if has_perm(request.user, "visits", "view"):
+            from apps.visits.models import Visit
+
+            # A day with field visits: the check-in card suggests "on a field visit".
+            from apps.visits.views import day_start
+
+            mine = Visit.objects.filter(Q(assigned_to=request.user) | Q(companions=request.user), status=Visit.Status.PLANNED)
+            today_visits = mine.filter(start__gte=day_start(today), start__lt=day_start(today + timedelta(days=1)))
+            data["visits_today"] = today_visits.values("pk").distinct().count()
         team = list(team_users(request.user).values_list("pk", flat=True))
         if team:
             infos = att.compute(team, today, today)

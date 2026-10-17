@@ -1,4 +1,4 @@
-import { CalendarCheck, CalendarDays, CheckSquare, ChevronLeft, ChevronRight, DoorOpen, Palmtree, PartyPopper, Plus, Users } from 'lucide-react'
+import { CalendarCheck, CalendarDays, CheckSquare, ChevronLeft, ChevronRight, DoorOpen, MapPin, Palmtree, PartyPopper, Plus, Users } from 'lucide-react'
 import { isSameMonth, parseISO } from 'date-fns'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -34,7 +34,7 @@ const LOCALES: Record<string, string> = { en: 'en-PK', ur: 'ur-PK' }
 const LAYERS_KEY = 'crm.calendar.layers'
 const MONTH_CHIPS = 3
 const HOUR_PX = 48
-const ICONS = { meeting: Users, event: PartyPopper, holiday: CalendarDays, task: CheckSquare, booking: DoorOpen, leave: Palmtree }
+const ICONS = { meeting: Users, event: PartyPopper, holiday: CalendarDays, task: CheckSquare, booking: DoorOpen, leave: Palmtree, visit: MapPin }
 
 function loadLayers(): CalendarLayer[] {
   try {

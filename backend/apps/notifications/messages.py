@@ -413,7 +413,53 @@ def _vendor_added(params: dict) -> tuple[str, str]:
     return _("New vendor: %(name)s") % {"name": params.get("name", "")}, detail
 
 
+def _visit_detail(params: dict) -> str:
+    """ "Clifton Retail · 16/10/2026 2:30 pm–3:30 pm · Main Boulevard, Lahore" (office time, the reader's clock)."""
+    when = _event_when({"start": params.get("start"), "end": params.get("end")})
+    return " · ".join(x for x in (params.get("place", ""), when, params.get("address", "")) if x)
+
+
+def _visit_assigned(params: dict) -> tuple[str, str]:
+    return _("Field visit: %(title)s") % params, _visit_detail(params)
+
+
+def _visit_changed(params: dict) -> tuple[str, str]:
+    return _("Visit changed: %(title)s") % params, _visit_detail(params)
+
+
+def _visit_cancelled(params: dict) -> tuple[str, str]:
+    return _("Visit cancelled: %(title)s") % params, _with_note(_visit_detail(params), params)
+
+
+def _visit_request(params: dict) -> tuple[str, str]:
+    return _("%(name)s plans a field visit") % params, _visit_detail(params)
+
+
+def _visit_approved(params: dict) -> tuple[str, str]:
+    return _("Visit approved: %(title)s") % params, _with_note(_visit_detail(params), params)
+
+
+def _visit_rejected(params: dict) -> tuple[str, str]:
+    return _("Visit not approved: %(title)s") % params, _with_note(_visit_detail(params), params)
+
+
+def _visit_done(params: dict) -> tuple[str, str]:
+    return _("Visit done: %(title)s") % params, _with_note(_visit_detail(params), params)
+
+
+def _visit_reminder(params: dict) -> tuple[str, str]:
+    return _("Visit in 30 minutes: %(title)s") % params, _visit_detail(params)
+
+
 RENDERERS = {
+    "visit_assigned": _visit_assigned,
+    "visit_changed": _visit_changed,
+    "visit_cancelled": _visit_cancelled,
+    "visit_request": _visit_request,
+    "visit_approved": _visit_approved,
+    "visit_rejected": _visit_rejected,
+    "visit_done": _visit_done,
+    "visit_reminder": _visit_reminder,
     "vendor_added": _vendor_added,
     "goal_assigned": _goal_assigned,
     "goal_done": _goal_done,

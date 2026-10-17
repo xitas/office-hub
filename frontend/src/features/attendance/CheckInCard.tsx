@@ -21,7 +21,9 @@ export function CheckInCard({ className, showTeam = true }: { className?: string
   const fmt = useFormat()
   const queryClient = useQueryClient()
   const { data, isLoading } = useAttendanceToday()
-  const [mode, setMode] = useState<AttendanceMode>('office')
+  const [chosen, setMode] = useState<AttendanceMode | null>(null)
+  // A day with field visits starts on "on a field visit".
+  const mode: AttendanceMode = chosen ?? (data?.visits_today ? 'field' : 'office')
   const [note, setNote] = useState('')
   const act = useMutation({
     mutationFn: async (what: 'in' | 'out') =>

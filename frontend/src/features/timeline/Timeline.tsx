@@ -246,6 +246,18 @@ function Headline({ item }: { item: TimelineItem }) {
       </span>
     )
   }
+  if (item.kind === 'visit') {
+    const d = item.details as { visit_id: number; status: string; start: string }
+    return (
+      <span className="font-medium">
+        {t(`timeline.visitEvents.${d.status}`)}
+        {' · '}
+        <Link to={`/visits?visit=${d.visit_id}`} className="font-normal text-primary hover:underline">
+          <bdi>{item.summary}</bdi>
+        </Link>
+      </span>
+    )
+  }
   if (item.kind === 'imported') {
     return (
       <span className="font-medium">
@@ -267,6 +279,10 @@ function Body({ item }: { item: TimelineItem }) {
   const hasExtras = !!(meeting?.location || meeting?.attendees || item.follow_up_on)
   // An import's file name is already in the headline.
   // An import's file name and a task's title are already in the headline.
+  if (item.kind === 'visit') {
+    const note = (item.details as { note?: string }).note
+    return note ? <p className="mt-1.5 text-sm [unicode-bidi:plaintext]">{note}</p> : null
+  }
   if ((!item.summary || item.kind === 'imported' || item.kind === 'task') && !hasExtras) return null
   return (
     <div className="mt-1.5 grid gap-1.5">

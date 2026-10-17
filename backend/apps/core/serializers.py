@@ -12,7 +12,7 @@ class OrganizationSettingsSerializer(serializers.ModelSerializer):
             "org_name", "currency", "date_format", "timezone", "week_start", "time_format", "default_language",
             "staff_can_import_contacts", "staff_can_export_contacts",
             "office_opens", "office_closes", "booking_max_minutes", "booking_horizon_days", "working_days",
-            "late_after_minutes", "attendance_reminders", "updated_at",
+            "late_after_minutes", "attendance_reminders", "visits_need_approval", "updated_at",
         ]
         extra_kwargs = {
             "booking_max_minutes": {"min_value": 15, "max_value": 24 * 60},

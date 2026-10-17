@@ -51,6 +51,18 @@ def providers() -> dict[str, Callable]:
     return dict(_providers)
 
 
+_vendor_providers: dict[str, Callable] = {}
+
+
+def register_vendor_provider(kind: str, provider: Callable):
+    """Automatic entries on a vendor's timeline: provider(user, vendor_id) -> list[dict]."""
+    _vendor_providers[kind] = provider
+
+
+def vendor_providers() -> dict[str, Callable]:
+    return dict(_vendor_providers)
+
+
 def target_ref(contact=None, company=None, vendor=None) -> dict:
     return {
         "contact": {"id": contact.pk, "name": contact.full_name} if contact else None,

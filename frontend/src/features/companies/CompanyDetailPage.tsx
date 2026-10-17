@@ -19,6 +19,7 @@ import type { Company } from '@/lib/types'
 import { CompanyContacts } from '@/features/contacts/CompanyContacts'
 import { LinkedTasks } from '@/features/tasks/LinkedTasks'
 import { Timeline } from '@/features/timeline/Timeline'
+import { PlanVisitButton } from '@/features/visits/PlanVisitButton'
 import { CompanyForm } from './CompanyForm'
 
 function Detail({ icon: Icon, label, children }: { icon: typeof Phone; label: string; children: ReactNode }) {
@@ -152,6 +153,7 @@ export function CompanyDetailPage() {
               className="contents"
               logFor={{ target: { company: company.id }, name: company.name, hint: company.city, type: 'company' }}
             />
+            <PlanVisitButton prefill={{ target: { target: { company: company.id }, name: company.name, hint: company.city, type: 'company' }, address: company.address, city: company.city }} />
             {company.website && (
               <Button
                 variant="outline"

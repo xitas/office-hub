@@ -26,8 +26,8 @@ LIMITS = {
     "dashboard": 22,
     "contact_tasks": 3,
     "company_tasks": 3,
-    "contact_timeline": 6,
-    "company_timeline": 8,
+    "contact_timeline": 7,  # +1 since Phase 5: visits to the contact
+    "company_timeline": 9,  # +1 since Phase 5: visits to the company
     "pipeline": 7,
     "search": 8,  # one query per searchable kind (Phase 5 added vendors)
     "detail": 2,

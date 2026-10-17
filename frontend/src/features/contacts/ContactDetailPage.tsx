@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { EmptyState, ErrorState, SimpleSelect, UserAvatar } from '@/components/common'
 import { ContactButtons } from '@/components/common/ContactButtons'
 import { TemplateSendButtons } from '@/features/templates/SendWithTemplate'
+import { PlanVisitButton } from '@/features/visits/PlanVisitButton'
 import { LastContacted } from '@/features/timeline/EntryBits'
 import { StatusBadge } from '@/components/common/StatusBadge'
 import { Badge } from '@/components/ui/badge'
@@ -191,6 +192,7 @@ export function ContactDetailPage() {
               logFor={{ target: { contact: contact.id }, name: contact.full_name, hint: contact.company_name ?? '', type: 'contact' }}
             />
             <TemplateSendButtons contact={contact} />
+            <PlanVisitButton prefill={{ target: { target: { contact: contact.id }, name: contact.full_name, hint: contact.company_name ?? '', type: 'contact' }, address: contact.address, city: contact.city }} />
           </div>
 
           <Card>

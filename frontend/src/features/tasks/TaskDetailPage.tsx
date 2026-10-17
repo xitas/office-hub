@@ -16,6 +16,7 @@ import { TASK_STATUSES, useTask, type Task, type TaskActivityData, type TaskStat
 import { cn } from '@/lib/utils'
 import { ChecklistProgress, DueLabel, PriorityBadge, RepeatMark, TaskStatusBadge } from './TaskBits'
 import { TaskActivity } from './TaskActivity'
+import { TaskVisits } from '@/features/visits/PlanVisitButton'
 import { TaskAttachments } from './TaskAttachments'
 import { TaskChecklist } from './TaskChecklist'
 import { TaskForm } from './TaskForm'
@@ -258,6 +259,7 @@ export function TaskDetailPage() {
               </CardContent>
             </Card>
             <TaskAttachments taskId={task.id} attachments={activity.data?.attachments} />
+            <TaskVisits task={task} />
             <p className="text-xs text-muted-foreground">
               <bdi>
                 <Trans

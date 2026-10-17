@@ -49,11 +49,11 @@ export function calendarTitles(locale: string, anchor: string, range: { start: s
 
 // ------------------------------------------------------------------ the office calendar
 
-export type CalendarItemType = 'meeting' | 'event' | 'holiday' | 'task' | 'booking' | 'leave'
-export const CALENDAR_LAYERS = ['meetings', 'events', 'holidays', 'tasks', 'bookings', 'leave'] as const
+export type CalendarItemType = 'meeting' | 'event' | 'holiday' | 'task' | 'booking' | 'leave' | 'visit'
+export const CALENDAR_LAYERS = ['meetings', 'events', 'holidays', 'tasks', 'bookings', 'leave', 'visits'] as const
 export type CalendarLayer = (typeof CALENDAR_LAYERS)[number]
 export const LAYER_OF: Record<CalendarItemType, CalendarLayer> = {
-  meeting: 'meetings', event: 'events', holiday: 'holidays', task: 'tasks', booking: 'bookings', leave: 'leave',
+  meeting: 'meetings', event: 'events', holiday: 'holidays', task: 'tasks', booking: 'bookings', leave: 'leave', visit: 'visits',
 }
 
 export interface CalendarItem {
@@ -76,7 +76,7 @@ export interface CalendarItem {
   priority?: string
   status?: string
   is_overdue?: boolean
-  /** Leave: the leave type (the title is the person). */
+  /** Leave: the leave type (the title is the person). Visits: who or where. */
   subtitle?: string
   url: string | null
 }
@@ -148,7 +148,8 @@ export const TYPE_STYLES: Record<CalendarItemType, string> = {
   task: 'border-amber-400/50 bg-amber-50 text-amber-900 dark:bg-amber-500/15 dark:text-amber-200',
   booking: 'border-sky-400/50 bg-sky-50 text-sky-800 dark:bg-sky-500/15 dark:text-sky-200',
   leave: 'border-rose-400/50 bg-rose-50 text-rose-800 dark:bg-rose-500/15 dark:text-rose-200',
+  visit: 'border-teal-400/50 bg-teal-50 text-teal-800 dark:bg-teal-500/15 dark:text-teal-200',
 }
 export const TYPE_DOTS: Record<CalendarItemType, string> = {
-  meeting: 'bg-primary', event: 'bg-violet-500', holiday: 'bg-emerald-500', task: 'bg-amber-500', booking: 'bg-sky-500', leave: 'bg-rose-500',
+  meeting: 'bg-primary', event: 'bg-violet-500', holiday: 'bg-emerald-500', task: 'bg-amber-500', booking: 'bg-sky-500', leave: 'bg-rose-500', visit: 'bg-teal-500',
 }

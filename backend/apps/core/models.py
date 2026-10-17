@@ -65,6 +65,8 @@ class OrganizationSettings(models.Model):
     late_after_minutes = models.PositiveSmallIntegerField(default=15)
     # "Forgot to check in / out?" reminders (in-app; email if a person turns it on).
     attendance_reminders = models.BooleanField(default=True)
+    # Field visits (Phase 5): a staff member's own visit waits for a department manager's approval.
+    visits_need_approval = models.BooleanField(default=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

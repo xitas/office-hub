@@ -2101,3 +2101,99 @@ msgstr "رابطہ، کمپنی یا وینڈر بتائیں۔"
 
 msgid "Choose a contact, a company or a vendor."
 msgstr "رابطہ، کمپنی یا وینڈر منتخب کریں۔"
+
+msgid "Client meeting"
+msgstr "کلائنٹ سے ملاقات"
+
+msgid "Delivery or pickup"
+msgstr "ترسیل یا وصولی"
+
+msgid "Site survey or inspection"
+msgstr "سائٹ کا سروے یا معائنہ"
+
+msgid "Payment collection"
+msgstr "ادائیگی کی وصولی"
+
+msgid "Service or support"
+msgstr "سروس یا سپورٹ"
+
+msgid "Planned"
+msgstr "طے شدہ"
+
+msgid "Not approved"
+msgstr "منظور نہیں ہوا"
+
+msgid "field visit"
+msgstr "فیلڈ وزٹ"
+
+msgid "field visits"
+msgstr "فیلڈ وزٹ"
+
+msgid "Visit"
+msgstr "وزٹ"
+
+msgid "The visit has to end after it starts."
+msgstr "وزٹ شروع ہونے کے بعد ختم ہونا چاہیے۔"
+
+msgid "A visit can last 12 hours at most."
+msgstr "وزٹ زیادہ سے زیادہ 12 گھنٹے کا ہو سکتا ہے۔"
+
+msgid "Choose one: a contact, a company or a vendor."
+msgstr "ایک منتخب کریں: رابطہ، کمپنی یا وینڈر۔"
+
+msgid "Say who or where the visit is."
+msgstr "بتائیں وزٹ کس سے یا کہاں ہے۔"
+
+msgid "Give both latitude and longitude, or neither."
+msgstr "عرض البلد اور طول البلد دونوں لکھیں، یا کوئی بھی نہیں۔"
+
+msgid "You can plan visits for yourself, or for your department if you manage it."
+msgstr "آپ اپنے لیے وزٹ طے کر سکتے ہیں، یا اپنے شعبے کے لیے اگر آپ اس کے مینیجر ہیں۔"
+
+msgid "The person responsible is already going."
+msgstr "ذمہ دار فرد پہلے ہی جا رہا ہے۔"
+
+msgid "Companions come from the same department."
+msgstr "ساتھی اسی شعبے سے ہوں۔"
+
+msgid "A visit can be marked done once it has started."
+msgstr "وزٹ شروع ہونے کے بعد ہی مکمل درج ہو سکتا ہے۔"
+
+msgid "Only managers and admins see the team's visits."
+msgstr "ٹیم کے وزٹ صرف مینیجر اور ایڈمن دیکھتے ہیں۔"
+
+msgid "This visit can't be changed."
+msgstr "یہ وزٹ تبدیل نہیں ہو سکتا۔"
+
+msgid "You can't decide on this visit."
+msgstr "آپ اس وزٹ کا فیصلہ نہیں کر سکتے۔"
+
+msgid "Only the people who went, their managers and admins mark a visit done."
+msgstr "وزٹ مکمل صرف جانے والے، ان کے مینیجر اور ایڈمن درج کرتے ہیں۔"
+
+msgid "This visit can't be cancelled."
+msgstr "یہ وزٹ منسوخ نہیں ہو سکتا۔"
+
+msgid "Field visit: %(title)s"
+msgstr "فیلڈ وزٹ: %(title)s"
+
+msgid "Visit changed: %(title)s"
+msgstr "وزٹ میں تبدیلی: %(title)s"
+
+msgid "Visit cancelled: %(title)s"
+msgstr "وزٹ منسوخ: %(title)s"
+
+msgid "%(name)s plans a field visit"
+msgstr "%(name)s فیلڈ وزٹ کا ارادہ رکھتے ہیں"
+
+msgid "Visit approved: %(title)s"
+msgstr "وزٹ منظور: %(title)s"
+
+msgid "Visit not approved: %(title)s"
+msgstr "وزٹ منظور نہیں ہوا: %(title)s"
+
+msgid "Visit done: %(title)s"
+msgstr "وزٹ مکمل: %(title)s"
+
+msgid "Visit in 30 minutes: %(title)s"
+msgstr "30 منٹ میں وزٹ: %(title)s"
