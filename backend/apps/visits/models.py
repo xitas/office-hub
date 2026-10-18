@@ -6,7 +6,9 @@
   (e.g. a follow-up), and it shows on the record's timeline and on the calendar.
 - Staff plan their own visits; managers plan for their department and admins for anyone. With the
   Organization setting on, a staff member's own visit waits for a department manager's approval (admins
-  when there is none). Visits are done or cancelled; visit reports and check-in come in later slices.
+  when there is none). Visits are done or cancelled; visit reports come in a later slice.
+- The people going check in and out at the visit (VisitCheck). Location is taken only then, never in the
+  background, and only if the person allows it; otherwise the check-in is marked "no location".
 """
 from django.conf import settings
 from django.db import models
@@ -58,6 +60,8 @@ class Visit(models.Model):
     closed_at = models.DateTimeField(null=True, blank=True)
     close_note = models.CharField(max_length=300, blank=True, help_text="Why it was cancelled, or a word on how it went")
     reminded_start = models.DateTimeField(null=True, blank=True)
+    # "No check-in yet" was sent for this start time (once).
+    check_in_reminded_start = models.DateTimeField(null=True, blank=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -96,3 +100,44 @@ class Visit(models.Model):
         if self.vendor_id:
             return self.vendor.name
         return self.place_name
+
+
+class VisitCheck(models.Model):
+    """One person's check-in and check-out at a visit, with where they were (if they allowed it).
+
+    Coordinates are personal data: only the person, their department's managers and admins see them (enforced in
+    the API), and they're removed after 90 days by a scheduled job; the times and the visit stay.
+    """
+
+    class Location(models.TextChoices):
+        RECORDED = "recorded", _("Location recorded")
+        DECLINED = "declined", _("Location not shared")
+        UNAVAILABLE = "unavailable", _("Location unavailable")
+
+    visit = models.ForeignKey(Visit, on_delete=models.CASCADE, related_name="checks")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="visit_checks")
+    checked_in_at = models.DateTimeField()
+    in_location = models.CharField(max_length=12, choices=Location.choices)
+    in_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    in_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    in_accuracy = models.PositiveIntegerField(null=True, blank=True, help_text="Metres, as the device reported it")
+    checked_out_at = models.DateTimeField(null=True, blank=True)
+    out_location = models.CharField(max_length=12, choices=Location.choices, blank=True)
+    out_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    out_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    out_accuracy = models.PositiveIntegerField(null=True, blank=True)
+    location_removed_at = models.DateTimeField(null=True, blank=True, help_text="Coordinates removed after 90 days")
+
+    class Meta:
+        ordering = ["checked_in_at", "id"]
+        constraints = [
+            models.UniqueConstraint(fields=["visit", "user"], name="one_visit_check_per_person"),
+            models.CheckConstraint(condition=Q(checked_out_at__isnull=True) | Q(checked_out_at__gte=models.F("checked_in_at")),
+                                   name="visit_check_out_after_in"),
+        ]
+        indexes = [models.Index(fields=["checked_in_at"], name="visit_check_in_idx")]
+        verbose_name = _("visit check-in")
+        verbose_name_plural = _("visit check-ins")
+
+    def __str__(self):
+        return f"{self.user} @ {self.visit}"

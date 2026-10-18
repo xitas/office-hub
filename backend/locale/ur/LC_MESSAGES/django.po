@@ -2197,3 +2197,57 @@ msgstr "وزٹ مکمل: %(title)s"
 
 msgid "Visit in 30 minutes: %(title)s"
 msgstr "30 منٹ میں وزٹ: %(title)s"
+
+msgid "Location recorded"
+msgstr "لوکیشن درج"
+
+msgid "Location not shared"
+msgstr "لوکیشن شیئر نہیں کی"
+
+msgid "Location unavailable"
+msgstr "لوکیشن دستیاب نہیں"
+
+msgid "visit check-in"
+msgstr "وزٹ پر آمد"
+
+msgid "visit check-ins"
+msgstr "وزٹ پر آمد"
+
+msgid "A recorded location needs latitude and longitude."
+msgstr "درج لوکیشن کے لیے عرض البلد اور طول البلد ضروری ہیں۔"
+
+msgid "You have already checked in at this visit."
+msgstr "آپ اس وزٹ پر پہلے ہی آمد درج کر چکے ہیں۔"
+
+msgid "You have already checked out of this visit."
+msgstr "آپ اس وزٹ سے پہلے ہی روانگی درج کر چکے ہیں۔"
+
+msgid "Visit: %(title)s"
+msgstr "وزٹ: %(title)s"
+
+msgid "Removed visit locations older than 90 days"
+msgstr "90 دن سے پرانی وزٹ لوکیشنز ہٹا دی گئیں"
+
+msgid "Checked in"
+msgstr "آمد درج"
+
+msgid "Checked out"
+msgstr "روانگی درج"
+
+msgid "Only the people going check in, on a planned visit, from two hours before it starts."
+msgstr "آمد صرف جانے والے درج کرتے ہیں، طے شدہ وزٹ پر، شروع ہونے سے دو گھنٹے پہلے سے۔"
+
+msgid "%(person)s arrived: %(title)s"
+msgstr "%(person)s پہنچ گئے: %(title)s"
+
+msgid "%(person)s left: %(title)s"
+msgstr "%(person)s روانہ ہو گئے: %(title)s"
+
+msgid "Checked in at %(time)s."
+msgstr "%(time)s پر آمد درج کی۔"
+
+msgid "Checked out at %(time)s."
+msgstr "%(time)s پر روانگی درج کی۔"
+
+msgid "No check-in yet: %(title)s"
+msgstr "ابھی تک آمد درج نہیں: %(title)s"

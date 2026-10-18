@@ -39,6 +39,11 @@ export function TodayVisitsCard({ className }: { className?: string }) {
                   </span>
                   <span className="flex items-center gap-2 text-xs text-muted-foreground">
                     <bdi className="min-w-0 flex-1 truncate">{team ? `${v.assigned_to_name} · ${v.place}` : v.place}</bdi>
+                    {v.status === 'planned' && v.checks.some((c) => c.user === v.assigned_to) && (
+                      <Badge variant="outline" className="border-emerald-500/50 font-normal text-emerald-700 dark:text-emerald-300">
+                        {v.checks.find((c) => c.user === v.assigned_to)?.checked_out_at ? t('visits.checks.left') : t('visits.checks.arrived')}
+                      </Badge>
+                    )}
                     {v.status !== 'planned' && <Badge variant="outline" className={cn('font-normal', VISIT_TONE[v.status])}>{t(`visits.status.${v.status}`)}</Badge>}
                   </span>
                 </Link>

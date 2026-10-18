@@ -6,10 +6,14 @@
 - The person going, whoever planned it, the department's managers and admins change, close or cancel an
   open visit. Managers decide their department's requests (not their own); admins decide any.
 """
+from datetime import datetime, time, timedelta
+
 from django.db.models import Q
+from django.utils import timezone
 
 from apps.accounts.models import User
 from apps.core.models import OrganizationSettings
+from apps.core.office_time import office_tz
 from apps.leave.rules import approvers_for, is_admin, is_manager  # noqa: F401 (same approvers as leave)
 
 from .models import Visit
@@ -79,3 +83,30 @@ def needs_approval(planner, person) -> bool:
     if not OrganizationSettings.cached().visits_need_approval:
         return False
     return person.pk == planner.pk and not (is_admin(planner) or is_manager(planner)) and bool(approvers_for(person))
+
+
+# ================================================================ check-in and location
+
+
+CHECK_IN_EARLY = timedelta(hours=2)
+
+
+def can_see_location(viewer, person) -> bool:
+    """Where someone checked in: the person, their department's managers and admins only."""
+    if viewer.pk == person.pk or is_admin(viewer):
+        return True
+    return is_manager(viewer) and person.department_id is not None and person.department_id == viewer.department_id
+
+
+def goes_on(user, visit) -> bool:
+    return visit.assigned_to_id == user.pk or any(c.pk == user.pk for c in visit.companions.all())
+
+
+def can_check_in(user, visit, now=None) -> bool:
+    """The people going, on a planned visit, from two hours before it starts until the end of its day."""
+    now = now or timezone.now()
+    if visit.status != Visit.Status.PLANNED or not goes_on(user, visit):
+        return False
+    tz = office_tz()
+    day_end = datetime.combine(visit.start.astimezone(tz).date() + timedelta(days=1), time.min, tzinfo=tz)
+    return visit.start - CHECK_IN_EARLY <= now < max(day_end, visit.end)

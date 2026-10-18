@@ -451,7 +451,31 @@ def _visit_reminder(params: dict) -> tuple[str, str]:
     return _("Visit in 30 minutes: %(title)s") % params, _visit_detail(params)
 
 
+def _visit_check_time(params: dict) -> str:
+    from django.utils.dateparse import parse_datetime
+
+    from apps.core.office_time import clock
+
+    at = parse_datetime(params.get("at", "") or "")
+    return clock(at) if at else ""
+
+
+def _visit_checked_in(params: dict) -> tuple[str, str]:
+    return _("%(person)s arrived: %(title)s") % params, _("Checked in at %(time)s.") % {"time": _visit_check_time(params)} + "\n" + _visit_detail(params)
+
+
+def _visit_checked_out(params: dict) -> tuple[str, str]:
+    return _("%(person)s left: %(title)s") % params, _("Checked out at %(time)s.") % {"time": _visit_check_time(params)} + "\n" + _visit_detail(params)
+
+
+def _visit_check_in_missed(params: dict) -> tuple[str, str]:
+    return _("No check-in yet: %(title)s") % params, _visit_detail(params)
+
+
 RENDERERS = {
+    "visit_checked_in": _visit_checked_in,
+    "visit_checked_out": _visit_checked_out,
+    "visit_check_in_missed": _visit_check_in_missed,
     "visit_assigned": _visit_assigned,
     "visit_changed": _visit_changed,
     "visit_cancelled": _visit_cancelled,

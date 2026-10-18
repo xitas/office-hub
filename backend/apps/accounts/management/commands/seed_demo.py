@@ -701,7 +701,7 @@ class Command(BaseCommand):
         from apps.core.office_time import office_today, office_tz
         from apps.tasks.models import Task
         from apps.vendors.models import Vendor
-        from apps.visits.models import Visit
+        from apps.visits.models import Visit, VisitCheck
 
         if Visit.objects.exists():
             return
@@ -733,6 +733,42 @@ class Command(BaseCommand):
                 closed_by=users[person] if closed else None, closed_at=ends if closed else None, close_note=note, **target,
             )
             visit.companions.set([users[c] for c in companions])
+            self._seed_visit_checks(visit, status, lat, lng)
+        # An old visit whose coordinates were removed after 90 days (the times and the visit stay).
+        old_day = today - timedelta(days=100)
+        old = Visit.objects.create(
+            title="Stock count at the Gulberg store", purpose="site", place_name="Gulberg store", city="Lahore", assigned_to=users[USMAN],
+            status="done", created_by=users[OPS_MGR], start=datetime.combine(old_day, datetime.strptime("10:00", "%H:%M").time(), tzinfo=tz),
+            end=datetime.combine(old_day, datetime.strptime("12:00", "%H:%M").time(), tzinfo=tz), closed_by=users[USMAN],
+            closed_at=datetime.combine(old_day, datetime.strptime("12:00", "%H:%M").time(), tzinfo=tz),
+        )
+        VisitCheck.objects.create(
+            visit=old, user=users[USMAN], checked_in_at=old.start + timedelta(minutes=5), in_location="recorded",
+            checked_out_at=old.end, out_location="recorded", location_removed_at=timezone.now() - timedelta(days=10),
+        )
+
+    def _seed_visit_checks(self, visit, status, lat, lng):
+        """Check-ins on the seeded visits: done ones were checked in and out (one without sharing the location);
+        today's planned visit is under way (checked in near the pin)."""
+        from decimal import Decimal
+
+        from django.utils import timezone as tz_now
+
+        from apps.visits.models import VisitCheck
+
+        if status == "done":
+            shared = lat is not None
+            near = {"in_latitude": Decimal(lat) + Decimal("0.000400"), "in_longitude": Decimal(lng) - Decimal("0.000300"), "in_accuracy": 14,
+                    "out_latitude": Decimal(lat) + Decimal("0.000200"), "out_longitude": Decimal(lng), "out_accuracy": 21} if shared else {}
+            VisitCheck.objects.create(
+                visit=visit, user=visit.assigned_to, checked_in_at=visit.start + timedelta(minutes=4), checked_out_at=visit.end - timedelta(minutes=6),
+                in_location="recorded" if shared else "declined", out_location="recorded" if shared else "declined", **near,
+            )
+        elif status == "planned" and visit.start <= tz_now.now() <= visit.end + timedelta(hours=12) and lat is not None:
+            VisitCheck.objects.create(
+                visit=visit, user=visit.assigned_to, checked_in_at=min(visit.start + timedelta(minutes=3), tz_now.now()),
+                in_location="recorded", in_latitude=Decimal(lat) - Decimal("0.000600"), in_longitude=Decimal(lng) + Decimal("0.000500"), in_accuracy=25,
+            )
 
     def _seed_leave(self):
         """Leave types, this year's balances (one with carried-over days) and a few requests

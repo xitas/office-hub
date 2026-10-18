@@ -7,7 +7,29 @@ from apps.tasks.models import Task
 from apps.vendors.models import Vendor
 
 from . import rules
-from .models import Visit
+from .models import Visit, VisitCheck
+
+
+def _spot(lat, lng, accuracy, visit) -> dict | None:
+    """Coordinates, accuracy and the distance from the visit's pin (when both exist): information only."""
+    if lat is None:
+        return None
+    from .checks import distance_m
+
+    far = distance_m(lat, lng, visit.latitude, visit.longitude) if visit.latitude is not None else None
+    return {"latitude": str(lat), "longitude": str(lng), "accuracy": accuracy, "distance_m": far}
+
+
+def check_data(c, viewer, visit) -> dict:
+    """One person's check-in. Coordinates only for the person, their department's managers and admins."""
+    allowed = rules.can_see_location(viewer, c.user)
+    return {
+        "user": c.user_id, "user_name": c.user.full_name, "checked_in_at": c.checked_in_at, "checked_out_at": c.checked_out_at,
+        "in_location": c.in_location, "out_location": c.out_location, "location_removed": c.location_removed_at is not None,
+        "location_visible": allowed,
+        "in": _spot(c.in_latitude, c.in_longitude, c.in_accuracy, visit) if allowed else None,
+        "out": _spot(c.out_latitude, c.out_longitude, c.out_accuracy, visit) if allowed else None,
+    }
 
 
 def _ref(obj, name) -> dict | None:
@@ -27,6 +49,8 @@ class VisitSerializer(serializers.ModelSerializer):
     closed_by_name = serializers.CharField(source="closed_by.full_name", read_only=True, default=None)
     created_by_name = serializers.CharField(source="created_by.full_name", read_only=True, default=None)
     record_visible = serializers.BooleanField(read_only=True, default=True)
+    checks = serializers.SerializerMethodField()
+    can_check_in = serializers.SerializerMethodField()
     can_change = serializers.SerializerMethodField()
     can_close = serializers.SerializerMethodField()
     can_decide = serializers.SerializerMethodField()
@@ -37,7 +61,7 @@ class VisitSerializer(serializers.ModelSerializer):
             "id", "title", "purpose", "contact", "company", "vendor", "place", "place_name", "address", "city", "latitude",
             "longitude", "start", "end", "assigned_to", "assigned_to_name", "department_name", "companions", "notes", "task",
             "status", "decided_by_name", "decided_at", "decision_note", "closed_by_name", "closed_at", "close_note",
-            "created_by_name", "record_visible", "can_change", "can_close", "can_decide", "created_at",
+            "created_by_name", "record_visible", "checks", "can_check_in", "can_change", "can_close", "can_decide", "created_at",
         ]
         read_only_fields = fields
 
@@ -58,6 +82,13 @@ class VisitSerializer(serializers.ModelSerializer):
 
     def get_task(self, obj) -> dict | None:
         return {"id": obj.task.pk, "title": obj.task.title, "status": obj.task.status} if obj.task else None
+
+    def get_checks(self, obj) -> list[dict]:
+        return [check_data(c, self._user(), obj) for c in obj.checks.all()]
+
+    def get_can_check_in(self, obj) -> bool:
+        me = self._user()
+        return rules.can_check_in(me, obj) and not any(c.user_id == me.pk for c in obj.checks.all())
 
     def get_can_change(self, obj) -> bool:
         return rules.can_change(self._user(), obj)
@@ -112,3 +143,12 @@ class VisitDecisionSerializer(serializers.Serializer):
 
 class VisitCloseSerializer(serializers.Serializer):
     note = serializers.CharField(required=False, allow_blank=True, max_length=300, default="")
+
+
+class CheckSerializer(serializers.Serializer):
+    """Where the person was when checking in or out: recorded (with coordinates), declined or unavailable."""
+
+    location = serializers.ChoiceField(choices=VisitCheck.Location.choices)
+    latitude = serializers.DecimalField(max_digits=12, decimal_places=8, min_value=-90, max_value=90, required=False, allow_null=True)
+    longitude = serializers.DecimalField(max_digits=12, decimal_places=8, min_value=-180, max_value=180, required=False, allow_null=True)
+    accuracy = serializers.FloatField(min_value=0, max_value=100_000, required=False, allow_null=True)

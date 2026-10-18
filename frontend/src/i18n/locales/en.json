@@ -2152,6 +2152,39 @@
     "todayTeam": "Visits today",
     "noneToday": "No visits today.",
     "open": "Open",
-    "pinShort": "Pin"
+    "pinShort": "Pin",
+    "checks": {
+      "label": "Check-in",
+      "checkIn": "Check in",
+      "checkOut": "Check out",
+      "inTitle": "Check in: {{title}}",
+      "outTitle": "Check out: {{title}}",
+      "privacyTitle": "About your location",
+      "privacyWhat": "If you share it, your location is recorded once now, with the time and how accurate it is. It is never tracked in the background.",
+      "privacyWho": "Only you, your department's managers and admins can see it. Exact coordinates are removed after 90 days; the visit and its times stay.",
+      "privacyOptional": "Sharing is optional: you can check in without a location.",
+      "inWith": "Share location and check in",
+      "inWithout": "Check in without location",
+      "outWith": "Share location and check out",
+      "outWithout": "Check out without location",
+      "inToast": "Checked in",
+      "outToast": "Checked out",
+      "noLocation": "no location",
+      "none": "Not checked in yet",
+      "inAt": "In {{time}}",
+      "outAt": "Out {{time}}",
+      "arrived": "Arrived",
+      "left": "Left",
+      "location": {
+        "recorded": "Location recorded",
+        "declined": "No location (not shared)",
+        "unavailable": "No location (unavailable)"
+      },
+      "removed": "Location removed after 90 days",
+      "within": "within {{m}}",
+      "fromPin": "{{d}} from the pin",
+      "metres": "{{n}} m",
+      "km": "{{n}} km"
+    }
   }
 }

@@ -39,10 +39,40 @@ export interface Visit {
   created_by_name: string | null
   /** The viewer may open the contact or company (a companion on a colleague's client may not). */
   record_visible: boolean
+  /** Who checked in and out. Coordinates are sent only to the person, their department's managers and admins. */
+  checks: VisitCheck[]
+  /** I go on this visit and may check in now. */
+  can_check_in: boolean
   can_change: boolean
   can_close: boolean
   can_decide: boolean
   created_at: string
+}
+
+export type CheckLocation = 'recorded' | 'declined' | 'unavailable'
+
+export interface CheckSpot {
+  latitude: string
+  longitude: string
+  /** Metres, as the device reported it. */
+  accuracy: number | null
+  /** From the visit's pin, when both exist (information only). */
+  distance_m: number | null
+}
+
+export interface VisitCheck {
+  user: number
+  user_name: string
+  checked_in_at: string
+  checked_out_at: string | null
+  in_location: CheckLocation
+  out_location: CheckLocation | ''
+  /** Coordinates removed after 90 days. */
+  location_removed: boolean
+  /** May I see where they were? (if not, in/out are null) */
+  location_visible: boolean
+  in: CheckSpot | null
+  out: CheckSpot | null
 }
 
 export const VISITS_KEY = ['visits'] as const

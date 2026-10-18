@@ -3,6 +3,7 @@ from datetime import datetime, time, timedelta
 from django.db.models import BooleanField, Exists, ExpressionWrapper, OuterRef, Q
 from django.utils.dateparse import parse_date
 from django.utils.translation import gettext as _
+from django.utils.translation import gettext_noop as N_
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
@@ -16,7 +17,7 @@ from apps.core.permissions import ModulePermission
 
 from . import rules, services
 from .models import Visit
-from .serializers import VisitCloseSerializer, VisitDecisionSerializer, VisitInputSerializer, VisitSerializer
+from .serializers import CheckSerializer, VisitCloseSerializer, VisitDecisionSerializer, VisitInputSerializer, VisitSerializer
 
 MAX_RANGE_DAYS = 62
 
@@ -55,7 +56,8 @@ class VisitViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.Ge
     serializer_class = VisitSerializer
     pagination_class = None  # bounded below: a date range, upcoming/past slices, or what's waiting
     http_method_names = ["get", "post", "patch", "head", "options"]
-    action_permissions = {"decide": "edit", "close": "edit", "cancel": "edit", "people": "view"}
+    # Checking in is for the people going (checked per visit), whatever else their role allows.
+    action_permissions = {"decide": "edit", "close": "edit", "cancel": "edit", "people": "view", "check_in": "view", "check_out": "view"}
 
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
@@ -63,7 +65,7 @@ class VisitViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.Ge
         user = self.request.user
         qs = rules.visible_visits(user).select_related(
             "contact", "company", "vendor", "assigned_to__department", "task", "decided_by", "closed_by", "created_by"
-        ).prefetch_related("companions").annotate(record_visible=record_visible(user))
+        ).prefetch_related("companions", "checks__user").annotate(record_visible=record_visible(user))
         if self.action != "list":
             return qs
         p = self.request.query_params
@@ -173,6 +175,40 @@ class VisitViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.Ge
         data.is_valid(raise_exception=True)
         return self._status(request, visit, lambda: services.cancel(request.user, visit, data.validated_data["note"]),
                             _("This visit can't be cancelled."))
+
+    def _check(self, request, pk, do):
+        from . import checks
+
+        visit = self.get_object()
+        data = CheckSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        try:
+            check = do(checks, visit, data.validated_data)
+        except PermissionError:
+            raise PermissionDenied(_("Only the people going check in, on a planned visit, from two hours before it starts."))
+        except services.VisitError as exc:
+            raise ValidationError(exc.errors)
+        out = do.__name__ == "_out"
+        # Times and whether a location was shared go in the audit log; coordinates never do (they're removed after 90 days).
+        log_action(request.user, AuditLog.Action.UPDATE, visit, description=N_("Checked out") if out else N_("Checked in"),
+                   changes={"checked_out_at" if out else "checked_in_at": [None, (check.checked_out_at if out else check.checked_in_at).isoformat()],
+                            "location": [None, check.out_location if out else check.in_location]}, request=request)
+        return Response(self._out(visit))
+
+    @extend_schema(request=CheckSerializer, responses={200: VisitSerializer})
+    @action(detail=True, methods=["post"], url_path="check-in")
+    def check_in(self, request, pk=None):
+        """Check in at the visit, with where I am if I allow it (otherwise marked "no location")."""
+        def _in(checks, visit, location):
+            return checks.check_in(request.user, visit, location)
+        return self._check(request, pk, _in)
+
+    @extend_schema(request=CheckSerializer, responses={200: VisitSerializer})
+    @action(detail=True, methods=["post"], url_path="check-out")
+    def check_out(self, request, pk=None):
+        def _out(checks, visit, location):
+            return checks.check_out(request.user, visit, location)
+        return self._check(request, pk, _out)
 
     @extend_schema(responses={200: dict})
     @action(detail=False, methods=["get"])
