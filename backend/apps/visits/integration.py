@@ -59,13 +59,14 @@ def timeline_entries(user, contact_ids, company_ids):
     if not has_perm(user, "visits", "view"):
         return []
     visits = rules.visible_visits(user).filter(Q(contact_id__in=contact_ids) | Q(company_id__in=company_ids), status__in=TIMELINE_STATUSES)
+    visits = visits.filter(report__entry__isnull=True)  # a reported visit is on the timeline as its report
     return [_entry(v) for v in visits.select_related("contact", "company", "vendor", "assigned_to")]
 
 
 def vendor_timeline_entries(user, vendor_id):
     if not has_perm(user, "visits", "view"):
         return []
-    visits = rules.visible_visits(user).filter(vendor_id=vendor_id, status__in=TIMELINE_STATUSES)
+    visits = rules.visible_visits(user).filter(vendor_id=vendor_id, status__in=TIMELINE_STATUSES, report__entry__isnull=True)
     return [_entry(v) for v in visits.select_related("contact", "company", "vendor", "assigned_to")]
 
 
@@ -88,7 +89,14 @@ def calendar_items(user, start, end) -> list[dict]:
 
 
 def register():
+    from django.utils.translation import gettext_lazy
+
     from apps.timeline import registry as timeline
+
+    # Visit reports are stored timeline entries of kind "visit" (written from the visit, not editable on the timeline);
+    # visits without a report come from the provider under the same kind, so one filter shows both.
+    timeline.register_type(timeline.EntryType("visit", gettext_lazy("Visit"), None, allows_follow_up=True, requires_summary=False,
+                                              creatable=False))
 
     approvals.register("visit", _approval_rows, _approval_item)
     timeline.register_provider("visit", timeline_entries)

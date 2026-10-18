@@ -14,7 +14,7 @@ import { api } from '@/lib/api'
 import { useFormat } from '@/lib/format'
 import { usePermission } from '@/lib/permissions'
 import { useUserOptions } from '@/lib/queries'
-import { ENTRY_KINDS, KIND_ICONS, KIND_STYLES, type LogFilters, type TimelineItem } from '@/lib/timeline'
+import { ENTRY_KINDS, KIND_ICONS, LOG_KINDS, KIND_STYLES, type LogFilters, type TimelineItem } from '@/lib/timeline'
 import { downloadFile } from '@/lib/transfer'
 import type { Paginated } from '@/lib/types'
 import { useDebouncedValue } from '@/lib/useDebouncedValue'
@@ -173,7 +173,7 @@ function Filters({
     <Card className="mb-4">
       <CardContent className="grid gap-3">
         <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t('log.types')}>
-          {ENTRY_KINDS.map((kind) => {
+          {LOG_KINDS.map((kind) => {
             const Icon = KIND_ICONS[kind]
             const on = types.includes(kind)
             return (

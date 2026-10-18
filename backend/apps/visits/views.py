@@ -1,12 +1,14 @@
 from datetime import datetime, time, timedelta
 
-from django.db.models import BooleanField, Exists, ExpressionWrapper, OuterRef, Q
+from django.db.models import BooleanField, Prefetch, Exists, ExpressionWrapper, OuterRef, Q
+from django.http import FileResponse, Http404
 from django.utils.dateparse import parse_date
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_noop as N_
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 
@@ -16,8 +18,8 @@ from apps.core.office_time import office_today, office_tz
 from apps.core.permissions import ModulePermission
 
 from . import rules, services
-from .models import Visit
-from .serializers import CheckSerializer, VisitCloseSerializer, VisitDecisionSerializer, VisitInputSerializer, VisitSerializer
+from .models import Visit, VisitPhoto
+from .serializers import CheckSerializer, ReportInputSerializer, VisitCloseSerializer, VisitDecisionSerializer, VisitInputSerializer, VisitSerializer
 
 MAX_RANGE_DAYS = 62
 
@@ -57,15 +59,18 @@ class VisitViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.Ge
     pagination_class = None  # bounded below: a date range, upcoming/past slices, or what's waiting
     http_method_names = ["get", "post", "patch", "head", "options"]
     # Checking in is for the people going (checked per visit), whatever else their role allows.
-    action_permissions = {"decide": "edit", "close": "edit", "cancel": "edit", "people": "view", "check_in": "view", "check_out": "view"}
+    action_permissions = {"decide": "edit", "close": "edit", "cancel": "edit", "people": "view", "check_in": "view", "check_out": "view",
+                          "report": "view"}  # the report: the people who went, their managers and admins (checked per visit)
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
 
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
             return Visit.objects.none()
         user = self.request.user
         qs = rules.visible_visits(user).select_related(
-            "contact", "company", "vendor", "assigned_to__department", "task", "decided_by", "closed_by", "created_by"
-        ).prefetch_related("companions", "checks__user").annotate(record_visible=record_visible(user))
+            "contact", "company", "vendor", "assigned_to__department", "task", "decided_by", "closed_by", "created_by",
+            "report__written_by", "report__updated_by", "report__follow_up_task", "report__status_change",
+        ).prefetch_related("companions", "checks__user", Prefetch("report__photos", queryset=VisitPhoto.objects.order_by("id"))).annotate(record_visible=record_visible(user))
         if self.action != "list":
             return qs
         p = self.request.query_params
@@ -210,6 +215,29 @@ class VisitViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.Ge
             return checks.check_out(request.user, visit, location)
         return self._check(request, pk, _out)
 
+    @extend_schema(request=ReportInputSerializer, responses={200: VisitSerializer})
+    @action(detail=True, methods=["post"])
+    def report(self, request, pk=None):
+        """Write or change the visit's report (multipart for photos). Writing it marks a planned visit done; the next
+        action becomes a follow-up task; on a contact, company or vendor it goes on their timeline."""
+        from . import reports
+
+        visit = self.get_object()
+        data = ReportInputSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        v = dict(data.validated_data)
+        remove = v.pop("remove_photos", [])
+        try:
+            report, changes, created = reports.save(request.user, visit, v, photos=request.FILES.getlist("photos"), remove_photos=remove)
+        except reports.NotAllowed:
+            raise PermissionDenied(_("Only the people who went, their managers and admins write the report, once the visit has started."))
+        except services.VisitError as exc:
+            raise ValidationError(exc.errors)
+        if changes:
+            log_action(request.user, AuditLog.Action.UPDATE, visit, changes=changes, request=request,
+                       description=N_("Visit report written") if created else N_("Visit report changed"))
+        return Response(self._out(visit))
+
     @extend_schema(responses={200: dict})
     @action(detail=False, methods=["get"])
     def people(self, request):
@@ -221,3 +249,40 @@ class VisitViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.Ge
         everyone = User.objects.filter(is_active=True)
         along = everyone if rules.is_admin(user) else everyone.filter(department_id=user.department_id) if user.department_id else everyone.none()
         return Response({"plan_for": rows(rules.planners_people(user)), "companions": rows(along)})
+
+
+class VisitPhotoViewSet(viewsets.GenericViewSet):
+    """A report photo, or its thumbnail: only people who can see the visit."""
+
+    module = "visits"
+    permission_classes = [ModulePermission]
+    serializer_class = VisitCloseSerializer  # (no body; for the schema)
+
+    def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return VisitPhoto.objects.none()
+        return VisitPhoto.objects.filter(report__visit__in=rules.visible_visits(self.request.user))
+
+    def _serve(self, field, name, content_type, inline):
+        if not field:
+            raise Http404
+        try:
+            handle = field.open("rb")
+        except FileNotFoundError:
+            raise Http404
+        response = FileResponse(handle, content_type=content_type, as_attachment=not inline, filename=name)
+        response["X-Content-Type-Options"] = "nosniff"
+        response["Content-Security-Policy"] = "default-src 'none'; sandbox"
+        response["Cache-Control"] = "private, max-age=3600"
+        return response
+
+    @extend_schema(responses={(200, "application/octet-stream"): bytes})
+    @action(detail=True, methods=["get"])
+    def download(self, request, pk=None):
+        photo = self.get_object()
+        return self._serve(photo.file, photo.original_name, photo.content_type, request.query_params.get("inline") == "1")
+
+    @extend_schema(responses={(200, "image/webp"): bytes})
+    @action(detail=True, methods=["get"])
+    def thumbnail(self, request, pk=None):
+        return self._serve(self.get_object().thumbnail, "thumbnail.webp", "image/webp", True)

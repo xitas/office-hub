@@ -20,7 +20,8 @@ def task_title(entry) -> str:
     from .registry import target_name
 
     target = target_name(entry)
-    first_line = (entry.summary or "").strip().split("\n")[0].strip()
+    # A visit report names its next action; otherwise the first line of what was logged.
+    first_line = ((entry.details or {}).get("next_action") or entry.summary or "").strip().split("\n")[0].strip()
     title = _("Follow up with %(name)s") % {"name": target}
     if first_line:
         title += f": {first_line}"

@@ -734,6 +734,7 @@ class Command(BaseCommand):
             )
             visit.companions.set([users[c] for c in companions])
             self._seed_visit_checks(visit, status, lat, lng)
+        self._seed_visit_reports(users, tz, today)
         # An old visit whose coordinates were removed after 90 days (the times and the visit stay).
         old_day = today - timedelta(days=100)
         old = Visit.objects.create(
@@ -746,6 +747,47 @@ class Command(BaseCommand):
             visit=old, user=users[USMAN], checked_in_at=old.start + timedelta(minutes=5), in_location="recorded",
             checked_out_at=old.end, out_location="recorded", location_removed_at=timezone.now() - timedelta(days=10),
         )
+
+    def _seed_visit_reports(self, users, tz, today):
+        """Reports on the done visits: the vendor's car service (on the vendor's timeline), samples delivered to
+        Saba Software (two photos, a follow-up task) and a product demo that moved a lead to "In discussion"."""
+        from datetime import datetime
+
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        from apps.contacts.models import Contact
+        from apps.visits import reports
+        from apps.visits.models import Visit, VisitCheck
+
+        car = Visit.objects.filter(title="Car service", status="done").first()
+        if car:
+            reports.save(car.assigned_to, car, {"outcome": "good", "notes": "Oil and brakes done; next service at 85,000 km."}, announce=False)
+        samples = Visit.objects.filter(title="Deliver samples to Saba Software", status="done").first()
+        if samples:
+            photos = [SimpleUploadedFile(name, _visit_photo(label, colour), content_type="image/jpeg")
+                      for name, label, colour in (("reception.jpg", "Samples at reception", (70, 110, 160)),
+                                                  ("brochures.jpg", "Brochure stand", (150, 95, 60)))]
+            reports.save(samples.assigned_to, samples, {
+                "outcome": "follow_up", "notes": "Left 3 sample packs with reception; the office manager will pass them to IT.",
+                "next_action": "Call to hear what they thought of the samples", "next_action_on": today + timedelta(days=2),
+            }, photos=photos, announce=False)
+        lead = Contact.objects.filter(assigned_to=users[FATIMA], status__in=["new", "contacted"]).order_by("pk").first()
+        if lead:
+            day = today - timedelta(days=2)
+            demo = Visit.objects.create(
+                title=f"Product demo for {lead.full_name}", purpose="meeting", contact=lead, address=lead.address, city=lead.city or "Lahore",
+                assigned_to=users[FATIMA], status="planned", created_by=users[SALES_MGR], decided_by=users[SALES_MGR],
+                start=datetime.combine(day, datetime.strptime("11:00", "%H:%M").time(), tzinfo=tz),
+                end=datetime.combine(day, datetime.strptime("12:00", "%H:%M").time(), tzinfo=tz),
+            )
+            VisitCheck.objects.create(visit=demo, user=users[FATIMA], checked_in_at=demo.start + timedelta(minutes=6), in_location="declined",
+                                      checked_out_at=demo.end - timedelta(minutes=5), out_location="declined")
+            demo = Visit.objects.prefetch_related("checks", "companions").select_related("contact").get(pk=demo.pk)
+            reports.save(users[FATIMA], demo, {
+                "outcome": "good", "notes": "Showed the booking module; they liked the approvals. Wants pricing for 25 users.",
+                "next_action": "Send pricing for 25 users", "next_action_on": today + timedelta(days=1),
+                "contact_status": "in_discussion", "status_reason": "Asked for pricing after the demo",
+            }, now=demo.end, announce=False)
 
     def _seed_visit_checks(self, visit, status, lat, lng):
         """Check-ins on the seeded visits: done ones were checked in and out (one without sharing the location);
@@ -1091,6 +1133,23 @@ class Command(BaseCommand):
             task = Task.objects.filter(title=title, series__isnull=True).exclude(due_date__isnull=True).first()
             if task is not None:
                 schedule.start_series(task, {"interval": 1, **rule}, task.created_by)
+
+
+def _visit_photo(label: str, colour) -> bytes:
+    """A made-up site photo (JPEG) for the demo visit reports."""
+    import io
+
+    from PIL import Image, ImageDraw
+
+    img = Image.new("RGB", (640, 480), colour)
+    draw = ImageDraw.Draw(img)
+    for x in range(0, 640, 40):
+        draw.line((x, 300, x + 120, 480), fill=tuple(min(255, c + 40) for c in colour), width=6)
+    draw.rectangle((40, 40, 600, 110), fill="white")
+    draw.text((60, 65), label, fill="black")
+    out = io.BytesIO()
+    img.save(out, "JPEG", quality=85)
+    return out.getvalue()
 
 
 def _receipt_image(title: str, amount: str, currency: str) -> bytes:

@@ -33,8 +33,9 @@ class WhatsAppDetailsSerializer(serializers.Serializer):
     direction = serializers.ChoiceField(choices=CallDetailsSerializer.DIRECTIONS)
 
 
-# Kinds that count as being in touch with the client ("Last contacted"); a note is internal.
-CONTACT_KINDS = ("call", "meeting", "email", "whatsapp")
+# Kinds that count as being in touch with the client ("Last contacted"); a note is internal. A visit report
+# (kind "visit", registered by the visits app) is meeting them in person.
+CONTACT_KINDS = ("call", "meeting", "email", "whatsapp", "visit")
 # Everything on the communication log.
 LOG_KINDS = ("note", *CONTACT_KINDS)
 

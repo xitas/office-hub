@@ -567,7 +567,8 @@
       "call": "Call",
       "meeting": "Meeting",
       "email": "Email",
-      "whatsapp": "WhatsApp"
+      "whatsapp": "WhatsApp",
+      "visit": "Visit report"
     },
     "filters": {
       "note": "Notes",
@@ -2185,6 +2186,46 @@
       "fromPin": "{{d}} from the pin",
       "metres": "{{n}} m",
       "km": "{{n}} km"
+    },
+    "report": {
+      "label": "Report",
+      "write": "Write report",
+      "edit": "Edit report",
+      "title": "Visit report: {{title}}",
+      "editTitle": "Edit report: {{title}}",
+      "marksDone": "Writing the report marks the visit done.",
+      "submit": "Save report",
+      "writtenToast": "Report saved, visit done",
+      "savedToast": "Report updated",
+      "stillIn": "You checked in at {{time}} and haven't checked out yet.",
+      "outcome": "How did it go?",
+      "outcomes": {
+        "good": "Went well",
+        "follow_up": "Needs follow-up",
+        "no_result": "No result",
+        "not_met": "Couldn't meet"
+      },
+      "notes": "Notes",
+      "notesPlaceholder": "Who you met, what was discussed, what was agreed",
+      "nextAction": "Next action",
+      "nextActionPlaceholder": "e.g. Send the quote",
+      "nextActionOn": "By",
+      "taskHint": "With a date, the next action becomes a follow-up task.",
+      "taskFor": "Follow-up task for",
+      "taskExists": "Follow-up task:",
+      "taskDone": "done",
+      "leadStatus": "Lead status of {{name}}",
+      "leaveStatus": "Leave as it is",
+      "statusReason": "Why (optional)",
+      "photos": "Photos",
+      "addPhotos": "Add photos",
+      "photosHint": "Up to {{n}} photos (JPEG, PNG or WebP, 10 MB each). Location and camera details are removed from photos.",
+      "removePhoto": "Remove {{name}}",
+      "openPhoto": "Open {{name}}",
+      "next": "Next:",
+      "writtenBy": "Written by {{name}}, {{when}}",
+      "photoCount_one": "{{count}} photo",
+      "photoCount_other": "{{count}} photos"
     }
   }
 }

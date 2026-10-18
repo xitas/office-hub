@@ -1,11 +1,12 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { History, MapPin, MoreHorizontal, Pencil, Trash2, UsersRound } from 'lucide-react'
+import { Camera, History, MapPin, MoreHorizontal, Pencil, Trash2, UsersRound } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { EmptyState, ErrorState, SimpleSelect } from '@/components/common'
 import { StatusBadge } from '@/components/common/StatusBadge'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -35,6 +36,7 @@ import {
 } from '@/lib/timeline'
 import type { Paginated } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { REPORT_TONE, type ReportOutcome } from '@/lib/visits'
 import { EntryTitle, FollowUpStatus } from './EntryBits'
 import { EntryForm } from './EntryForm'
 
@@ -247,13 +249,14 @@ function Headline({ item }: { item: TimelineItem }) {
     )
   }
   if (item.kind === 'visit') {
-    const d = item.details as { visit_id: number; status: string; start: string }
+    // A visit without a report (automatic: its summary is the title), or a visit report (stored: the title in details).
+    const d = item.details as { visit_id: number; status: string; start: string; title?: string }
     return (
       <span className="font-medium">
         {t(`timeline.visitEvents.${d.status}`)}
         {' · '}
         <Link to={`/visits?visit=${d.visit_id}`} className="font-normal text-primary hover:underline">
-          <bdi>{item.summary}</bdi>
+          <bdi>{d.title ?? item.summary}</bdi>
         </Link>
       </span>
     )
@@ -279,10 +282,7 @@ function Body({ item }: { item: TimelineItem }) {
   const hasExtras = !!(meeting?.location || meeting?.attendees || item.follow_up_on)
   // An import's file name is already in the headline.
   // An import's file name and a task's title are already in the headline.
-  if (item.kind === 'visit') {
-    const note = (item.details as { note?: string }).note
-    return note ? <p className="mt-1.5 text-sm [unicode-bidi:plaintext]">{note}</p> : null
-  }
+  if (item.kind === 'visit') return <VisitBody item={item} />
   if ((!item.summary || item.kind === 'imported' || item.kind === 'task') && !hasExtras) return null
   return (
     <div className="mt-1.5 grid gap-1.5">
@@ -305,6 +305,33 @@ function Body({ item }: { item: TimelineItem }) {
               <bdi>{meeting.attendees}</bdi>
             </span>
           )}
+          <FollowUpStatus item={item} />
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** A visit on the timeline: the note it was closed with, or its report (outcome, notes, next action and its task, photos). */
+function VisitBody({ item }: { item: TimelineItem }) {
+  const { t } = useTranslation()
+  const d = item.details as { note?: string; outcome?: ReportOutcome; next_action?: string; photos?: number }
+  if (!d.outcome) return d.note ? <p className="mt-1.5 text-sm [unicode-bidi:plaintext]">{d.note}</p> : null
+  return (
+    <div className="mt-1.5 grid gap-1.5 text-sm">
+      <span className="flex flex-wrap items-center gap-2">
+        <Badge variant="outline" className={cn('font-normal', REPORT_TONE[d.outcome])}>{t(`visits.report.outcomes.${d.outcome}`)}</Badge>
+        {!!d.photos && (
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <Camera className="size-3.5" />
+            {t('visits.report.photoCount', { count: d.photos })}
+          </span>
+        )}
+      </span>
+      {item.summary && <p className="whitespace-pre-wrap break-words [unicode-bidi:plaintext] ltr:text-left rtl:text-right">{item.summary}</p>}
+      {(d.next_action || item.follow_up_on) && (
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+          {d.next_action && <span>{t('visits.report.next')} <bdi>{d.next_action}</bdi></span>}
           <FollowUpStatus item={item} />
         </div>
       )}

@@ -9,11 +9,18 @@
   when there is none). Visits are done or cancelled; visit reports come in a later slice.
 - The people going check in and out at the visit (VisitCheck). Location is taken only then, never in the
   background, and only if the person allows it; otherwise the check-in is marked "no location".
+- After the visit, a report (VisitReport): how it went, notes, photos (VisitPhoto, location metadata stripped)
+  and the next action, which becomes a follow-up task. Writing it marks the visit done.
 """
+import uuid
+
 from django.conf import settings
+from django.utils import timezone
 from django.db import models
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
+
+from apps.tasks.models import private_storage
 
 
 class Visit(models.Model):
@@ -141,3 +148,69 @@ class VisitCheck(models.Model):
 
     def __str__(self):
         return f"{self.user} @ {self.visit}"
+
+
+class VisitReport(models.Model):
+    """How a visit went, written by someone who went (or their manager). Writing it marks the visit done.
+
+    Connected rather than copied: on a contact's, company's or vendor's visit the report is also a timeline entry
+    (kind "visit": the record's history, the communication log, "last contacted"), and the next action becomes a
+    follow-up task through the timeline's follow-ups (completing the task marks the follow-up done). A lead's
+    status can be moved from the report (a normal status change, with its history).
+    """
+
+    class Outcome(models.TextChoices):
+        GOOD = "good", _("Went well")
+        FOLLOW_UP = "follow_up", _("Needs follow-up")
+        NO_RESULT = "no_result", _("No result")
+        NOT_MET = "not_met", _("Couldn't meet")
+
+    visit = models.OneToOneField(Visit, on_delete=models.CASCADE, related_name="report")
+    outcome = models.CharField(max_length=12, choices=Outcome.choices)
+    notes = models.TextField(blank=True)
+    next_action = models.CharField(max_length=200, blank=True)
+    next_action_on = models.DateField(null=True, blank=True)
+    # The record's timeline entry for this report (none for a visit to a place).
+    entry = models.OneToOneField("timeline.TimelineEntry", null=True, blank=True, on_delete=models.SET_NULL, related_name="visit_report")
+    follow_up_task = models.ForeignKey("tasks.Task", null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    status_change = models.ForeignKey("contacts.ContactStatusChange", null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    written_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="+")
+    written_at = models.DateTimeField(default=timezone.now)
+    updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _("visit report")
+        verbose_name_plural = _("visit reports")
+
+    def __str__(self):
+        return str(self.visit)
+
+
+def photo_path(instance, filename):
+    # Random names: nothing about the original name can be guessed from the path.
+    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else "jpg"
+    return f"visits/{timezone.now():%Y/%m}/{uuid.uuid4().hex}.{ext}"
+
+
+class VisitPhoto(models.Model):
+    """A photo on a visit report: private storage (task-file rules), re-encoded so no EXIF or GPS location is kept."""
+
+    report = models.ForeignKey(VisitReport, on_delete=models.CASCADE, related_name="photos")
+    file = models.FileField(upload_to=photo_path, storage=private_storage, max_length=200)
+    thumbnail = models.FileField(upload_to=photo_path, storage=private_storage, max_length=200, blank=True)
+    original_name = models.CharField(max_length=255)
+    size = models.PositiveIntegerField()
+    content_type = models.CharField(max_length=100)
+    width = models.PositiveIntegerField()
+    height = models.PositiveIntegerField()
+    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="+")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["id"]
+        verbose_name = _("visit photo")
+        verbose_name_plural = _("visit photos")
+
+    def __str__(self):
+        return self.original_name

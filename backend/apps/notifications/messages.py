@@ -472,10 +472,31 @@ def _visit_check_in_missed(params: dict) -> tuple[str, str]:
     return _("No check-in yet: %(title)s") % params, _visit_detail(params)
 
 
+def _visit_reported(params: dict) -> tuple[str, str]:
+    """ "Visit report: Quarterly review" / "Outcome: Needs follow-up. Next: send the quote by 20/10/2026." """
+    from datetime import date
+
+    from apps.visits.models import VisitReport
+
+    try:
+        outcome = VisitReport.Outcome(params.get("outcome")).label
+    except ValueError:
+        outcome = params.get("outcome", "")
+    body = _("%(actor)s wrote the report. Outcome: %(outcome)s.") % {"actor": params.get("actor", ""), "outcome": outcome}
+    if params.get("next_action"):
+        if params.get("next_action_on"):
+            day = date.fromisoformat(params["next_action_on"]).strftime("%d/%m/%Y")
+            body += "\n" + _("Next: %(action)s by %(date)s.") % {"action": params["next_action"], "date": day}
+        else:
+            body += "\n" + _("Next: %(action)s.") % {"action": params["next_action"]}
+    return _("Visit report: %(title)s") % params, body + "\n" + _visit_detail(params)
+
+
 RENDERERS = {
     "visit_checked_in": _visit_checked_in,
     "visit_checked_out": _visit_checked_out,
     "visit_check_in_missed": _visit_check_in_missed,
+    "visit_reported": _visit_reported,
     "visit_assigned": _visit_assigned,
     "visit_changed": _visit_changed,
     "visit_cancelled": _visit_cancelled,

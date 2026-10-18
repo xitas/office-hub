@@ -6,7 +6,9 @@ import type { ContactStatus } from './types'
 /** Entry types people log by hand. Later modules add theirs here and in the backend registry. */
 export const ENTRY_KINDS = ['note', 'call', 'meeting', 'email', 'whatsapp'] as const
 /** Kinds that count as being in touch with the client ("Last contacted"); a note is internal. */
-export const CONTACT_KINDS = ['call', 'meeting', 'email', 'whatsapp'] as const
+export const CONTACT_KINDS = ['call', 'meeting', 'email', 'whatsapp', 'visit'] as const
+/** On the communication log: what people log, and visit reports (written from the visit). */
+export const LOG_KINDS = ['note', 'call', 'meeting', 'email', 'whatsapp', 'visit'] as const
 /** A lead with no contact for this many days gets a "No contact in N days" hint. */
 export const STALE_AFTER_DAYS = 14
 export type EntryKind = (typeof ENTRY_KINDS)[number]

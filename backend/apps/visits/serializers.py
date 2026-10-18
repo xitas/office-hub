@@ -1,3 +1,4 @@
+from django.urls import reverse
 from rest_framework import serializers
 
 from apps.accounts.models import User
@@ -7,7 +8,7 @@ from apps.tasks.models import Task
 from apps.vendors.models import Vendor
 
 from . import rules
-from .models import Visit, VisitCheck
+from .models import Visit, VisitCheck, VisitReport
 
 
 def _spot(lat, lng, accuracy, visit) -> dict | None:
@@ -29,6 +30,31 @@ def check_data(c, viewer, visit) -> dict:
         "location_visible": allowed,
         "in": _spot(c.in_latitude, c.in_longitude, c.in_accuracy, visit) if allowed else None,
         "out": _spot(c.out_latitude, c.out_longitude, c.out_accuracy, visit) if allowed else None,
+    }
+
+
+def photo_data(p) -> dict:
+    return {
+        "id": p.pk, "original_name": p.original_name, "size": p.size, "width": p.width, "height": p.height,
+        # Relative API paths: the frontend fetches them with the user's token (they are not public links).
+        "download_url": reverse("visit-photo-download", args=[p.pk]).removeprefix("/api/v1"),
+        "thumbnail_url": reverse("visit-photo-thumbnail", args=[p.pk]).removeprefix("/api/v1") if p.thumbnail else None,
+    }
+
+
+def report_data(r) -> dict | None:
+    """The visit's report (seen by everyone who can see the visit)."""
+    if r is None:
+        return None
+    task, change = r.follow_up_task, r.status_change
+    return {
+        "outcome": r.outcome, "notes": r.notes, "next_action": r.next_action, "next_action_on": r.next_action_on,
+        "written_by_name": r.written_by.full_name if r.written_by else None, "written_at": r.written_at,
+        "updated_by_name": r.updated_by.full_name if r.updated_by else None, "updated_at": r.updated_at,
+        "photos": [photo_data(p) for p in r.photos.all()],
+        "follow_up_task": {"id": task.pk, "title": task.title, "status": task.status, "due_date": task.due_date} if task else None,
+        "status_change": {"from": change.from_status, "to": change.to_status} if change else None,
+        "on_timeline": r.entry_id is not None,
     }
 
 
@@ -54,6 +80,8 @@ class VisitSerializer(serializers.ModelSerializer):
     can_change = serializers.SerializerMethodField()
     can_close = serializers.SerializerMethodField()
     can_decide = serializers.SerializerMethodField()
+    report = serializers.SerializerMethodField()
+    can_report = serializers.SerializerMethodField()
 
     class Meta:
         model = Visit
@@ -61,7 +89,8 @@ class VisitSerializer(serializers.ModelSerializer):
             "id", "title", "purpose", "contact", "company", "vendor", "place", "place_name", "address", "city", "latitude",
             "longitude", "start", "end", "assigned_to", "assigned_to_name", "department_name", "companions", "notes", "task",
             "status", "decided_by_name", "decided_at", "decision_note", "closed_by_name", "closed_at", "close_note",
-            "created_by_name", "record_visible", "checks", "can_check_in", "can_change", "can_close", "can_decide", "created_at",
+            "created_by_name", "record_visible", "checks", "can_check_in", "can_change", "can_close", "can_decide", "report", "can_report",
+            "created_at",
         ]
         read_only_fields = fields
 
@@ -98,6 +127,15 @@ class VisitSerializer(serializers.ModelSerializer):
 
     def get_can_decide(self, obj) -> bool:
         return rules.can_decide(self._user(), obj)
+
+    def get_report(self, obj) -> dict | None:
+        try:
+            return report_data(obj.report)
+        except VisitReport.DoesNotExist:
+            return None
+
+    def get_can_report(self, obj) -> bool:
+        return rules.can_report(self._user(), obj)
 
 
 class VisitInputSerializer(serializers.Serializer):
@@ -152,3 +190,16 @@ class CheckSerializer(serializers.Serializer):
     latitude = serializers.DecimalField(max_digits=12, decimal_places=8, min_value=-90, max_value=90, required=False, allow_null=True)
     longitude = serializers.DecimalField(max_digits=12, decimal_places=8, min_value=-180, max_value=180, required=False, allow_null=True)
     accuracy = serializers.FloatField(min_value=0, max_value=100_000, required=False, allow_null=True)
+
+
+class ReportInputSerializer(serializers.Serializer):
+    """The report form (JSON or multipart with `photos` files)."""
+
+    outcome = serializers.ChoiceField(choices=VisitReport.Outcome.choices)
+    notes = serializers.CharField(max_length=4000, required=False, allow_blank=True, default="")
+    next_action = serializers.CharField(max_length=200, required=False, allow_blank=True, default="")
+    next_action_on = serializers.DateField(required=False, allow_null=True, default=None)
+    follow_up_assignee = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(is_active=True), required=False, allow_null=True)
+    contact_status = serializers.ChoiceField(choices=Contact.Status.choices, required=False, allow_blank=True, default="")
+    status_reason = serializers.CharField(max_length=300, required=False, allow_blank=True, default="")
+    remove_photos = serializers.ListField(child=serializers.IntegerField(), required=False, default=list)

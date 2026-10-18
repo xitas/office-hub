@@ -2251,3 +2251,69 @@ msgstr "%(time)s پر روانگی درج کی۔"
 
 msgid "No check-in yet: %(title)s"
 msgstr "ابھی تک آمد درج نہیں: %(title)s"
+
+msgid "Went well"
+msgstr "اچھا رہا"
+
+msgid "Needs follow-up"
+msgstr "مزید کارروائی درکار"
+
+msgid "No result"
+msgstr "کوئی نتیجہ نہیں"
+
+msgid "Couldn't meet"
+msgstr "ملاقات نہیں ہو سکی"
+
+msgid "visit report"
+msgstr "وزٹ رپورٹ"
+
+msgid "visit reports"
+msgstr "وزٹ رپورٹس"
+
+msgid "visit photo"
+msgstr "وزٹ کی تصویر"
+
+msgid "visit photos"
+msgstr "وزٹ کی تصاویر"
+
+msgid "“%(name)s” is not a photo. Photos can be JPEG, PNG or WebP."
+msgstr "“%(name)s” تصویر نہیں ہے۔ تصاویر JPEG، PNG یا WebP ہو سکتی ہیں۔"
+
+msgid "“%(name)s” is too large to open."
+msgstr "“%(name)s” کھولنے کے لیے بہت بڑی ہے۔"
+
+msgid "Say what the next action is."
+msgstr "بتائیں کہ اگلا قدم کیا ہے۔"
+
+msgid "The next action can't be in the past."
+msgstr "اگلا قدم ماضی میں نہیں ہو سکتا۔"
+
+msgid "You can't change this contact's status."
+msgstr "آپ اس رابطے کا اسٹیٹس نہیں بدل سکتے۔"
+
+msgid "A report can have up to %(n)s photos."
+msgstr "ایک رپورٹ میں زیادہ سے زیادہ %(n)s تصاویر ہو سکتی ہیں۔"
+
+msgid "Next step after %(visit)s: %(action)s"
+msgstr "%(visit)s کے بعد اگلا قدم: %(action)s"
+
+msgid "Only the people who went, their managers and admins write the report, once the visit has started."
+msgstr "رپورٹ صرف جانے والے، ان کے منیجرز اور ایڈمنز لکھتے ہیں، وزٹ شروع ہونے کے بعد۔"
+
+msgid "Visit report written"
+msgstr "وزٹ رپورٹ لکھی گئی"
+
+msgid "Visit report changed"
+msgstr "وزٹ رپورٹ بدلی گئی"
+
+msgid "%(actor)s wrote the report. Outcome: %(outcome)s."
+msgstr "%(actor)s نے رپورٹ لکھی۔ نتیجہ: %(outcome)s۔"
+
+msgid "Next: %(action)s by %(date)s."
+msgstr "اگلا قدم: %(date)s تک %(action)s۔"
+
+msgid "Next: %(action)s."
+msgstr "اگلا قدم: %(action)s۔"
+
+msgid "Visit report: %(title)s"
+msgstr "وزٹ رپورٹ: %(title)s"

@@ -110,3 +110,20 @@ def can_check_in(user, visit, now=None) -> bool:
     tz = office_tz()
     day_end = datetime.combine(visit.start.astimezone(tz).date() + timedelta(days=1), time.min, tzinfo=tz)
     return visit.start - CHECK_IN_EARLY <= now < max(day_end, visit.end)
+
+
+# ================================================================ reports
+
+
+REPORT_EARLY = timedelta(hours=1)  # as for marking done: once the visit has (nearly) started
+
+
+def can_report(user, visit, now=None) -> bool:
+    """Write or change the report: the people who went, the department's managers and admins, once a planned visit
+    has started (writing it marks the visit done) or after it's done."""
+    if visit.status == Visit.Status.PLANNED:
+        if visit.start > (now or timezone.now()) + REPORT_EARLY:
+            return False
+    elif visit.status != Visit.Status.DONE:
+        return False
+    return goes_on(user, visit) or manages(user, visit)

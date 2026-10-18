@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Ban, Check, CheckCircle2, ChevronLeft, ChevronRight, CheckSquare, LogIn, LogOut, MapPin, Pencil, Plus, Users, X } from 'lucide-react'
+import { Ban, Check, CheckCircle2, ChevronLeft, ChevronRight, CheckSquare, ClipboardPen, LogIn, LogOut, MapPin, Pencil, Plus, Users, X } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
@@ -17,8 +17,9 @@ import { addDays, officeParts, todayInOffice, weekStartOf } from '@/lib/bookings
 import { useFormat } from '@/lib/format'
 import { usePermission } from '@/lib/permissions'
 import { cn } from '@/lib/utils'
-import { useVisit, useVisitPeople, useVisits, VISIT_TONE, VISITS_KEY, visitRecordLink, type Visit } from '@/lib/visits'
+import { REPORT_TONE, useVisit, useVisitPeople, useVisits, VISIT_TONE, VISITS_KEY, visitRecordLink, type Visit } from '@/lib/visits'
 import { CheckDialog, CheckList } from './CheckDialog'
+import { ReportDialog, ReportView } from './ReportDialog'
 import { VisitDialog } from './VisitDialog'
 
 type Tab = 'mine' | 'past' | 'team' | 'approvals'
@@ -158,6 +159,7 @@ function VisitRow({ visit: v, showPerson }: { visit: Visit; showPerson?: boolean
                   {v.checks.find((c) => c.user === v.assigned_to)?.checked_out_at ? t('visits.checks.left') : t('visits.checks.arrived')}
                 </Badge>
               )}
+              {v.report && <Badge variant="outline" className={cn('font-normal', REPORT_TONE[v.report.outcome])}>{t(`visits.report.outcomes.${v.report.outcome}`)}</Badge>}
               {overdue && <Badge variant="outline" className="border-amber-500/50 font-normal text-amber-700 dark:text-amber-300">{t('visits.notClosed')}</Badge>}
             </p>
             <p className="mt-0.5 text-sm text-muted-foreground">
@@ -183,7 +185,7 @@ function VisitActions({ visit: v, onDone }: { visit: Visit; onDone?: () => void 
   const { t } = useTranslation()
   const refresh = useRefresh()
   const { user } = useAuth()
-  const [mode, setMode] = useState<'edit' | 'close' | 'cancel' | 'reject' | 'in' | 'out' | null>(null)
+  const [mode, setMode] = useState<'edit' | 'close' | 'cancel' | 'reject' | 'in' | 'out' | 'report' | null>(null)
   const mine = v.checks.find((c) => c.user === user?.id)
   const canCheckOut = v.status === 'planned' && !!mine && !mine.checked_out_at
   const approve = useMutation({
@@ -195,7 +197,7 @@ function VisitActions({ visit: v, onDone }: { visit: Visit; onDone?: () => void 
     },
     onError: (e) => toast.error(apiError(e).message),
   })
-  if (!(v.can_change || v.can_close || v.can_decide || v.can_check_in || canCheckOut)) return null
+  if (!(v.can_change || v.can_close || v.can_decide || v.can_check_in || canCheckOut || v.can_report)) return null
   return (
     <div className="flex flex-wrap gap-2">
       {v.can_check_in && <Button size="sm" onClick={() => setMode('in')}><LogIn className="size-4 rtl:rotate-180" />{t('visits.checks.checkIn')}</Button>}
@@ -205,6 +207,11 @@ function VisitActions({ visit: v, onDone }: { visit: Visit; onDone?: () => void 
           <Button variant="outline" size="sm" onClick={() => setMode('reject')}><X className="size-4" />{t('visits.reject')}</Button>
           <Button size="sm" disabled={approve.isPending} onClick={() => approve.mutate()}><Check className="size-4" />{t('visits.approve')}</Button>
         </>
+      )}
+      {v.can_report && (
+        <Button size="sm" variant={v.report ? 'outline' : 'default'} onClick={() => setMode('report')}>
+          <ClipboardPen className="size-4" />{t(v.report ? 'visits.report.edit' : 'visits.report.write')}
+        </Button>
       )}
       {v.can_close && (
         <Button size="sm" variant="outline" onClick={() => setMode('close')}><CheckCircle2 className="size-4" />{t('visits.markDone')}</Button>
@@ -216,6 +223,7 @@ function VisitActions({ visit: v, onDone }: { visit: Visit; onDone?: () => void 
         </>
       )}
       {(mode === 'in' || mode === 'out') && <CheckDialog visit={v} mode={mode} onClose={() => setMode(null)} />}
+      {mode === 'report' && <ReportDialog visit={v} onClose={() => setMode(null)} />}
       {mode === 'edit' && <VisitDialog visit={v} onClose={() => setMode(null)} />}
       {(mode === 'close' || mode === 'cancel' || mode === 'reject') && (
         <NoteDialog visit={v} mode={mode} onClose={() => setMode(null)} onDone={onDone} />
@@ -269,6 +277,7 @@ function VisitDetails({ id, onClose }: { id: number; onClose: () => void }) {
         { label: t('visits.who'), value: <bdi>{[v.assigned_to_name, ...v.companions.map((c) => c.name)].join(', ')}</bdi> },
         { label: t('visits.pinShort'), value: v.latitude && <bdi dir="ltr" className="font-latin">{v.latitude}, {v.longitude}</bdi> },
         { label: t('visits.checks.label'), value: (v.checks.length > 0 || v.status === 'planned') && <CheckList checks={v.checks} /> },
+        { label: t('visits.report.label'), value: v.report && <ReportView report={v.report} /> },
         { label: t('visits.forTask'), value: v.task && <Link to={`/tasks/${v.task.id}`} className="inline-flex items-center gap-1 text-primary hover:underline"><CheckSquare className="size-3.5" /><bdi>{v.task.title}</bdi></Link> },
         { label: t('visits.notes'), value: v.notes && <span className="whitespace-pre-line [unicode-bidi:plaintext]">{v.notes}</span> },
         { label: t('visits.decision'), value: v.decided_by_name && <>{v.decided_by_name}{v.decision_note && <> · <span className="[unicode-bidi:plaintext]">{v.decision_note}</span></>}</> },

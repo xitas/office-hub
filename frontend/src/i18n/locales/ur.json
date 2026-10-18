@@ -567,7 +567,8 @@
       "call": "کال",
       "meeting": "میٹنگ",
       "email": "ای میل",
-      "whatsapp": "واٹس ایپ"
+      "whatsapp": "واٹس ایپ",
+      "visit": "وزٹ رپورٹ"
     },
     "filters": {
       "note": "نوٹس",
@@ -2185,6 +2186,46 @@
       "fromPin": "پن سے {{d}}",
       "metres": "{{n}} میٹر",
       "km": "{{n}} کلومیٹر"
+    },
+    "report": {
+      "label": "رپورٹ",
+      "write": "رپورٹ لکھیں",
+      "edit": "رپورٹ میں ترمیم",
+      "title": "وزٹ رپورٹ: {{title}}",
+      "editTitle": "رپورٹ میں ترمیم: {{title}}",
+      "marksDone": "رپورٹ لکھنے سے وزٹ مکمل ہو جاتا ہے۔",
+      "submit": "رپورٹ محفوظ کریں",
+      "writtenToast": "رپورٹ محفوظ ہو گئی، وزٹ مکمل",
+      "savedToast": "رپورٹ اپ ڈیٹ ہو گئی",
+      "stillIn": "آپ نے {{time}} پر آمد درج کی تھی اور ابھی روانگی درج نہیں کی۔",
+      "outcome": "وزٹ کیسا رہا؟",
+      "outcomes": {
+        "good": "اچھا رہا",
+        "follow_up": "مزید کارروائی درکار",
+        "no_result": "کوئی نتیجہ نہیں",
+        "not_met": "ملاقات نہیں ہو سکی"
+      },
+      "notes": "نوٹس",
+      "notesPlaceholder": "کس سے ملے، کیا بات ہوئی، کیا طے پایا",
+      "nextAction": "اگلا قدم",
+      "nextActionPlaceholder": "مثلاً کوٹیشن بھیجیں",
+      "nextActionOn": "تاریخ تک",
+      "taskHint": "تاریخ دینے پر اگلا قدم فالو اپ کام بن جاتا ہے۔",
+      "taskFor": "فالو اپ کام کس کے لیے",
+      "taskExists": "فالو اپ کام:",
+      "taskDone": "مکمل",
+      "leadStatus": "{{name}} کا لیڈ اسٹیٹس",
+      "leaveStatus": "جیسا ہے ویسا رہنے دیں",
+      "statusReason": "وجہ (اختیاری)",
+      "photos": "تصاویر",
+      "addPhotos": "تصاویر شامل کریں",
+      "photosHint": "زیادہ سے زیادہ {{n}} تصاویر (JPEG، PNG یا WebP، ہر ایک 10 MB تک)۔ تصاویر سے لوکیشن اور کیمرے کی تفصیلات ہٹا دی جاتی ہیں۔",
+      "removePhoto": "{{name}} ہٹائیں",
+      "openPhoto": "{{name}} کھولیں",
+      "next": "اگلا قدم:",
+      "writtenBy": "{{name}} نے لکھی، {{when}}",
+      "photoCount_one": "{{count}} تصویر",
+      "photoCount_other": "{{count}} تصاویر"
     }
   }
 }

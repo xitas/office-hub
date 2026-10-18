@@ -36,6 +36,20 @@ export function EntryTitle({ item }: { item: TimelineItem }) {
       </span>
     )
   }
+  if (item.kind === 'visit') {
+    const d = item.details as { visit_id?: number; title?: string }
+    return (
+      <span className="font-medium">
+        {t('timeline.kinds.visit')}
+        {d.visit_id && (
+          <>
+            {' · '}
+            <Link to={`/visits?visit=${d.visit_id}`} className="font-normal text-primary hover:underline"><bdi>{d.title ?? item.summary}</bdi></Link>
+          </>
+        )}
+      </span>
+    )
+  }
   const known = ['note', 'meeting'].includes(item.kind)
   return <span className="font-medium">{known ? t(`timeline.kinds.${item.kind}`) : item.kind}</span>
 }
