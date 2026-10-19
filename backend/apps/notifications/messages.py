@@ -492,11 +492,80 @@ def _visit_reported(params: dict) -> tuple[str, str]:
     return _("Visit report: %(title)s") % params, body + "\n" + _visit_detail(params)
 
 
+def _errand_detail(params: dict) -> str:
+    """ "Bank visit · Bank Alfalah, Gulberg · by 18/10/2026 2:30 pm · Main Boulevard" (office time, the reader's clock)."""
+    from django.utils.dateparse import parse_datetime
+
+    from apps.core.office_time import clock, office_tz
+    from apps.errands.models import Errand
+
+    try:
+        kind = Errand.Kind(params.get("kind")).label
+    except ValueError:
+        kind = ""
+    due = parse_datetime(params.get("due") or "")
+    when = _("by %(time)s") % {"time": f"{due.astimezone(office_tz()):%d/%m/%Y} {clock(due)}"} if due else ""
+    return " · ".join(str(x) for x in (kind, params.get("place", ""), when, params.get("address", "")) if x)
+
+
+def _errand_assigned(params: dict) -> tuple[str, str]:
+    return _("Errand for you: %(title)s") % params, _("%(actor)s asked you to do it.") % params + "\n" + _errand_detail(params)
+
+
+def _errand_open(params: dict) -> tuple[str, str]:
+    return _("Errand waiting for someone: %(title)s") % params, _("%(actor)s asked for it; nobody has it yet.") % params + "\n" + _errand_detail(params)
+
+
+def _errand_changed(params: dict) -> tuple[str, str]:
+    return _("Errand changed: %(title)s") % params, _errand_detail(params)
+
+
+def _errand_reassigned(params: dict) -> tuple[str, str]:
+    return _("Errand no longer yours: %(title)s") % params, _("%(actor)s gave it to someone else.") % params
+
+
+def _errand_taken(params: dict) -> tuple[str, str]:
+    return _("%(actor)s will do it: %(title)s") % params, _errand_detail(params)
+
+
+def _errand_started(params: dict) -> tuple[str, str]:
+    return _("On the way: %(title)s") % params, _("%(actor)s is on the way.") % params + "\n" + _errand_detail(params)
+
+
+def _errand_done(params: dict) -> tuple[str, str]:
+    body = _("%(actor)s finished it.") % params
+    if params.get("reference"):
+        body += "\n" + _("Reference: %(reference)s") % params
+    return _("Errand done: %(title)s") % params, _with_note(body, params)
+
+
+def _errand_failed(params: dict) -> tuple[str, str]:
+    return _("Errand not done: %(title)s") % params, _with_note(_("%(actor)s couldn't do it.") % params, params)
+
+
+def _errand_cancelled(params: dict) -> tuple[str, str]:
+    return _("Errand cancelled: %(title)s") % params, _with_note(_errand_detail(params), params)
+
+
+def _errand_due(params: dict) -> tuple[str, str]:
+    return _("Errand due soon: %(title)s") % params, _errand_detail(params)
+
+
 RENDERERS = {
     "visit_checked_in": _visit_checked_in,
     "visit_checked_out": _visit_checked_out,
     "visit_check_in_missed": _visit_check_in_missed,
     "visit_reported": _visit_reported,
+    "errand_assigned": _errand_assigned,
+    "errand_open": _errand_open,
+    "errand_changed": _errand_changed,
+    "errand_reassigned": _errand_reassigned,
+    "errand_taken": _errand_taken,
+    "errand_started": _errand_started,
+    "errand_done": _errand_done,
+    "errand_failed": _errand_failed,
+    "errand_cancelled": _errand_cancelled,
+    "errand_due": _errand_due,
     "visit_assigned": _visit_assigned,
     "visit_changed": _visit_changed,
     "visit_cancelled": _visit_cancelled,

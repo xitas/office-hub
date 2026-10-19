@@ -29,6 +29,7 @@ import { cn } from '@/lib/utils'
 import { ClientActivityWidget, ContactsByStatusWidget } from './ContactWidgets'
 import { CheckInCard } from '@/features/attendance/CheckInCard'
 import { WeeklyGoalsCard } from '@/features/planning/WeeklyGoalsCard'
+import { TodayErrandsCard } from '@/features/errands/ErrandWidgets'
 import { TodayVisitsCard } from '@/features/visits/TodayVisitsCard'
 import { LowStockCard } from '@/features/supplies/LowStockCard'
 import { AnnouncementsWidget } from './AnnouncementsWidget'
@@ -62,6 +63,7 @@ export function DashboardPage() {
   const canStock = usePermission('inventory.edit')
   const canPlan = usePermission('planning.view')
   const canVisit = usePermission('visits.view')
+  const canErrand = usePermission('errands.view')
   const firstName = me.full_name.split(' ')[0]
   // Widgets whose module isn't released yet (value null) collapse into one compact card.
   const live = data ? LIST_WIDGETS.filter((w) => data[w.key] !== null) : []
@@ -95,6 +97,8 @@ export function DashboardPage() {
             {canPlan && <WeeklyGoalsCard />}
             {/* Also loaded on its own (/visits/?scope=today). */}
             {canVisit && <TodayVisitsCard />}
+            {/* Also loaded on its own (/errands/?scope=today). */}
+            {canErrand && <TodayErrandsCard />}
             {live.map((w) => (
               <ListWidget
                 key={w.key}

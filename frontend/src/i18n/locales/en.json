@@ -36,7 +36,8 @@
     "expenses": "Expenses",
     "planning": "Weekly plan",
     "vendors": "Vendors",
-    "map": "Map"
+    "map": "Map",
+    "errands": "Errands"
   },
   "common": {
     "save": "Save",
@@ -426,7 +427,8 @@
     "attendance": "Attendance reminders and corrections",
     "low_stock": "Low-stock alerts (supplies)",
     "planning": "Weekly goals",
-    "vendor": "New vendors in the directory"
+    "vendor": "New vendors in the directory",
+    "errand": "Errands and deliveries"
   },
   "companies": {
     "title": "Companies",
@@ -581,7 +583,8 @@
       "task": "Tasks",
       "email": "Emails",
       "whatsapp": "WhatsApp",
-      "visit": "Visits"
+      "visit": "Visits",
+      "errand": "Errands"
     },
     "placeholders": {
       "note": "Write a note…",
@@ -2241,7 +2244,8 @@
       "checks": "Check-ins",
       "contacts": "Contacts",
       "companies": "Companies",
-      "vendors": "Vendors"
+      "vendors": "Vendors",
+      "errands": "Errands"
     },
     "kind": {
       "contact": "Contact",
@@ -2275,5 +2279,94 @@
     "searchPlaceholder": "Find an address to move the map",
     "searchOff": "Address search isn't set up yet (an admin adds a contact email in the server settings). Drop the pin on the map or use your location.",
     "noResults": "No places found."
+  },
+  "errands": {
+    "title": "Errands",
+    "subtitle": "Couriers, document pickups, deliveries and bank visits: who goes, and how it went.",
+    "new": "New errand",
+    "ask": "Ask for it",
+    "editTitle": "Change errand",
+    "createdToast": "Errand sent",
+    "openToast": "Errand waiting for someone to take it",
+    "takenToast": "It's yours",
+    "startedToast": "Marked on the way",
+    "doneToast": "Errand done",
+    "failedToast": "Marked not done",
+    "cancelledToast": "Errand cancelled",
+    "tabs": {
+      "mine": "Mine to do",
+      "requested": "I asked for",
+      "open": "Waiting",
+      "team": "Team",
+      "done": "Finished"
+    },
+    "empty": {
+      "mine": "Nothing to do right now.",
+      "requested": "You haven't asked for any errands lately.",
+      "open": "No errands waiting for someone.",
+      "team": "No errands under way.",
+      "done": "No finished errands in the last 60 days.",
+      "today": "No errands today."
+    },
+    "kinds": {
+      "courier": "Courier to send",
+      "pickup": "Document pickup",
+      "delivery": "Delivery",
+      "bank": "Bank visit",
+      "other": "Other errand"
+    },
+    "status": {
+      "open": "Waiting for someone",
+      "assigned": "To do",
+      "on_the_way": "On the way",
+      "done": "Done",
+      "failed": "Not done",
+      "cancelled": "Cancelled"
+    },
+    "what": "What",
+    "whatPlaceholder": "e.g. Courier the signed contract",
+    "kind": "Kind",
+    "where": "Where",
+    "placePlaceholder": "Bank, office or other place",
+    "pinHint": "Where to go, for the map",
+    "pinTitle": "Where is the errand?",
+    "dueDate": "By (date)",
+    "dueTime": "Time",
+    "due": "By",
+    "dueBy": "By {{when}}",
+    "noDue": "No time set",
+    "runner": "Who does it",
+    "anyone": "Leave it for someone to take",
+    "openHint": "Your department's managers are told, and anyone in the department can take it.",
+    "details": "Details",
+    "detailsPlaceholder": "What to take or bring back, who to ask for, amounts…",
+    "by": "Doing it: {{name}}",
+    "nobodyYet": "Nobody yet",
+    "askedBy": "Asked by {{name}}",
+    "askedByLabel": "Asked by",
+    "take": "I'll do it",
+    "start": "On my way",
+    "done": "Done",
+    "notDone": "Couldn't",
+    "cancel": "Cancel errand",
+    "cancelTitle": "Cancel: {{title}}",
+    "cancelNote": "Why (optional)",
+    "doneTitle": "Done: {{title}}",
+    "failTitle": "Not done: {{title}}",
+    "doneNote": "How it went (optional)",
+    "failNote": "Why it couldn't be done",
+    "markDone": "Mark done",
+    "markNotDone": "Mark not done",
+    "reference": "Reference",
+    "referenceHint": "Tracking number, receipt or deposit slip number",
+    "proof": "Proof",
+    "addProof": "Add photo",
+    "proofHint": "Up to {{n}} photos of the receipt or what was handed over. Location and camera details are removed.",
+    "history": "What happened",
+    "notFound": "This errand isn't there, or you can't see it.",
+    "open": "Open errand",
+    "today": "Today's errands",
+    "noneToday": "No errands today.",
+    "noneForTask": "No errands for this task."
   }
 }

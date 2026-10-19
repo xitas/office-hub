@@ -23,7 +23,7 @@ export interface LeafletMapProps {
 
 const SHAPES: Record<PinKind, string> = {
   // Teardrop pins for places; dots for where people checked in and out.
-  visit: 'pin', contact: 'pin', company: 'pin', vendor: 'pin', pin: 'pin', checkin: 'dot', checkout: 'dot',
+  visit: 'pin', errand: 'pin', contact: 'pin', company: 'pin', vendor: 'pin', pin: 'pin', checkin: 'dot', checkout: 'dot',
 }
 
 function icon(kind: PinKind, tone: string | undefined, selected: boolean) {

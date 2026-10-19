@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { api } from './api'
+import type { ErrandKind, ErrandStatus } from './errands'
 import type { VisitCheck, VisitStatus } from './visits'
 
 /** OpenStreetMap's standard tiles (tile usage policy: attribution on every map, no prefetching, Referer kept). */
@@ -9,7 +10,7 @@ export const TILE_ATTRIBUTION = '© <a href="https://www.openstreetmap.org/copyr
 export const DEFAULT_CENTER: [number, number] = [31.5204, 74.3587]
 export const DEFAULT_ZOOM = 12
 
-export type PinKind = 'visit' | 'checkin' | 'checkout' | 'contact' | 'company' | 'vendor' | 'pin'
+export type PinKind = 'visit' | 'errand' | 'checkin' | 'checkout' | 'contact' | 'company' | 'vendor' | 'pin'
 
 export interface MapMarker {
   id: string
@@ -18,8 +19,8 @@ export interface MapMarker {
   lng: number
   /** Shown on hover/tap (plain text). */
   label: string
-  /** Visits: by status. */
-  tone?: VisitStatus
+  /** Visits and errands: by status. */
+  tone?: VisitStatus | ErrandStatus
 }
 
 export interface MapRecord {
@@ -48,11 +49,25 @@ export interface MapVisit {
   checks: VisitCheck[]
 }
 
+export interface MapErrand {
+  id: number
+  title: string
+  kind: ErrandKind
+  status: ErrandStatus
+  due_at: string | null
+  place: string
+  assigned_to_name: string | null
+  latitude: string | null
+  longitude: string | null
+  pin_source: 'errand' | 'record' | null
+}
+
 export interface MapData {
   from: string
   to: string
   search_enabled: boolean
   visits: MapVisit[]
+  errands: MapErrand[]
   contacts: MapRecord[]
   companies: MapRecord[]
   vendors: MapRecord[]

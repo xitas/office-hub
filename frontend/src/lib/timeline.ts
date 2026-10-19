@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { CalendarDays, CheckSquare, CirclePlus, FileUp, Mail, MapPin, MessageCircle, NotebookPen, Phone, Repeat2, type LucideIcon } from 'lucide-react'
+import { CalendarDays, CheckSquare, CirclePlus, FileUp, Hand, Mail, MapPin, MessageCircle, NotebookPen, Phone, Repeat2, type LucideIcon } from 'lucide-react'
 import { api } from './api'
 import type { ContactStatus } from './types'
 
@@ -13,7 +13,7 @@ export const LOG_KINDS = ['note', 'call', 'meeting', 'email', 'whatsapp', 'visit
 export const STALE_AFTER_DAYS = 14
 export type EntryKind = (typeof ENTRY_KINDS)[number]
 /** Everything the timeline can show, including automatic entries. */
-export const TIMELINE_FILTERS = [...ENTRY_KINDS, 'visit', 'task', 'status', 'created', 'imported'] as const
+export const TIMELINE_FILTERS = [...ENTRY_KINDS, 'visit', 'errand', 'task', 'status', 'created', 'imported'] as const
 
 export const CALL_DIRECTIONS = ['out', 'in'] as const
 export const CALL_OUTCOMES = ['connected', 'no_answer', 'busy', 'voicemail', 'wrong_number'] as const
@@ -145,6 +145,7 @@ export const KIND_ICONS: Record<string, LucideIcon> = {
   imported: FileUp,
   task: CheckSquare,
   visit: MapPin,
+  errand: Hand,
 }
 
 export const KIND_STYLES: Record<string, string> = {
@@ -158,6 +159,7 @@ export const KIND_STYLES: Record<string, string> = {
   imported: 'bg-muted text-muted-foreground',
   task: 'bg-primary/10 text-primary',
   visit: 'bg-teal-500/15 text-teal-700 dark:text-teal-300',
+  errand: 'bg-orange-500/15 text-orange-700 dark:text-orange-300',
 }
 
 

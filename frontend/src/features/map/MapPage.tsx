@@ -14,11 +14,12 @@ import { addDays, todayInOffice, weekStartOf } from '@/lib/bookings'
 import { useFormat } from '@/lib/format'
 import { toNumber, useMapData, type MapData, type MapMarker, type MapRecord, type MapVisit } from '@/lib/map'
 import { cn } from '@/lib/utils'
+import { ERRAND_TONE } from '@/lib/errands'
 import { useVisitPeople, VISIT_TONE } from '@/lib/visits'
 
 type Range = 'today' | 'week'
-type LayerKey = 'visits' | 'checks' | 'contacts' | 'companies' | 'vendors'
-const LAYERS: LayerKey[] = ['visits', 'checks', 'contacts', 'companies', 'vendors']
+type LayerKey = 'visits' | 'checks' | 'errands' | 'contacts' | 'companies' | 'vendors'
+const LAYERS: LayerKey[] = ['visits', 'checks', 'errands', 'contacts', 'companies', 'vendors']
 const STATUSES = ['all', 'planned', 'done', 'pending'] as const
 const RECORD_KIND = { contacts: 'contact', companies: 'company', vendors: 'vendor' } as const
 const RECORD_PATH = { contacts: '/contacts', companies: '/companies', vendors: '/vendors' } as const
@@ -40,7 +41,7 @@ export function MapPage() {
   const from = range === 'week' ? weekStartOf(today, fmt.settings.week_start) : today
   const to = range === 'week' ? addDays(from, 6) : today
   const { data, isLoading, isError, refetch } = useMapData({ from, to, ...(person ? { person } : {}), status })
-  const [layers, setLayers] = useState<Record<LayerKey, boolean>>({ visits: true, checks: true, contacts: false, companies: true, vendors: false })
+  const [layers, setLayers] = useState<Record<LayerKey, boolean>>({ visits: true, checks: true, errands: true, contacts: false, companies: true, vendors: false })
   const [selected, setSelected] = useState<string | null>(null)
   const [view, setView] = useState<'map' | 'list'>('map')
   const set = (key: string, value: string) =>
@@ -115,6 +116,7 @@ export function MapPage() {
 const LEGEND: Record<LayerKey, string> = {
   visits: 'bg-teal-600',
   checks: 'bg-emerald-600',
+  errands: 'bg-rose-600',
   contacts: 'bg-blue-500',
   companies: 'bg-purple-600',
   vendors: 'bg-orange-600',
@@ -131,6 +133,12 @@ function buildMarkers(data: MapData, layers: Record<LayerKey, boolean>, t: (k: s
     for (const c of v.checks) {
       if (c.in) out.push({ id: `visit:${v.id}`, kind: 'checkin', lat: Number(c.in.latitude), lng: Number(c.in.longitude), label: t('map.checkedIn', { name: c.user_name, time: time(c.checked_in_at) }) })
       if (c.out && c.checked_out_at) out.push({ id: `visit:${v.id}`, kind: 'checkout', lat: Number(c.out.latitude), lng: Number(c.out.longitude), label: t('map.checkedOut', { name: c.user_name, time: time(c.checked_out_at) }) })
+    }
+  }
+  if (layers.errands) {
+    for (const e of data.errands) {
+      const lat = toNumber(e.latitude)
+      if (lat !== null) out.push({ id: `errand:${e.id}`, kind: 'errand', lat, lng: toNumber(e.longitude)!, tone: e.status, label: `${e.title} · ${e.assigned_to_name ?? t('errands.nobodyYet')}${e.due_at ? ` · ${time(e.due_at)}` : ''}` })
     }
   }
   for (const key of ['contacts', 'companies', 'vendors'] as const) {
@@ -150,6 +158,25 @@ function Selected({ data, id, onClose }: { data: MapData; id: string | null; onC
   if (kind === 'visit') {
     const v = data.visits.find((x) => x.id === Number(raw))
     return v ? <VisitCard visit={v} action={close} highlighted /> : null
+  }
+  if (kind === 'errand') {
+    const e = data.errands.find((x) => x.id === Number(raw))
+    if (!e) return null
+    return (
+      <Card className="gap-2 border-primary/50 py-3">
+        <CardContent className="grid gap-1 px-4 text-sm">
+          <div className="flex items-start gap-2">
+            <span className="min-w-0 flex-1 font-medium [unicode-bidi:plaintext]">{e.title}</span>
+            <Badge variant="outline" className={cn('font-normal', ERRAND_TONE[e.status])}>{t(`errands.status.${e.status}`)}</Badge>
+            {close}
+          </div>
+          <span className="text-muted-foreground">{t(`errands.kinds.${e.kind}`)} · <bdi>{e.place}</bdi> · <bdi>{e.assigned_to_name ?? t('errands.nobodyYet')}</bdi></span>
+          <Link to={`/errands?errand=${e.id}`} className="inline-flex w-fit items-center gap-1 text-primary hover:underline">
+            <ExternalLink className="size-3.5" />{t('errands.open')}
+          </Link>
+        </CardContent>
+      </Card>
+    )
   }
   const key = kind as keyof typeof RECORD_PATH
   const r: MapRecord | undefined = data[key]?.find((x) => x.id === Number(raw))

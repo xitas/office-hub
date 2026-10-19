@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     "apps.vendors",
     "apps.visits",
     "apps.maps",
+    "apps.errands",
 ]
 
 MIDDLEWARE = [
@@ -201,6 +202,8 @@ SPECTACULAR_SETTINGS = {
         "SupplyCategoryEnum": "apps.inventory.models.SupplyItem.Category",
         "StockChangeKindEnum": "apps.inventory.models.StockMovement.Kind",
         "ExpenseCategoryEnum": "apps.expenses.models.Expense.Category",
+        "ErrandKindEnum": "apps.errands.models.Errand.Kind",
+        "ErrandStatusEnum": "apps.errands.models.Errand.Status",
     },
 }
 

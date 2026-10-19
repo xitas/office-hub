@@ -12,7 +12,7 @@
  * Output: ../review-screenshots/<viewport>/<theme>-<lang>/<role>-<page>.png and report.json
  */
 import { createHmac } from 'node:crypto'
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright'
@@ -22,6 +22,9 @@ const API = `${BASE}/api/v1`
 const PASSWORD = 'Demo@12345'
 const OUT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../review-screenshots')
 const ONLY = process.argv.find((a) => a.startsWith('--only='))?.split('=')[1]
+// Map tiles are kept on disk so each one is fetched from tile.openstreetmap.org at most once (tile usage policy).
+const TILES = path.join(OUT, '.tile-cache')
+const tileStats = { fetched: 0, cached: 0 }
 
 const VIEWPORTS = {
   desktop: { viewport: { width: 1440, height: 900 } },
@@ -103,6 +106,8 @@ async function prepareData() {
   const company = {}
   const task = {}
   const announcement = {}
+  const visit = {}
+  const errand = {}
   for (const [role, email] of Object.entries(ROLES)) {
     const token = await apiLogin(email)
     // Their own announcement where they have one (shows read receipts), otherwise the first.
@@ -112,8 +117,14 @@ async function prepareData() {
     company[role] = (await (await call(token, 'GET', '/companies/')).json()).results[0].id
     const tasks = (await (await call(token, 'GET', '/tasks/?page_size=100')).json()).results
     task[role] = tasks.sort((a, b) => b.comment_count + b.checklist_total - (a.comment_count + a.checklist_total))[0].id
+    // A visit and an errand they can open (the most detailed: a report, check-ins, updates), if any.
+    const visits = [...await (await call(token, 'GET', '/visits/')).json(), ...await (await call(token, 'GET', '/visits/?when=past')).json()]
+    visit[role] = (visits.find((v) => v.report) ?? visits.find((v) => v.checks.length) ?? visits[0])?.id
+    const errands = [...await (await call(token, 'GET', '/errands/?scope=requested')).json(), ...await (await call(token, 'GET', '/errands/?scope=done')).json()]
+    errand[role] = (errands.find((e) => e.photos.length) ?? errands[0])?.id
   }
-  return { users: byEmail, depts: dept, contact, company, task, announcement }
+  const vendor = (await (await call(admin, 'GET', '/vendors/')).json()).results.find((v) => v.latitude)?.id
+  return { users: byEmail, depts: dept, contact, company, task, announcement, visit, errand, vendor }
 }
 
 // ---------------------------------------------------------------- page checks
@@ -251,6 +262,7 @@ async function rolePages(browser, role, vpName, vp, data) {
   const email = ROLES[role]
   const token = await apiLogin(email)
   const ctx = await browser.newContext(vp)
+  await cacheTiles(ctx)
   const page = await ctx.newPage()
   watchConsole(page, `${role}/${vpName}`)
   const isPhone = vpName === 'phone'
@@ -505,6 +517,46 @@ async function rolePages(browser, role, vpName, vp, data) {
       await s('planning')
       if (manages) await dialog(/^(Add goal|ہدف شامل کریں)$/, 'dialog-goal')
 
+      // Phase 5: vendors, field visits, errands, the map.
+      await go('/vendors')
+      await page.waitForSelector('main h1')
+      await s('vendors')
+      if (data.vendor) {
+        await go(`/vendors/${data.vendor}`)
+        await page.waitForSelector('main h1')
+        await s('vendor')
+      }
+      for (const tab of ['', 'past', ...(manages ? ['team', 'approvals'] : [])]) {
+        await go(`/visits${tab ? `?tab=${tab}` : ''}`)
+        await page.waitForSelector('main h1')
+        await s(`visits${tab ? `-${tab}` : ''}`)
+      }
+      if (data.visit[role]) {
+        await go(`/visits?visit=${data.visit[role]}`)
+        await page.waitForSelector('[role=dialog] dl')
+        await s('visit-details', { fullPage: false })
+      }
+      for (const tab of ['', 'requested', 'open', 'done', ...(manages ? ['team'] : [])]) {
+        await go(`/errands${tab ? `?tab=${tab}` : ''}`)
+        await page.waitForSelector('main h1')
+        await s(`errands${tab ? `-${tab}` : ''}`)
+      }
+      if (data.errand[role]) {
+        await go(`/errands?errand=${data.errand[role]}`)
+        await page.waitForSelector('[role=dialog] dl')
+        await s('errand-details', { fullPage: false })
+      }
+      await go('/errands')
+      await page.waitForSelector('main h1')
+      await dialog(/^(New errand|نیا کام)$/, 'dialog-errand')
+      if (manages) {
+        for (const range of ['', 'week']) {
+          await go(`/map${range ? '?range=week' : ''}`)
+          await page.waitForSelector('.leaflet-container')
+          await s(`map${range ? '-week' : ''}`)
+        }
+      }
+
       await go('/contacts/import')
       await page.waitForSelector('#import-file', { state: 'attached' })
       await s('import-upload')
@@ -558,6 +610,22 @@ async function rolePages(browser, role, vpName, vp, data) {
   await ctx.close()
 }
 
+async function cacheTiles(ctx) {
+  mkdirSync(TILES, { recursive: true })
+  await ctx.route('https://tile.openstreetmap.org/**', async (route) => {
+    const file = path.join(TILES, new URL(route.request().url()).pathname.replaceAll('/', '_'))
+    if (existsSync(file)) {
+      tileStats.cached++
+      return route.fulfill({ status: 200, contentType: 'image/png', body: readFileSync(file) })
+    }
+    const resp = await route.fetch()
+    const body = await resp.body()
+    tileStats.fetched++
+    if (resp.ok()) writeFileSync(file, body)
+    return route.fulfill({ response: resp, body })
+  })
+}
+
 // ---------------------------------------------------------------- main
 // The run only looks at tasks; this checks it never changed one.
 const taskState = async () => {
@@ -589,4 +657,5 @@ try {
   writeFileSync(path.join(OUT, 'report.json'), JSON.stringify(report, null, 2))
   console.log(`${report.shots} screenshots, ${report.issues.length} with issues, ${report.consoleErrors.length} console errors`)
   console.log(`report: ${path.join(OUT, 'report.json')}`)
+  console.log(`map tiles: ${tileStats.fetched} fetched from OpenStreetMap, ${tileStats.cached} from the cache`)
 }

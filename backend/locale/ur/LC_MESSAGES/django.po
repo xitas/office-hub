@@ -2329,3 +2329,141 @@ msgstr "پتے کی تلاش مصروف ہے۔ تھوڑی دیر میں دوبا
 
 msgid "Address search didn't answer. Try again, or drop the pin on the map."
 msgstr "پتے کی تلاش نے جواب نہیں دیا۔ دوبارہ کوشش کریں، یا نقشے پر پن لگائیں۔"
+
+msgid "Courier to send"
+msgstr "کوریئر بھیجنا"
+
+msgid "Document pickup"
+msgstr "کاغذات لانا"
+
+msgid "Delivery"
+msgstr "ڈیلیوری"
+
+msgid "Bank visit"
+msgstr "بینک کا کام"
+
+msgid "Other errand"
+msgstr "دیگر کام"
+
+msgid "Waiting for someone"
+msgstr "کسی کا انتظار"
+
+msgid "On the way"
+msgstr "راستے میں"
+
+msgid "Not done"
+msgstr "نہیں ہو سکا"
+
+msgid "errand"
+msgstr "کام"
+
+msgid "errands"
+msgstr "کام"
+
+msgid "errand update"
+msgstr "کام کی اپڈیٹ"
+
+msgid "errand updates"
+msgstr "کام کی اپڈیٹس"
+
+msgid "errand photo"
+msgstr "کام کی تصویر"
+
+msgid "errand photos"
+msgstr "کام کی تصاویر"
+
+msgid "Errands and deliveries"
+msgstr "کام اور ڈیلیوریاں"
+
+msgid "Say where the errand is."
+msgstr "بتائیں کہ کام کہاں ہے۔"
+
+msgid "Errands go to someone in the department."
+msgstr "کام شعبے کے کسی فرد کو دیا جاتا ہے۔"
+
+msgid "The time it's due can't be in the past."
+msgstr "مقررہ وقت ماضی میں نہیں ہو سکتا۔"
+
+msgid "They're already on the way; cancel it instead."
+msgstr "وہ پہلے ہی راستے میں ہیں؛ اس کے بجائے منسوخ کریں۔"
+
+msgid "Say why it couldn't be done."
+msgstr "بتائیں کہ کیوں نہیں ہو سکا۔"
+
+msgid "Up to %(n)s photos."
+msgstr "زیادہ سے زیادہ %(n)s تصاویر۔"
+
+msgid "Only managers and admins see the team's errands."
+msgstr "ٹیم کے کام صرف منیجرز اور ایڈمنز دیکھتے ہیں۔"
+
+msgid "Only whoever asked, their managers and admins change an errand that isn't finished."
+msgstr "نامکمل کام صرف کہنے والا، ان کے منیجرز اور ایڈمنز بدل سکتے ہیں۔"
+
+msgid "This errand isn't waiting for someone from your department."
+msgstr "یہ کام آپ کے شعبے کے کسی فرد کا انتظار نہیں کر رہا۔"
+
+msgid "Only the person doing it marks it on the way."
+msgstr "صرف کام کرنے والا اسے راستے میں درج کرتا ہے۔"
+
+msgid "Only the person doing it, their managers and admins mark it done."
+msgstr "صرف کام کرنے والا، ان کے منیجرز اور ایڈمنز اسے مکمل درج کرتے ہیں۔"
+
+msgid "Only whoever asked, their managers and admins cancel an errand."
+msgstr "کام صرف کہنے والا، ان کے منیجرز اور ایڈمنز منسوخ کرتے ہیں۔"
+
+msgid "Took the errand"
+msgstr "کام لے لیا"
+
+msgid "by %(time)s"
+msgstr "%(time)s تک"
+
+msgid "Errand for you: %(title)s"
+msgstr "آپ کے لیے کام: %(title)s"
+
+msgid "%(actor)s asked you to do it."
+msgstr "%(actor)s نے آپ سے یہ کرنے کو کہا۔"
+
+msgid "Errand waiting for someone: %(title)s"
+msgstr "کام کسی کا منتظر: %(title)s"
+
+msgid "%(actor)s asked for it; nobody has it yet."
+msgstr "%(actor)s نے کہا ہے؛ ابھی کسی نے نہیں لیا۔"
+
+msgid "Errand changed: %(title)s"
+msgstr "کام بدل گیا: %(title)s"
+
+msgid "Errand no longer yours: %(title)s"
+msgstr "کام اب آپ کا نہیں: %(title)s"
+
+msgid "%(actor)s gave it to someone else."
+msgstr "%(actor)s نے یہ کسی اور کو دے دیا۔"
+
+msgid "%(actor)s will do it: %(title)s"
+msgstr "%(actor)s کریں گے: %(title)s"
+
+msgid "On the way: %(title)s"
+msgstr "راستے میں: %(title)s"
+
+msgid "%(actor)s is on the way."
+msgstr "%(actor)s راستے میں ہیں۔"
+
+msgid "Errand done: %(title)s"
+msgstr "کام مکمل: %(title)s"
+
+msgid "%(actor)s finished it."
+msgstr "%(actor)s نے مکمل کر دیا۔"
+
+msgid "Reference: %(reference)s"
+msgstr "حوالہ: %(reference)s"
+
+msgid "Errand not done: %(title)s"
+msgstr "کام نہیں ہو سکا: %(title)s"
+
+msgid "%(actor)s couldn't do it."
+msgstr "%(actor)s یہ نہیں کر سکے۔"
+
+msgid "Errand cancelled: %(title)s"
+msgstr "کام منسوخ: %(title)s"
+
+msgid "Errand due soon: %(title)s"
+msgstr "کام کا وقت قریب: %(title)s"

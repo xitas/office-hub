@@ -26,6 +26,7 @@ api_v1 = [
     path("", include("apps.vendors.urls")),
     path("", include("apps.visits.urls")),
     path("", include("apps.maps.urls")),
+    path("", include("apps.errands.urls")),
 ]
 
 urlpatterns = [

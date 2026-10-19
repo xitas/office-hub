@@ -26,6 +26,7 @@ class NotificationType(models.TextChoices):
     PLANNING = "planning", _("Weekly goals")
     VENDOR = "vendor", _("New vendors in the directory")
     VISIT = "visit", _("Field visit updates")
+    ERRAND = "errand", _("Errands and deliveries")
     SYSTEM = "system", _("System and security")
 
 

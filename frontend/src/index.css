@@ -244,3 +244,5 @@ html[lang="ur"] .leaflet-tooltip {
 .crm-marker-checkin .crm-dot { background: oklch(0.6 0.15 155); }
 .crm-marker-checkout .crm-dot { background: oklch(0.6 0.02 260); }
 .crm-marker-selected .crm-dot { box-shadow: 0 0 0 3px var(--ring); }
+.crm-marker-errand .crm-pin-body { fill: oklch(0.6 0.19 15); }
+.crm-marker-errand.crm-tone-done .crm-pin-body { fill: var(--success); }

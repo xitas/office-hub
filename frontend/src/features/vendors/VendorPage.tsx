@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TemplateSendButtons } from '@/features/templates/SendWithTemplate'
+import { ErrandButton } from '@/features/errands/ErrandWidgets'
 import { PlanVisitButton } from '@/features/visits/PlanVisitButton'
 import { Timeline } from '@/features/timeline/Timeline'
 import { api, apiError } from '@/lib/api'
@@ -124,6 +125,7 @@ export function VendorPage() {
               <div className="flex flex-wrap gap-2">
                 <TemplateSendButtons contact={{ id: v.id, isVendor: true, full_name: v.name, company_name: v.contact_person, phone: v.phone, whatsapp: v.whatsapp, email: v.email }} />
                 <PlanVisitButton prefill={{ target: { target: { vendor: v.id }, name: v.name, hint: v.contact_person, type: 'vendor' }, address: v.address || v.areas, city: v.city }} />
+                <ErrandButton prefill={{ target: { target: { vendor: v.id }, name: v.name, hint: v.contact_person, type: 'vendor' }, address: v.address || v.areas, city: v.city }} />
               </div>
             </CardContent>
           </Card>

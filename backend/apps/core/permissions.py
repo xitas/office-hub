@@ -51,10 +51,11 @@ PERMISSIONS: dict[str, dict[str, set[str]]] = {
     # Staff plan their own visits (approved by their manager when the Organization setting is on); managers plan
     # their department's, admins anyone's. Who may change, close or decide one is checked per visit.
     "visits": {"view": ALL, "create": ALL, "edit": ALL, "delete": MGMT, "view_map": MGMT},
+    # Errands: anyone asks for one and runs them; managers and admins give out and follow their department's.
+    "errands": {"view": ALL, "create": ALL, "edit": ALL, "delete": MGMT},
     # One shared directory: anyone adds and corrects vendors; managers and admins mark them preferred or inactive
     # and delete unused ones; admins manage the service categories.
     "vendors": {"view": ALL, "create": ALL, "edit": ALL, "delete": MGMT, "manage": ADMIN_ONLY},
-    "errands": {"view": ALL, "create": ALL, "edit": ALL, "delete": MGMT},
     # Phase 6
     "reports": {"view": MGMT, "export": MGMT},
 }

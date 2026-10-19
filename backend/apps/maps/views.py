@@ -11,6 +11,7 @@
 """
 from datetime import timedelta
 
+from django.db.models import Q
 from django.utils.dateparse import parse_date
 from django.utils.translation import gettext as _
 from django.utils.translation import get_language
@@ -23,6 +24,8 @@ from rest_framework.views import APIView
 from apps.contacts.visibility import visible_companies, visible_contacts
 from apps.core.office_time import office_today
 from apps.core.permissions import has_perm, module_permission
+from apps.errands import rules as errand_rules
+from apps.errands.models import Errand
 from apps.vendors.models import Vendor
 from apps.visits import rules
 from apps.visits.models import Visit
@@ -42,6 +45,20 @@ def _num(value):
 
 def _pin(obj) -> dict:
     return {"latitude": _num(obj.latitude), "longitude": _num(obj.longitude)}
+
+
+def errand_data(e) -> dict:
+    record = e.contact or e.company or e.vendor
+    if e.latitude is not None:
+        pin, source = _pin(e), "errand"
+    elif record is not None and record.latitude is not None:
+        pin, source = _pin(record), "record"
+    else:
+        pin, source = {"latitude": None, "longitude": None}, None
+    return {
+        "id": e.pk, "title": e.title, "kind": e.kind, "status": e.status, "due_at": e.due_at, "place": e.place,
+        "assigned_to_name": e.assigned_to.full_name if e.assigned_to else None, **pin, "pin_source": source,
+    }
 
 
 def visit_data(v, viewer) -> dict:
@@ -103,9 +120,21 @@ class MapView(APIView):
         contacts = visible_contacts(user) if has_perm(user, "contacts", "view") else visible_contacts(user).none()
         companies = visible_companies(user) if has_perm(user, "contacts", "view") else visible_companies(user).none()
         vendors = Vendor.objects.filter(is_active=True) if has_perm(user, "vendors", "view") else Vendor.objects.none()
+        errands = Errand.objects.none()
+        if has_perm(user, "errands", "view"):
+            errands = errand_rules.visible_errands(user).filter(
+                Q(due_at__gte=day_start(first), due_at__lt=day_start(last + timedelta(days=1)))
+                | Q(due_at__isnull=True, status__in=Errand.ACTIVE)
+            ).exclude(status=Errand.Status.CANCELLED)
+            if not rules.is_admin(user):
+                errands = errands.filter(department_id=user.department_id)
+            if (person := p.get("person")) and person.isdigit():
+                errands = errands.filter(assigned_to_id=int(person))
+            errands = errands.select_related("contact", "company", "vendor", "assigned_to").order_by("due_at", "id")
         return Response({
             "from": first, "to": last, "search_enabled": geocode.enabled(),
             "visits": [visit_data(v, user) for v in visits[:MAX_RECORDS]],
+            "errands": [errand_data(e) for e in errands[:MAX_RECORDS]],
             "contacts": records(contacts), "companies": records(companies), "vendors": records(vendors),
         })
 

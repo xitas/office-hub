@@ -36,6 +36,7 @@ import {
 } from '@/lib/timeline'
 import type { Paginated } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { ERRAND_TONE, type ErrandKind, type ErrandStatus } from '@/lib/errands'
 import { REPORT_TONE, type ReportOutcome } from '@/lib/visits'
 import { EntryTitle, FollowUpStatus } from './EntryBits'
 import { EntryForm } from './EntryForm'
@@ -266,6 +267,17 @@ function Headline({ item }: { item: TimelineItem }) {
       </span>
     )
   }
+  if (item.kind === 'errand') {
+    const d = item.details as { errand_id: number; status: ErrandStatus; errand_kind: ErrandKind }
+    return (
+      <span className="inline-flex flex-wrap items-center gap-1.5 font-medium">
+        {t(`errands.kinds.${d.errand_kind}`)}
+        {' · '}
+        <Link to={`/errands?errand=${d.errand_id}`} className="font-normal text-primary hover:underline"><bdi>{item.summary}</bdi></Link>
+        <Badge variant="outline" className={cn('font-normal', ERRAND_TONE[d.status])}>{t(`errands.status.${d.status}`)}</Badge>
+      </span>
+    )
+  }
   if (item.kind === 'imported') {
     return (
       <span className="font-medium">
@@ -288,6 +300,12 @@ function Body({ item }: { item: TimelineItem }) {
   // An import's file name is already in the headline.
   // An import's file name and a task's title are already in the headline.
   if (item.kind === 'visit') return <VisitBody item={item} />
+  if (item.kind === 'errand') {
+    const d = item.details as { reference?: string; note?: string }
+    return d.note || d.reference ? (
+      <p className="mt-1.5 text-sm [unicode-bidi:plaintext]">{d.note}{d.reference && <span className="text-muted-foreground"> {d.note && '· '}<bdi dir="ltr" className="font-latin">{d.reference}</bdi></span>}</p>
+    ) : null
+  }
   if ((!item.summary || item.kind === 'imported' || item.kind === 'task') && !hasExtras) return null
   return (
     <div className="mt-1.5 grid gap-1.5">

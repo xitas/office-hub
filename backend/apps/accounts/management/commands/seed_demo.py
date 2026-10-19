@@ -478,6 +478,7 @@ class Command(BaseCommand):
         self._seed_vendors()
         self._seed_places()
         self._seed_visits()
+        self._seed_errands()
 
         self.stdout.write(self.style.SUCCESS("Demo data ready. All demo users share the password: " + DEMO_PASSWORD))
         for email, name, role, dept, _ in USERS:
@@ -707,6 +708,66 @@ class Command(BaseCommand):
             details = {"call": {"direction": "out", "outcome": "connected"}, "whatsapp": {"direction": "out"}}.get(kind, {})
             entry = TimelineEntry.objects.create(kind=kind, vendor=vendors[vendor], summary=summary, details=details, created_by=users[by])
             TimelineEntry.objects.filter(pk=entry.pk).update(occurred_at=timezone.now() - timedelta(days=ago, hours=2))
+
+    def _seed_errands(self):
+        """Errands in each state for Operations (Sana asks, Usman runs) and Sales (Bilal asks, Hamza runs): a courier
+        sent through TCS (done, with its tracking number and a proof photo), a bank deposit and a pickup for today, one
+        on the way, one waiting for someone, one not done and one cancelled. Quiet: no notifications."""
+        from datetime import datetime
+
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        from apps.contacts.models import Company, Contact
+        from apps.core import photos
+        from apps.core.office_time import office_today, office_tz
+        from apps.errands.models import Errand, ErrandPhoto, ErrandUpdate
+        from apps.vendors.models import Vendor
+
+        if Errand.objects.exists():
+            return
+        users = {u.email: u for u in User.objects.select_related("department")}
+        tz, today = office_tz(), office_today()
+        at = lambda days, hhmm: datetime.combine(today + timedelta(days=days), datetime.strptime(hhmm, "%H:%M").time(), tzinfo=tz)  # noqa: E731
+        vendor = lambda name: Vendor.objects.filter(name=name).first()  # noqa: E731
+        bank = ("Bank Alfalah, Gulberg", "Main Boulevard, Gulberg III", "31.512300", "74.346100")
+        rows = [
+            # title, kind, requester, runner, target, place, due, status, reference, note
+            ("Courier the signed contract to Margalla Builders", "courier", OPS_MGR, USMAN, {"vendor": vendor("TCS Express (Gulberg)")}, None,
+             at(-1, "11:00"), "done", "TCS 7781 2290 113", "Booked at the Gulberg counter; delivery in 2 days."),
+            ("Deposit this week's cheques", "bank", OPS_MGR, USMAN, {}, bank, at(0, "14:00"), "assigned", "", ""),
+            ("Collect toner cartridges", "pickup", OPS_MGR, USMAN, {"vendor": vendor("Hall Road Computers")}, None, at(0, "12:00"), "on_the_way", "", ""),
+            ("Pay the electricity bill", "bank", OPS_MGR, None, {}, bank, at(1, "13:00"), "open", "", ""),
+            ("Pick up the signed agreement", "pickup", SALES_MGR, HAMZA, {"company": Company.objects.filter(name="Ravi Pharma").first()}, None,
+             at(0, "16:00"), "assigned", "", ""),
+            ("Deliver brochures", "delivery", SALES_MGR, HAMZA, {"company": Company.objects.filter(name="Saba Software House").first()}, None,
+             at(-2, "15:00"), "failed", "", "Reception had closed early; will go again next week."),
+            ("Drop the quotation", "delivery", FATIMA, None, {"contact": Contact.objects.filter(assigned_to__email=FATIMA, city="Lahore").order_by("pk").first()},
+             None, at(1, "11:00"), "open", "", ""),
+            ("Get the stamp paper", "other", SALES_MGR, HAMZA, {}, ("District Courts, Lower Mall", "Lower Mall", None, None), at(-3, "10:00"),
+             "cancelled", "", "Not needed any more."),
+        ]
+        for title, kind, requester, runner, target, place, due, status, reference, note in rows:
+            target = {k: v for k, v in target.items() if v is not None}
+            where = {"place_name": place[0], "address": place[1], "latitude": place[2], "longitude": place[3]} if place else {}
+            asked = users[requester]
+            errand = Errand.objects.create(
+                title=title, kind=kind, requested_by=asked, department=asked.department, assigned_to=users[runner] if runner else None,
+                due_at=due, status=status, reference=reference, outcome_note=note, city="Lahore", **target, **where,
+                started_at=due - timedelta(minutes=40) if status in ("on_the_way", "done") else None,
+                finished_at=due if status in ("done", "failed") else None,
+            )
+            steps = [("open", asked, "", due - timedelta(days=1))]
+            if runner:
+                steps.append(("assigned", asked, users[runner].full_name, due - timedelta(hours=20)))
+            if status in ("on_the_way", "done"):
+                steps.append(("on_the_way", users[runner], "", due - timedelta(minutes=40)))
+            if status in ("done", "failed", "cancelled"):
+                steps.append((status, users[runner] if status != "cancelled" else asked, note, due))
+            ErrandUpdate.objects.bulk_create([ErrandUpdate(errand=errand, status=st, by=by, note=n, at=t) for st, by, n, t in steps])
+            if status == "done":
+                upload = SimpleUploadedFile("tcs-receipt.jpg", _visit_photo("TCS receipt 7781 2290 113", (90, 110, 130)), content_type="image/jpeg")
+                photos.save_photos(lambda name, size, info: ErrandPhoto(errand=errand, original_name=name, size=size, **info),
+                                   users[runner], [(upload, photos.clean_photo(upload))])
 
     def _seed_places(self):
         """Pins around Lahore: the Lahore companies and vendors at their neighbourhood, and Lahore contacts spread over

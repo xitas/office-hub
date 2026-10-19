@@ -11,30 +11,23 @@
   directly. A contact's lead status can be moved from the report (a normal status change, with its history).
 - Whoever planned the visit and the person responsible hear about a new report (not the writer).
 """
-import io
-
-from django.core.files.base import ContentFile
 from django.db import transaction
 from django.utils import timezone
 from django.utils.translation import gettext as _
-from PIL import Image, ImageOps
 
+from apps.core import photos
 from apps.core.audit import log_action
 from apps.core.models import AuditLog
 from apps.core.office_time import office_today
 from apps.core.permissions import has_perm
 from apps.notifications.models import NotificationType
 from apps.notifications.services import notify
-from apps.tasks.files import FileRejected, check_upload, make_thumbnail
 
 from . import rules
 from .models import Visit, VisitPhoto, VisitReport
 from .services import VisitError, _load, _params, link
 
 MAX_PHOTOS = 8
-PHOTO_MAX_SIDE = 2560
-MAX_PIXELS = 50_000_000  # refuse decompression bombs before decoding
-PHOTO_TYPES = {"jpg": ("JPEG", "image/jpeg"), "jpeg": ("JPEG", "image/jpeg"), "png": ("PNG", "image/png"), "webp": ("WEBP", "image/webp")}
 FIELDS = ("outcome", "notes", "next_action", "next_action_on")
 
 
@@ -45,48 +38,16 @@ class NotAllowed(Exception):
 # ================================================================ photos
 
 
-def clean_photo(upload) -> tuple[ContentFile, dict]:
-    """Check a photo (task-file rules) and re-encode it from pixels only: no EXIF, GPS, XMP or trailing data.
-    Returns the cleaned file and {width, height, content_type}."""
-    name = upload.name or ""
-    ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
-    if ext not in PHOTO_TYPES:
-        raise VisitError({"photos": _("“%(name)s” is not a photo. Photos can be JPEG, PNG or WebP.") % {"name": name}})
+def clean_photo(upload):
+    """The shared photo rules (apps.core.photos): checked and re-encoded, no EXIF or GPS kept."""
     try:
-        check_upload(upload)
-    except FileRejected as exc:
+        return photos.clean_photo(upload)
+    except photos.PhotoRejected as exc:
         raise VisitError({"photos": str(exc)})
-    fmt, content_type = PHOTO_TYPES[ext]
-    upload.seek(0)
-    with Image.open(upload) as probe:
-        if probe.size[0] * probe.size[1] > MAX_PIXELS:
-            raise VisitError({"photos": _("“%(name)s” is too large to open.") % {"name": name}})
-    upload.seek(0)
-    with Image.open(upload) as img:
-        img = ImageOps.exif_transpose(img)  # keep it upright once the EXIF orientation is gone
-        img.thumbnail((PHOTO_MAX_SIDE, PHOTO_MAX_SIDE), Image.Resampling.LANCZOS)
-        out = io.BytesIO()
-        if fmt == "JPEG":
-            img.convert("RGB").save(out, "JPEG", quality=85, optimize=True)
-        elif fmt == "PNG":
-            img.convert("RGBA" if img.mode in ("RGBA", "LA", "P") else "RGB").save(out, "PNG", optimize=True)
-        else:
-            img.convert("RGBA" if img.mode in ("RGBA", "LA", "P") else "RGB").save(out, "WEBP", quality=85)
-        width, height = img.size
-    upload.seek(0)
-    return ContentFile(out.getvalue(), name=f"photo.{'jpg' if fmt == 'JPEG' else ext}"), {
-        "width": width, "height": height, "content_type": content_type,
-    }
 
 
 def _add_photos(report, user, cleaned):
-    for (upload, (content, info)) in cleaned:
-        photo = VisitPhoto(report=report, original_name=upload.name[:255], size=content.size, uploaded_by=user, **info)
-        thumb = make_thumbnail(content)
-        photo.file.save(content.name, content, save=False)
-        if thumb:
-            photo.thumbnail.save("thumb.webp", thumb, save=False)
-        photo.save()
+    photos.save_photos(lambda name, size, info: VisitPhoto(report=report, original_name=name, size=size, **info), user, cleaned)
 
 
 # ================================================================ saving
