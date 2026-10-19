@@ -2467,3 +2467,123 @@ msgstr "کام منسوخ: %(title)s"
 
 msgid "Errand due soon: %(title)s"
 msgstr "کام کا وقت قریب: %(title)s"
+
+msgid "Unknown department."
+msgstr "نامعلوم شعبہ۔"
+
+msgid "This person isn't in the report."
+msgstr "یہ فرد رپورٹ میں شامل نہیں۔"
+
+msgid "The end comes before the start."
+msgstr "اختتام آغاز سے پہلے ہے۔"
+
+msgid "A report covers a year at most."
+msgstr "رپورٹ زیادہ سے زیادہ ایک سال کی ہوتی ہے۔"
+
+msgid "Choose PDF or Excel."
+msgstr "PDF یا Excel منتخب کریں۔"
+
+msgid "Covers: %(who)s"
+msgstr "شامل: %(who)s"
+
+msgid "Made %(date)s %(time)s by %(name)s"
+msgstr "%(date)s %(time)s کو %(name)s نے بنائی"
+
+msgid "Due"
+msgstr "مقررہ"
+
+msgid "On time"
+msgstr "وقت پر"
+
+msgid "Late"
+msgstr "تاخیر سے"
+
+msgid "Overdue"
+msgstr "تاخیر شدہ"
+
+msgid "Still open"
+msgstr "ابھی باقی"
+
+msgid "Completion rate"
+msgstr "تکمیل کی شرح"
+
+msgid "On time rate"
+msgstr "وقت پر تکمیل کی شرح"
+
+msgid "Completed in the period"
+msgstr "مدت میں مکمل ہوئے"
+
+msgid "Task completion"
+msgstr "کاموں کی تکمیل"
+
+msgid "Tasks due %(first)s – %(last)s"
+msgstr "%(first)s – %(last)s تک مقررہ کام"
+
+msgid "Overall"
+msgstr "مجموعی"
+
+msgid "All"
+msgstr "سب"
+
+msgid "By department"
+msgstr "شعبے کے لحاظ سے"
+
+msgid "No department"
+msgstr "کوئی شعبہ نہیں"
+
+msgid "By person"
+msgstr "فرد کے لحاظ سے"
+
+msgid "Person"
+msgstr "فرد"
+
+msgid "1–7 days late"
+msgstr "1–7 دن تاخیر"
+
+msgid "8–30 days late"
+msgstr "8–30 دن تاخیر"
+
+msgid "Over 30 days late"
+msgstr "30 دن سے زیادہ تاخیر"
+
+msgid "High or urgent"
+msgstr "اہم یا فوری"
+
+msgid "Oldest due date"
+msgstr "سب سے پرانی مقررہ تاریخ"
+
+msgid "Task"
+msgstr "کام"
+
+msgid "Due date"
+msgstr "مقررہ تاریخ"
+
+msgid "Days late"
+msgstr "دن تاخیر"
+
+msgid "Priority"
+msgstr "ترجیح"
+
+msgid "Contact or company"
+msgstr "رابطہ یا کمپنی"
+
+msgid "The %(shown)s most overdue of %(total)s."
+msgstr "%(total)s میں سے سب سے زیادہ تاخیر والے %(shown)s۔"
+
+msgid "Overdue tasks"
+msgstr "تاخیر شدہ کام"
+
+msgid "As of %(date)s"
+msgstr "%(date)s تک"
+
+msgid "Page %(n)s of %(total)s"
+msgstr "صفحہ %(n)s از %(total)s"
+
+msgid "Nothing to show."
+msgstr "دکھانے کو کچھ نہیں۔"
+
+msgid "Exported the task completion report"
+msgstr "کاموں کی تکمیل کی رپورٹ ایکسپورٹ کی"
+
+msgid "Exported the overdue tasks report"
+msgstr "تاخیر شدہ کاموں کی رپورٹ ایکسپورٹ کی"

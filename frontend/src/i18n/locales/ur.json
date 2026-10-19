@@ -2368,5 +2368,69 @@
     "today": "آج کے کام",
     "noneToday": "آج کوئی کام نہیں۔",
     "noneForTask": "اس ٹاسک کے لیے کوئی کام نہیں۔"
+  },
+  "reports": {
+    "title": "رپورٹس",
+    "subtitle": "ٹیم کیسا کام کر رہی ہے، اس ڈیٹا سے جو آپ دیکھ سکتے ہیں۔",
+    "names": {
+      "task-completion": "کاموں کی تکمیل",
+      "overdue-tasks": "تاخیر شدہ کام"
+    },
+    "exportPdf": "PDF",
+    "exportExcel": "Excel",
+    "period": "مدت",
+    "periods": {
+      "this_week": "یہ ہفتہ",
+      "last_week": "پچھلا ہفتہ",
+      "this_month": "یہ مہینہ",
+      "last_month": "پچھلا مہینہ",
+      "this_quarter": "یہ سہ ماہی",
+      "last_quarter": "پچھلی سہ ماہی",
+      "this_year": "یہ سال",
+      "custom": "تاریخیں منتخب کریں"
+    },
+    "from": "سے",
+    "to": "تک",
+    "department": "شعبہ",
+    "allDepartments": "تمام شعبے",
+    "person": "فرد",
+    "everyone": "سب",
+    "noDepartment": "کوئی شعبہ نہیں",
+    "byDepartment": "شعبے کے لحاظ سے",
+    "byPerson": "فرد کے لحاظ سے",
+    "columns": {
+      "due": "مقررہ",
+      "done": "مکمل",
+      "on_time": "وقت پر",
+      "late": "تاخیر سے",
+      "overdue": "تاخیر شدہ",
+      "open": "ابھی باقی",
+      "completed": "مدت میں مکمل",
+      "rate": "تکمیل کی شرح",
+      "on_time_rate": "وقت پر تکمیل کی شرح",
+      "days_1_7": "1–7 دن تاخیر",
+      "days_8_30": "8–30 دن تاخیر",
+      "days_31_plus": "30 دن سے زیادہ تاخیر",
+      "urgent": "اہم یا فوری",
+      "oldest": "سب سے پرانی مقررہ تاریخ"
+    },
+    "tiles": {
+      "due": "مقررہ کام",
+      "rate": "تکمیل کی شرح",
+      "rateHint": "{{due}} میں سے {{done}} مکمل",
+      "onTime": "وقت پر مکمل",
+      "onTimeHint": "{{n}} مقررہ تاریخ تک",
+      "overdue": "تاخیر شدہ",
+      "completedHint": "{{n}} مدت میں مکمل ہوئے (کسی بھی مقررہ تاریخ کے)",
+      "overdueNow": "اب تاخیر شدہ"
+    },
+    "completionNote": "مدت میں مقررہ کام، مقررہ تاریخ کے لحاظ سے۔ \"وقت پر\" کا مطلب ہے مقررہ دن یا اس سے پہلے مکمل (دفتر کا وقت)۔ کئی افراد والا کام ہر فرد کے لیے ایک بار، اور مجموعے میں ایک بار گنا جاتا ہے۔",
+    "asOf": "{{date}} تک",
+    "urgentHint": "کل {{n}} اہم یا فوری",
+    "overdueTasks": "سب سے زیادہ تاخیر",
+    "mostOverdue": "{{total}} میں سے سب سے زیادہ تاخیر والے {{shown}}",
+    "noneOverdue": "کوئی کام تاخیر کا شکار نہیں۔",
+    "daysLate_one": "{{count}} دن تاخیر",
+    "daysLate_other": "{{count}} دن تاخیر"
   }
 }

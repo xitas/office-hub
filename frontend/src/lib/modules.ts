@@ -68,7 +68,7 @@ export const NAV_ITEMS: NavItem[] = [
   { key: 'visits', path: '/visits', icon: MapPin, label: 'nav.visits', permission: 'visits.view', enabled: true, section: 'main' },
   { key: 'errands', path: '/errands', icon: Hand, label: 'nav.errands', permission: 'errands.view', enabled: true, section: 'main' },
   { key: 'map', path: '/map', icon: Map, label: 'nav.map', permission: 'visits.view_map', enabled: true, section: 'main' },
-  { key: 'reports', path: '/reports', icon: BarChart3, label: 'nav.reports', permission: 'reports.view', enabled: false, section: 'main' },
+  { key: 'reports', path: '/reports', icon: BarChart3, label: 'nav.reports', permission: 'reports.view', enabled: true, section: 'main' },
   { key: 'team', path: '/team', icon: Users, label: 'nav.team', permission: 'users.view', enabled: true, mobilePrimary: true, section: 'main' },
   { key: 'notifications', path: '/notifications', icon: Bell, label: 'nav.notifications', enabled: true, mobilePrimary: true, section: 'main' },
   { key: 'settings', path: '/settings', icon: Settings, label: 'nav.settings', enabled: true, section: 'main' },

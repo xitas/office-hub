@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     "apps.visits",
     "apps.maps",
     "apps.errands",
+    "apps.reports",
 ]
 
 MIDDLEWARE = [

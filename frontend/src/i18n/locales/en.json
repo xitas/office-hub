@@ -2368,5 +2368,69 @@
     "today": "Today's errands",
     "noneToday": "No errands today.",
     "noneForTask": "No errands for this task."
+  },
+  "reports": {
+    "title": "Reports",
+    "subtitle": "How the team is doing, from the data you can see.",
+    "names": {
+      "task-completion": "Task completion",
+      "overdue-tasks": "Overdue tasks"
+    },
+    "exportPdf": "PDF",
+    "exportExcel": "Excel",
+    "period": "Period",
+    "periods": {
+      "this_week": "This week",
+      "last_week": "Last week",
+      "this_month": "This month",
+      "last_month": "Last month",
+      "this_quarter": "This quarter",
+      "last_quarter": "Last quarter",
+      "this_year": "This year",
+      "custom": "Choose dates"
+    },
+    "from": "From",
+    "to": "To",
+    "department": "Department",
+    "allDepartments": "All departments",
+    "person": "Person",
+    "everyone": "Everyone",
+    "noDepartment": "No department",
+    "byDepartment": "By department",
+    "byPerson": "By person",
+    "columns": {
+      "due": "Due",
+      "done": "Done",
+      "on_time": "On time",
+      "late": "Late",
+      "overdue": "Overdue",
+      "open": "Still open",
+      "completed": "Completed in period",
+      "rate": "Completion rate",
+      "on_time_rate": "On time rate",
+      "days_1_7": "1–7 days late",
+      "days_8_30": "8–30 days late",
+      "days_31_plus": "Over 30 days late",
+      "urgent": "High or urgent",
+      "oldest": "Oldest due date"
+    },
+    "tiles": {
+      "due": "Tasks due",
+      "rate": "Completion rate",
+      "rateHint": "{{done}} of {{due}} done",
+      "onTime": "Done on time",
+      "onTimeHint": "{{n}} by their due date",
+      "overdue": "Overdue",
+      "completedHint": "{{n}} finished in the period (any due date)",
+      "overdueNow": "Overdue now"
+    },
+    "completionNote": "Tasks due in the period, by due date. \"On time\" means finished on or before the due day (office time). A task with several people counts once for each of them, and once in the totals.",
+    "asOf": "As of {{date}}",
+    "urgentHint": "{{n}} high or urgent in all",
+    "overdueTasks": "Most overdue",
+    "mostOverdue": "{{shown}} most overdue of {{total}}",
+    "noneOverdue": "Nothing overdue.",
+    "daysLate_one": "{{count}} day late",
+    "daysLate_other": "{{count}} days late"
   }
 }

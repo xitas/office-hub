@@ -88,6 +88,7 @@ export const router = createBrowserRouter([
             path: 'errands',
             lazy: () => import('@/features/errands/ErrandsPage').then((m) => ({ Component: m.ErrandsPage })),
           },
+          guarded('reports.view', 'reports', () => import('@/features/reports/ReportsPage').then((m) => ({ Component: m.ReportsPage }))),
           guarded('visits.view_map', 'map', () => import('@/features/map/MapPage').then((m) => ({ Component: m.MapPage }))),
           {
             path: 'vendors',

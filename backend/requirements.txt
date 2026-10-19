@@ -17,3 +17,7 @@ pyotp>=2.9
 qrcode[pil]>=7.4
 Pillow>=10.4
 polib>=1.2
+# Report exports: PDF with HarfBuzz text shaping (Urdu Nastaliq, right to left) and Excel
+fpdf2>=2.8
+uharfbuzz>=0.50
+openpyxl>=3.1
