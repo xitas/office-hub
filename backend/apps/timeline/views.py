@@ -82,7 +82,7 @@ class TimelineViewSet(
         and companies you can see, newest first, with filters."""
         qs = log_queryset(request.user, request.query_params).select_related("contact", "company", "vendor", "created_by__department")
         page = self.paginate_queryset(qs)
-        return self.get_paginated_response([entry_data(e, request.user) for e in page])
+        return self.get_paginated_response(registry.decorate(request.user, [entry_data(e, request.user) for e in page]))
 
     @extend_schema(responses={(200, "text/csv"): str})
     @action(detail=False, methods=["get"], url_path="log/export")
@@ -143,7 +143,7 @@ class TimelineViewSet(
         entries.sort(key=lambda e: (e["occurred_at"], e["created_at"]), reverse=True)
 
         page = self.paginate_queryset(entries)
-        return self.get_paginated_response(page)
+        return self.get_paginated_response(registry.decorate(user, page))
 
     def _vendor_timeline(self, request, vendor_id, kinds):
         """A vendor's logged calls, messages and notes, and automatic entries such as visits."""
@@ -164,4 +164,4 @@ class TimelineViewSet(
                 entries += provider(request.user, vendor.pk)
         entries.sort(key=lambda e: (e["occurred_at"], e["created_at"]), reverse=True)
         page = self.paginate_queryset(entries)
-        return self.get_paginated_response(page)
+        return self.get_paginated_response(registry.decorate(request.user, page))

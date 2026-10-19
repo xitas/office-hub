@@ -23,6 +23,9 @@ export interface Vendor {
   address: string
   city: string
   areas: string
+  /** Where it is, for the map (optional). */
+  latitude: string | null
+  longitude: string | null
   payment_terms: string
   notes: string
   rating: number | null

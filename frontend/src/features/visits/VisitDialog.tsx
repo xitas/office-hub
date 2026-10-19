@@ -1,9 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Building2, CheckSquare, LocateFixed, MapPin, Store, UserRound, X } from 'lucide-react'
+import { Building2, CheckSquare, MapPin, MapPinned, Store, UserRound, X } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { FormDialog, FormField, SimpleSelect } from '@/components/common'
+import { PinPickerDialog } from '@/components/map/PinPickerDialog'
 import { RecordPicker, type Picked } from '@/components/common/RecordPicker'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -66,7 +67,7 @@ export function VisitDialog({ visit, prefill, onClose }: { visit?: Visit; prefil
   })
   const [task, setTask] = useState(visit?.task ?? prefill?.task ?? null)
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [locating, setLocating] = useState(false)
+  const [picking, setPicking] = useState(false)
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm((f) => ({ ...f, [k]: v }))
   const planFor = people?.plan_for ?? []
   const along = (people?.companions ?? []).filter((p) => p.id !== form.assigned_to)
@@ -76,22 +77,6 @@ export function VisitDialog({ visit, prefill, onClose }: { visit?: Visit; prefil
     setVendor(id)
     const v = (vendors ?? []).find((x) => x.id === id)
     if (v) setForm((f) => ({ ...f, address: f.address || v.address || v.areas, city: f.city || v.city }))
-  }
-  const locateMe = () => {
-    if (!navigator.geolocation) return toast.error(t('visits.noLocation'))
-    setLocating(true)
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLocating(false)
-        setForm((f) => ({ ...f, latitude: pos.coords.latitude.toFixed(6), longitude: pos.coords.longitude.toFixed(6) }))
-        toast.success(t('visits.locationSet', { metres: Math.round(pos.coords.accuracy) }))
-      },
-      () => {
-        setLocating(false)
-        toast.error(t('visits.noLocation'))
-      },
-      { enableHighAccuracy: true, timeout: 15_000 },
-    )
   }
   const save = useMutation({
     mutationFn: async () => {
@@ -222,13 +207,18 @@ export function VisitDialog({ visit, prefill, onClose }: { visit?: Visit; prefil
         <div className="grid gap-1.5">
           <span className="flex items-center gap-1.5 text-sm font-medium"><MapPin className="size-4 text-muted-foreground" />{t('visits.pin')}</span>
           <div className="flex flex-wrap items-center gap-2">
-            <Input value={form.latitude} dir="ltr" inputMode="decimal" onChange={(e) => set('latitude', e.target.value)} placeholder={t('visits.latitude')} aria-label={t('visits.latitude')} className="w-36 font-latin" />
-            <Input value={form.longitude} dir="ltr" inputMode="decimal" onChange={(e) => set('longitude', e.target.value)} placeholder={t('visits.longitude')} aria-label={t('visits.longitude')} className="w-36 font-latin" />
-            <Button type="button" variant="outline" size="sm" onClick={locateMe} disabled={locating}>
-              <LocateFixed className="size-4" />
-              {t('visits.useMyLocation')}
+            <span className="min-w-0 flex-1 text-sm">
+              {form.latitude ? <bdi dir="ltr" className="font-latin">{form.latitude}, {form.longitude}</bdi> : <span className="text-muted-foreground">{t('map.noPin')}</span>}
+            </span>
+            <Button type="button" variant="outline" size="sm" onClick={() => setPicking(true)}>
+              <MapPinned className="size-4" />
+              {t(form.latitude ? 'map.changePin' : 'map.setPin')}
             </Button>
           </div>
+          {picking && (
+            <PinPickerDialog title={t('map.visitPinTitle')} latitude={form.latitude || null} longitude={form.longitude || null} onClose={() => setPicking(false)}
+              onSave={(lat, lng) => setForm((f) => ({ ...f, latitude: lat ?? '', longitude: lng ?? '' }))} />
+          )}
           <p className="text-xs text-muted-foreground">{errors.latitude ?? t('visits.pinHint')}</p>
         </div>
         {task && (

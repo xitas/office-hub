@@ -12,6 +12,7 @@ from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from apps.core.geo import pin_constraint, pin_fields
 from apps.core.phones import normalize_phone
 
 
@@ -41,6 +42,7 @@ class Vendor(models.Model):
     address = models.CharField(max_length=255, blank=True)
     city = models.CharField(max_length=100, blank=True, db_index=True)
     areas = models.CharField(max_length=255, blank=True, help_text="Areas served, e.g. Gulberg, DHA, Model Town")
+    latitude, longitude = pin_fields()  # where it is, for the map (optional)
     payment_terms = models.CharField(max_length=200, blank=True, help_text="Cash on delivery, 30 days credit…")
     notes = models.TextField(blank=True)
     rating = models.PositiveSmallIntegerField(null=True, blank=True, help_text="1–5")
@@ -58,6 +60,7 @@ class Vendor(models.Model):
         ordering = ["name"]
         constraints = [
             models.CheckConstraint(condition=models.Q(rating__isnull=True) | models.Q(rating__gte=1, rating__lte=5), name="vendor_rating_1_to_5"),
+            pin_constraint("vendor_pin_valid"),
         ]
         verbose_name = _("vendor")
         verbose_name_plural = _("vendors")

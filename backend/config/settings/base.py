@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     "apps.planning",
     "apps.vendors",
     "apps.visits",
+    "apps.maps",
 ]
 
 MIDDLEWARE = [
@@ -168,6 +169,7 @@ REST_FRAMEWORK = {
         "login": env("LOGIN_THROTTLE_RATE", default="10/min"),
         "password_reset": env("PASSWORD_RESET_THROTTLE_RATE", default="5/hour"),
         "chat_send": env("CHAT_SEND_RATE", default="30/min"),
+        "map_search": env("MAP_SEARCH_RATE", default="20/min"),
     },
 }
 
@@ -208,5 +210,7 @@ CORS_ALLOW_CREDENTIALS = True
 FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:5173")
 # Address search (Phase 5): Nominatim asks for a contact email in the User-Agent. Set it in .env; never hard-code it.
 NOMINATIM_CONTACT_EMAIL = env("NOMINATIM_CONTACT_EMAIL", default="")
+# Limit address search to these countries (ISO codes, comma-separated; empty = anywhere).
+NOMINATIM_COUNTRY_CODES = env("NOMINATIM_COUNTRY_CODES", default="pk")
 vars().update(env.email_url("EMAIL_URL", default="consolemail://"))
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="Office CRM <noreply@example.com>")

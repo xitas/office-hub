@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Building, Mail, MapPin, MessageCircle, Pencil, Phone, Tag as TagIcon, Trash2, UserRound } from 'lucide-react'
+import { ArrowLeft, Building, Mail, MapPin, MapPinned, MessageCircle, Pencil, Phone, Tag as TagIcon, Trash2, UserRound } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { EmptyState, ErrorState, SimpleSelect, UserAvatar } from '@/components/common'
+import { PlaceLocation } from '@/components/map/PlaceLocation'
 import { ContactButtons } from '@/components/common/ContactButtons'
 import { TemplateSendButtons } from '@/features/templates/SendWithTemplate'
 import { PlanVisitButton } from '@/features/visits/PlanVisitButton'
@@ -224,6 +225,9 @@ export function ContactDetailPage() {
               </Detail>
               <Detail icon={MapPin} label={t('companies.address')}>
                 {[contact.address, contact.city].filter(Boolean).join(', ') || '—'}
+              </Detail>
+              <Detail icon={MapPinned} label={t('map.location')}>
+                <PlaceLocation name={contact.full_name} latitude={contact.latitude} longitude={contact.longitude} path={`/contacts/${contact.id}/`} canEdit={canEdit} refresh={[key]} />
               </Detail>
               <Detail icon={UserRound} label={t('companies.assignedTo')}>
                 {contact.assigned_to_name ?? t('companies.unassigned')}

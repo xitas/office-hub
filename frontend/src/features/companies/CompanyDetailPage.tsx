@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Building2, Globe, Mail, MapPin, Pencil, Phone, Trash2, UserRound } from 'lucide-react'
+import { ArrowLeft, Building2, Globe, Mail, MapPin, MapPinned, Pencil, Phone, Trash2, UserRound } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { EmptyState, ErrorState } from '@/components/common'
+import { PlaceLocation } from '@/components/map/PlaceLocation'
 import { ContactButtons } from '@/components/common/ContactButtons'
 import { LastContacted } from '@/features/timeline/EntryBits'
 import { Badge } from '@/components/ui/badge'
@@ -187,6 +188,9 @@ export function CompanyDetailPage() {
               </Detail>
               <Detail icon={MapPin} label={t('companies.address')}>
                 {[company.address, company.city].filter(Boolean).join(', ') || '—'}
+              </Detail>
+              <Detail icon={MapPinned} label={t('map.location')}>
+                <PlaceLocation name={company.name} latitude={company.latitude} longitude={company.longitude} path={`/companies/${company.id}/`} canEdit={canEdit} refresh={[['companies', 'detail', id]]} />
               </Detail>
               <Detail icon={UserRound} label={t('companies.assignedTo')}>
                 {company.assigned_to_name ?? t('companies.unassigned')}

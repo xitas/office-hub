@@ -181,3 +181,66 @@ html[lang="ur"] .font-latin {
     padding-bottom: env(safe-area-inset-bottom);
 }
 
+
+/* Maps (Leaflet). The map's own text stays Latin and left-to-right; tooltips follow their text. */
+.leaflet-container {
+    font-family: var(--font-latin, inherit);
+    background: var(--muted);
+    z-index: 0;
+}
+html[lang="ur"] .leaflet-tooltip {
+    font-family: var(--font-urdu);
+}
+/* Dark mode: dim and invert the light tiles so the map isn't a bright block (labels stay readable). */
+.dark .leaflet-tile-pane {
+    filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9) saturate(0.6);
+}
+.dark .leaflet-bar a,
+.dark .leaflet-control-attribution {
+    background: var(--card);
+    color: var(--foreground);
+    border-color: var(--border);
+}
+.dark .leaflet-control-attribution a {
+    color: var(--primary);
+}
+.dark .leaflet-tooltip {
+    background: var(--popover);
+    color: var(--popover-foreground);
+    border-color: var(--border);
+}
+.crm-marker {
+    background: none;
+    border: 0;
+}
+.crm-marker .crm-pin-body {
+    fill: var(--primary);
+    stroke: var(--background);
+    stroke-width: 1.5;
+}
+.crm-marker .crm-pin-hole {
+    fill: var(--background);
+}
+.crm-marker-contact .crm-pin-body { fill: oklch(0.62 0.16 255); }
+.crm-marker-company .crm-pin-body { fill: oklch(0.55 0.17 300); }
+.crm-marker-vendor .crm-pin-body { fill: oklch(0.6 0.13 55); }
+.crm-marker-visit.crm-tone-planned .crm-pin-body { fill: oklch(0.6 0.12 185); }
+.crm-marker-visit.crm-tone-done .crm-pin-body { fill: var(--success); }
+.crm-marker-visit.crm-tone-pending .crm-pin-body { fill: var(--warning); }
+.crm-marker-pin .crm-pin-body { fill: var(--destructive); }
+.crm-marker-selected svg {
+    filter: drop-shadow(0 0 4px var(--ring));
+    transform: scale(1.15);
+    transform-origin: bottom center;
+}
+.crm-marker .crm-dot {
+    display: block;
+    width: 16px;
+    height: 16px;
+    border-radius: 9999px;
+    border: 3px solid var(--background);
+    box-shadow: 0 0 0 1px var(--border);
+}
+.crm-marker-checkin .crm-dot { background: oklch(0.6 0.15 155); }
+.crm-marker-checkout .crm-dot { background: oklch(0.6 0.02 260); }
+.crm-marker-selected .crm-dot { box-shadow: 0 0 0 3px var(--ring); }

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { ErrorState, PageHeader } from '@/components/common'
+import { PlaceLocation } from '@/components/map/PlaceLocation'
 import { ContactButtons } from '@/components/common/ContactButtons'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -34,6 +35,7 @@ export function VendorPage() {
   const { data: categories } = useVendorCategories()
   const [editing, setEditing] = useState(false)
   const canDelete = usePermission('vendors.delete')
+  const canEditVendor = usePermission('vendors.edit')
   const remove = useMutation({
     mutationFn: async () => api.delete(`/vendors/${id}/`),
     onSuccess: () => {
@@ -54,6 +56,7 @@ export function VendorPage() {
     { label: t('vendors.fields.address'), value: v.address && <span className="[unicode-bidi:plaintext]">{v.address}</span> },
     { label: t('vendors.fields.city'), value: v.city && <bdi>{v.city}</bdi> },
     { label: t('vendors.fields.areas'), value: v.areas && <span className="[unicode-bidi:plaintext]">{v.areas}</span> },
+    { label: t('map.location'), value: <PlaceLocation name={v.name} latitude={v.latitude} longitude={v.longitude} path={`/vendors/${v.id}/`} canEdit={canEditVendor} refresh={[VENDORS_KEY]} /> },
     { label: t('vendors.fields.payment_terms'), value: v.payment_terms && <span className="[unicode-bidi:plaintext]">{v.payment_terms}</span> },
     { label: t('vendors.fields.website'), value: v.website && (
       <a href={v.website} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-latin text-primary hover:underline">

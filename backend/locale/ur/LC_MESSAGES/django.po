@@ -2317,3 +2317,15 @@ msgstr "اگلا قدم: %(action)s۔"
 
 msgid "Visit report: %(title)s"
 msgstr "وزٹ رپورٹ: %(title)s"
+
+msgid "Type at least %(n)s characters."
+msgstr "کم از کم %(n)s حروف لکھیں۔"
+
+msgid "Address search isn't set up yet: an admin needs to add a contact email (NOMINATIM_CONTACT_EMAIL) to the server settings. You can still drop the pin on the map or use your location."
+msgstr "پتے کی تلاش ابھی سیٹ نہیں: ایڈمن کو سرور سیٹنگز میں رابطہ ای میل (NOMINATIM_CONTACT_EMAIL) شامل کرنا ہوگا۔ آپ پھر بھی نقشے پر پن لگا سکتے ہیں یا اپنی لوکیشن استعمال کر سکتے ہیں۔"
+
+msgid "Address search is busy. Try again in a moment."
+msgstr "پتے کی تلاش مصروف ہے۔ تھوڑی دیر میں دوبارہ کوشش کریں۔"
+
+msgid "Address search didn't answer. Try again, or drop the pin on the map."
+msgstr "پتے کی تلاش نے جواب نہیں دیا۔ دوبارہ کوشش کریں، یا نقشے پر پن لگائیں۔"

@@ -298,6 +298,21 @@ VENDOR_CATEGORIES = [
     ("Vehicle repair and fuel", "گاڑی کی مرمت اور ایندھن"),
     ("Electricians and plumbers", "الیکٹریشن اور پلمبر"),
 ]
+# Where things are in Lahore (for the map): neighbourhood -> (latitude, longitude), and who is where.
+LAHORE_AREAS = {
+    "Gulberg III": ("31.510600", "74.344600"), "Johar Town": ("31.469400", "74.272800"), "DHA Phase 5": ("31.462800", "74.408700"),
+    "Model Town": ("31.483500", "74.322700"), "Mall Road": ("31.560000", "74.329000"), "Anarkali": ("31.568000", "74.311000"),
+    "Faisal Town": ("31.480000", "74.305000"), "Cantt": ("31.510000", "74.380000"), "Allama Iqbal Town": ("31.515000", "74.285000"),
+    "Hall Road": ("31.564000", "74.317000"), "Township": ("31.450000", "74.315000"), "Garden Town": ("31.502000", "74.326000"),
+    "Ferozepur Road": ("31.470000", "74.335000"), "Wapda Town": ("31.438000", "74.265000"),
+}
+PLACES = {
+    "Ravi Pharma": "Gulberg III", "Saba Software House": "Johar Town",
+    "Al-Noor Printers": "Model Town", "Hall Road Computers": "Hall Road", "TCS Express (Gulberg)": "Gulberg III",
+    "Sparkle Cleaning Services": "DHA Phase 5", "Chai Wala Catering": "Gulberg III", "Bismillah Auto Workshop": "Ferozepur Road",
+    "Raza Electric Works": "Garden Town",
+}
+
 # Vendors: (name, categories, contact person, phone, city, areas, payment terms, rating, preferred, notes)
 VENDORS = [
     ("Al-Noor Printers", ["Stationery and printing"], "Imran Butt", "0300-1112233", "Lahore", "Gulberg, Model Town, Johar Town",
@@ -461,6 +476,7 @@ class Command(BaseCommand):
         self._seed_expenses()
         self._seed_planning()
         self._seed_vendors()
+        self._seed_places()
         self._seed_visits()
 
         self.stdout.write(self.style.SUCCESS("Demo data ready. All demo users share the password: " + DEMO_PASSWORD))
@@ -691,6 +707,26 @@ class Command(BaseCommand):
             details = {"call": {"direction": "out", "outcome": "connected"}, "whatsapp": {"direction": "out"}}.get(kind, {})
             entry = TimelineEntry.objects.create(kind=kind, vendor=vendors[vendor], summary=summary, details=details, created_by=users[by])
             TimelineEntry.objects.filter(pk=entry.pk).update(occurred_at=timezone.now() - timedelta(days=ago, hours=2))
+
+    def _seed_places(self):
+        """Pins around Lahore: the Lahore companies and vendors at their neighbourhood, and Lahore contacts spread over
+        the city (a few metres apart, so they don't sit on one point). Skipped once any record has a pin."""
+        from decimal import Decimal
+
+        from apps.contacts.models import Company, Contact
+        from apps.vendors.models import Vendor
+
+        if Company.objects.filter(latitude__isnull=False).exists() or Vendor.objects.filter(latitude__isnull=False).exists():
+            return
+        for model in (Company, Vendor):
+            for record in model.objects.filter(name__in=PLACES, city="Lahore"):
+                lat, lng = LAHORE_AREAS[PLACES[record.name]]
+                model.objects.filter(pk=record.pk).update(latitude=Decimal(lat), longitude=Decimal(lng))
+        areas = list(LAHORE_AREAS.values())
+        for i, contact in enumerate(Contact.objects.filter(city="Lahore").order_by("pk")[:14]):
+            lat, lng = areas[i % len(areas)]
+            nudge = Decimal(i % 5) * Decimal("0.001300")
+            Contact.objects.filter(pk=contact.pk).update(latitude=Decimal(lat) + nudge, longitude=Decimal(lng) - nudge)
 
     def _seed_visits(self):
         """Field visits in each state (one waiting for approval, some with a pin, one carrying out a task, two to

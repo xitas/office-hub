@@ -63,6 +63,21 @@ def vendor_providers() -> dict[str, Callable]:
     return dict(_vendor_providers)
 
 
+_decorators: list[Callable] = []
+
+
+def register_decorator(fn: Callable):
+    """fn(user, entries) adjusts a page of timeline entries for this viewer in place (one query for the page, not one
+    per entry), e.g. whether the visit a report links to may be opened."""
+    _decorators.append(fn)
+
+
+def decorate(user, entries: list[dict]) -> list[dict]:
+    for fn in _decorators:
+        fn(user, entries)
+    return entries
+
+
 def target_ref(contact=None, company=None, vendor=None) -> dict:
     return {
         "contact": {"id": contact.pk, "name": contact.full_name} if contact else None,

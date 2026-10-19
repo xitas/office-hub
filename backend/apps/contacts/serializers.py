@@ -4,6 +4,7 @@ from django.utils.translation import gettext as _
 from rest_framework import serializers
 
 from apps.accounts.models import User
+from apps.core.geo import PIN_KWARGS, PinSerializerMixin
 from apps.core.permissions import ADMIN, has_perm
 
 from .duplicates import find_duplicates
@@ -42,7 +43,7 @@ def _assignable_users():
     return User.objects.filter(is_active=True)
 
 
-class CompanySerializer(AssignmentMixin, serializers.ModelSerializer):
+class CompanySerializer(PinSerializerMixin, AssignmentMixin, serializers.ModelSerializer):
     industry_label = serializers.CharField(source="get_industry_display", read_only=True)
     assigned_to_name = serializers.CharField(source="assigned_to.full_name", default=None, read_only=True)
     created_by_name = serializers.CharField(source="created_by.full_name", default=None, read_only=True)
@@ -54,11 +55,12 @@ class CompanySerializer(AssignmentMixin, serializers.ModelSerializer):
     class Meta:
         model = Company
         fields = [
-            "id", "name", "industry", "industry_label", "phone", "email", "website", "address", "city", "notes",
+            "id", "name", "industry", "industry_label", "phone", "email", "website", "address", "city", "latitude", "longitude", "notes",
             "assigned_to", "assigned_to_name", "created_by_name", "updated_by_name", "created_at", "updated_at",
             "last_contacted_at",
         ]
         read_only_fields = ["created_at", "updated_at"]
+        extra_kwargs = PIN_KWARGS
 
     def validate_name(self, value):
         value = value.strip()
@@ -87,7 +89,7 @@ class TagSerializer(serializers.ModelSerializer):
         fields = ["id", "name"]
 
 
-class ContactSerializer(AssignmentMixin, serializers.ModelSerializer):
+class ContactSerializer(PinSerializerMixin, AssignmentMixin, serializers.ModelSerializer):
     full_name = serializers.CharField(read_only=True)
     status_label = serializers.CharField(source="get_status_display", read_only=True)
     company = serializers.PrimaryKeyRelatedField(queryset=Company.objects.all(), required=False, allow_null=True)
@@ -111,12 +113,13 @@ class ContactSerializer(AssignmentMixin, serializers.ModelSerializer):
         model = Contact
         fields = [
             "id", "first_name", "last_name", "full_name", "company", "company_name", "job_title", "phone",
-            "whatsapp", "email", "address", "city", "tags", "tag_names", "status", "status_label",
+            "whatsapp", "email", "address", "city", "latitude", "longitude", "tags", "tag_names", "status", "status_label",
             "status_changed_at", "status_reason",
             "assigned_to", "assigned_to_name", "created_by_name", "updated_by_name", "created_at", "updated_at",
             "last_contacted_at",
         ]
         read_only_fields = ["status_changed_at", "created_at", "updated_at"]
+        extra_kwargs = PIN_KWARGS
 
     def get_tag_names(self, obj) -> list[str]:
         return [t.name for t in obj.tags.all()]

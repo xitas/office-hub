@@ -37,14 +37,18 @@ export function EntryTitle({ item }: { item: TimelineItem }) {
     )
   }
   if (item.kind === 'visit') {
-    const d = item.details as { visit_id?: number; title?: string }
+    const d = item.details as { visit_id?: number; title?: string; visit_visible?: boolean }
     return (
       <span className="font-medium">
         {t('timeline.kinds.visit')}
         {d.visit_id && (
           <>
             {' · '}
-            <Link to={`/visits?visit=${d.visit_id}`} className="font-normal text-primary hover:underline"><bdi>{d.title ?? item.summary}</bdi></Link>
+            {d.visit_visible === false ? (
+              <bdi className="font-normal">{d.title ?? item.summary}</bdi>
+            ) : (
+              <Link to={`/visits?visit=${d.visit_id}`} className="font-normal text-primary hover:underline"><bdi>{d.title ?? item.summary}</bdi></Link>
+            )}
           </>
         )}
       </span>

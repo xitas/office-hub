@@ -88,6 +88,18 @@ def calendar_items(user, start, end) -> list[dict]:
     } for v in visits]
 
 
+def mark_visit_links(user, entries):
+    """A visit report on a client's timeline is seen by everyone who sees the client; the link to the visit only by
+    those who may open it (details.visit_visible; otherwise the title is plain text)."""
+    reports = [e for e in entries if e["kind"] == "visit" and e.get("source") == "manual"]
+    ids = {e["details"].get("visit_id") for e in reports} - {None}
+    if not ids:
+        return
+    can_open = set(rules.visible_visits(user).filter(pk__in=ids).values_list("pk", flat=True)) if has_perm(user, "visits", "view") else set()
+    for e in reports:
+        e["details"] = {**e["details"], "visit_visible": e["details"].get("visit_id") in can_open}
+
+
 def register():
     from django.utils.translation import gettext_lazy
 
@@ -101,4 +113,5 @@ def register():
     approvals.register("visit", _approval_rows, _approval_item)
     timeline.register_provider("visit", timeline_entries)
     timeline.register_vendor_provider("visit", vendor_timeline_entries)
+    timeline.register_decorator(mark_visit_links)
 

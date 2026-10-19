@@ -35,7 +35,8 @@
     "supplies": "Supplies",
     "expenses": "Expenses",
     "planning": "Weekly plan",
-    "vendors": "Vendors"
+    "vendors": "Vendors",
+    "map": "Map"
   },
   "common": {
     "save": "Save",
@@ -2137,7 +2138,7 @@
     "latitude": "Latitude",
     "longitude": "Longitude",
     "useMyLocation": "Use my location",
-    "pinHint": "Where the place is, for the map later. Use your location only when you are at the place.",
+    "pinHint": "Where the place is, for the map: drop the pin on the map, or use your location when you are at the place.",
     "locationSet_one": "Location set (within {{count}} metre)",
     "locationSet_other": "Location set (within {{count}} metres)",
     "noLocation": "Your location isn't available. Allow it in the browser, or type the pin.",
@@ -2227,5 +2228,52 @@
       "photoCount_one": "{{count}} photo",
       "photoCount_other": "{{count}} photos"
     }
+  },
+  "map": {
+    "title": "Map",
+    "subtitle": "Field visits, where people checked in, and clients and vendors on the map.",
+    "today": "Today",
+    "thisWeek": "This week",
+    "allStatuses": "All visits",
+    "layers": "Show on the map",
+    "layer": {
+      "visits": "Visits",
+      "checks": "Check-ins",
+      "contacts": "Contacts",
+      "companies": "Companies",
+      "vendors": "Vendors"
+    },
+    "kind": {
+      "contact": "Contact",
+      "company": "Company",
+      "vendor": "Vendor"
+    },
+    "mapTab": "Map",
+    "listTab": "List",
+    "privacyNote": "Check-in locations show only for people whose locations you may see, and are removed after 90 days.",
+    "checkedIn": "{{name}} checked in, {{time}}",
+    "checkedOut": "{{name}} checked out, {{time}}",
+    "noVisits": "No visits for these filters.",
+    "visitList": "Visits",
+    "noPin": "No pin",
+    "atRecord": "at the client's pin",
+    "open": "Open",
+    "openVisit": "Open visit",
+    "location": "Location",
+    "setPin": "Set on map",
+    "changePin": "Change",
+    "clearPin": "Remove pin",
+    "savePin": "Save pin",
+    "pinTitle": "Where is {{name}}?",
+    "visitPinTitle": "Where is the visit?",
+    "pinSaved": "Location saved",
+    "pinCleared": "Location removed",
+    "pickerLabel": "Map: tap to drop the pin",
+    "tapToPin": "Tap the map to drop the pin, then drag it to adjust.",
+    "pinNote": "The pin marks where the place is. \"Use my location\" places it once; your location isn't tracked or kept.",
+    "search": "Search",
+    "searchPlaceholder": "Find an address to move the map",
+    "searchOff": "Address search isn't set up yet (an admin adds a contact email in the server settings). Drop the pin on the map or use your location.",
+    "noResults": "No places found."
   }
 }

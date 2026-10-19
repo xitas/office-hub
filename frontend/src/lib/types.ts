@@ -224,6 +224,9 @@ export interface Company {
   website: string
   address: string
   city: string
+  /** Where it is, for the map (optional). */
+  latitude: string | null
+  longitude: string | null
   notes: string
   assigned_to: number | null
   assigned_to_name: string | null
@@ -250,6 +253,9 @@ export interface Contact {
   email: string
   address: string
   city: string
+  /** Where they are, for the map (optional). */
+  latitude: string | null
+  longitude: string | null
   tags: string[]
   status: ContactStatus
   status_label: string

@@ -157,6 +157,7 @@ export function FormDialog({
   description,
   children,
   footer,
+  className,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -164,10 +165,12 @@ export function FormDialog({
   description?: string
   children: ReactNode
   footer?: ReactNode
+  /** e.g. a wider dialog on desktop (sm:max-w-2xl) */
+  className?: string
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg max-sm:inset-0 max-sm:max-h-dvh max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-none max-sm:rtl:translate-x-0 max-sm:content-start">
+      <DialogContent className={cn('max-h-[90dvh] overflow-y-auto sm:max-w-lg max-sm:inset-0 max-sm:max-h-dvh max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-none max-sm:rtl:translate-x-0 max-sm:content-start', className)}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}

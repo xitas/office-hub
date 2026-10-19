@@ -250,14 +250,19 @@ function Headline({ item }: { item: TimelineItem }) {
   }
   if (item.kind === 'visit') {
     // A visit without a report (automatic: its summary is the title), or a visit report (stored: the title in details).
-    const d = item.details as { visit_id: number; status: string; start: string; title?: string }
+    // A report is seen by everyone who sees the client; its visit opens only for those allowed (plain text otherwise).
+    const d = item.details as { visit_id: number; status: string; start: string; title?: string; visit_visible?: boolean }
     return (
       <span className="font-medium">
         {t(`timeline.visitEvents.${d.status}`)}
         {' · '}
-        <Link to={`/visits?visit=${d.visit_id}`} className="font-normal text-primary hover:underline">
-          <bdi>{d.title ?? item.summary}</bdi>
-        </Link>
+        {d.visit_visible === false ? (
+          <bdi className="font-normal">{d.title ?? item.summary}</bdi>
+        ) : (
+          <Link to={`/visits?visit=${d.visit_id}`} className="font-normal text-primary hover:underline">
+            <bdi>{d.title ?? item.summary}</bdi>
+          </Link>
+        )}
       </span>
     )
   }

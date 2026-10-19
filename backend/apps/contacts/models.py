@@ -4,6 +4,7 @@ from django.db.models.functions import Lower
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+from apps.core.geo import pin_constraint, pin_fields
 from apps.core.models import TimeStampedModel
 
 from .phones import normalize_phone
@@ -32,6 +33,7 @@ class Company(TimeStampedModel):
     website = models.URLField(blank=True)
     address = models.CharField(max_length=255, blank=True)
     city = models.CharField(max_length=100, blank=True, db_index=True)
+    latitude, longitude = pin_fields()  # where it is, for the map (optional)
     notes = models.TextField(blank=True)
     # Digits-only international form of `phone`, kept in sync on save (search by phone in any format).
     phone_digits = models.CharField(max_length=30, blank=True, db_index=True, editable=False)
@@ -44,6 +46,7 @@ class Company(TimeStampedModel):
 
     class Meta:
         ordering = ["name"]
+        constraints = [pin_constraint("company_pin_valid")]
         verbose_name = _("company")
         verbose_name_plural = _("companies")
 
@@ -90,6 +93,7 @@ class Contact(TimeStampedModel):
     email = models.EmailField(blank=True)
     address = models.CharField(max_length=255, blank=True)
     city = models.CharField(max_length=100, blank=True, db_index=True)
+    latitude, longitude = pin_fields()  # where they are, for the map (optional)
     tags = models.ManyToManyField(Tag, blank=True, related_name="contacts")
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.NEW, db_index=True)
     # When the current status was set (for "days in status"); the full trail is ContactStatusChange.
@@ -109,6 +113,7 @@ class Contact(TimeStampedModel):
         verbose_name = _("contact")
         verbose_name_plural = _("contacts")
         indexes = [models.Index(Lower("email"), name="contact_email_ci")]
+        constraints = [pin_constraint("contact_pin_valid")]
 
     def __str__(self):
         return self.full_name

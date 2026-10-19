@@ -244,3 +244,18 @@ def test_seed_creates_reports(db):
     assert VisitReport.objects.filter(entry__isnull=False, follow_up_task__isnull=False).exists()
     assert VisitPhoto.objects.exists()
     assert VisitReport.objects.filter(status_change__isnull=False).exists()
+
+
+def test_report_on_the_timeline_links_the_visit_only_for_those_who_may_open_it(client_for, people, lead):
+    """The lead's owner sees the report a colleague wrote, but its visit (not theirs) only as plain text."""
+    v = _visit(people, who="colleague", contact=lead)  # Sara's visit to Staff's lead
+    from apps.visits import reports
+
+    reports.save(people["colleague"], Visit.objects.get(pk=v.pk), {"outcome": "good", "notes": "Met the buyer."})
+    seen = lambda who, url, params: next(e for e in client_for(people[who]).get(url, params).data["results"] if e["kind"] == "visit")  # noqa: E731
+    mine = seen("staff", "/api/v1/timeline/", {"contact": lead.pk})
+    assert mine["summary"] == "Met the buyer." and mine["details"]["visit_visible"] is False
+    assert client_for(people["staff"]).get(f"{URL}{v.pk}/").status_code == 404
+    assert seen("staff", "/api/v1/timeline/log/", {"type": "visit"})["details"]["visit_visible"] is False
+    assert seen("manager", "/api/v1/timeline/", {"contact": lead.pk})["details"]["visit_visible"] is True
+    assert seen("admin", "/api/v1/timeline/log/", {"type": "visit"})["details"]["visit_visible"] is True
