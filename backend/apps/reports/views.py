@@ -104,3 +104,71 @@ class PeopleView(APIView):
     def get(self, request):
         scope = scope_for(request.user, {"department": request.query_params.get("department")})
         return Response({"people": _people(scope), "department": scope.department.pk if scope.department else None})
+
+
+BY_PARAM = [OpenApiParameter("by", str, enum=["week", "month"], description="Group by office week (from its week start) or month")]
+
+
+def _by(request) -> str:
+    by = request.query_params.get("by") or "week"
+    if by not in ("week", "month"):
+        raise ValidationError({"by": [_("Group by week or month.")]})
+    return by
+
+
+class InteractionsView(APIView):
+    """Calls, meetings, emails, WhatsApp messages and visit reports with clients, per week or month and per person."""
+
+    permission_classes = [module_permission("reports", "view")]
+
+    @extend_schema(parameters=[*PERIOD_PARAMS, *BY_PARAM, *SCOPE_PARAMS], responses={200: dict})
+    def get(self, request):
+        from . import client_reports
+
+        first, last = period_for(request.query_params)
+        scope = scope_for(request.user, request.query_params)
+        return Response(client_reports.interactions(request.user, scope, first, last, _by(request)))
+
+
+class InteractionsExportView(APIView):
+    permission_classes = [module_permission("reports", "export")]
+
+    @extend_schema(parameters=[*PERIOD_PARAMS, *BY_PARAM, *SCOPE_PARAMS, *FORMAT_PARAM], responses={(200, "application/octet-stream"): bytes})
+    def get(self, request):
+        from . import client_reports
+
+        first, last = period_for(request.query_params)
+        scope = scope_for(request.user, request.query_params)
+        data = client_reports.interactions(request.user, scope, first, last, _by(request))
+        doc = documents.interactions_document(data, scope, request.user)
+        return _export(request, doc, f"client-interactions-{first:%Y-%m-%d}-{last:%Y-%m-%d}", "client interactions report",
+                       data["totals"]["total"], N_("Exported the client interactions report"))
+
+
+class PipelineView(APIView):
+    """Leads added in the period and how far they got; status changes and wins in the period."""
+
+    permission_classes = [module_permission("reports", "view")]
+
+    @extend_schema(parameters=[*PERIOD_PARAMS, *SCOPE_PARAMS], responses={200: dict})
+    def get(self, request):
+        from . import client_reports
+
+        first, last = period_for(request.query_params)
+        scope = scope_for(request.user, request.query_params)
+        return Response(client_reports.pipeline(request.user, scope, first, last))
+
+
+class PipelineExportView(APIView):
+    permission_classes = [module_permission("reports", "export")]
+
+    @extend_schema(parameters=[*PERIOD_PARAMS, *SCOPE_PARAMS, *FORMAT_PARAM], responses={(200, "application/octet-stream"): bytes})
+    def get(self, request):
+        from . import client_reports
+
+        first, last = period_for(request.query_params)
+        scope = scope_for(request.user, request.query_params)
+        data = client_reports.pipeline(request.user, scope, first, last)
+        doc = documents.pipeline_document(data, scope, request.user)
+        return _export(request, doc, f"lead-pipeline-{first:%Y-%m-%d}-{last:%Y-%m-%d}", "lead pipeline report", data["funnel"]["created"],
+                       N_("Exported the lead pipeline report"))

@@ -15,11 +15,13 @@ import { useFormat } from '@/lib/format'
 import { usePermission } from '@/lib/permissions'
 import { useDepartments } from '@/lib/queries'
 import {
-  PERIOD_PRESETS, REPORTS, exportParams, presetRange, useCompletionReport, useOverdueReport, useReportPeople,
+  PERIOD_PRESETS, PERIOD_REPORTS, REPORTS, exportParams, pct, presetRange, useCompletionReport, useOverdueReport, useReportPeople,
   type CompletionRow, type PeriodPreset, type ReportFilters, type ReportKey,
 } from '@/lib/reports'
 import { downloadFile } from '@/lib/transfer'
 import { cn } from '@/lib/utils'
+import { RateBar, Tile } from './bits'
+import { Interactions, Pipeline } from './ClientReports'
 
 /**
  * Reports for managers (their department) and admins (everyone, or one department): task completion for a period
@@ -33,7 +35,9 @@ export function ReportsPage() {
   const isAdmin = usePermission('departments.create')
   const canExport = usePermission('reports.export')
   const { data: departments } = useDepartments()
-  const report: ReportKey = params.get('report') === 'overdue-tasks' ? 'overdue-tasks' : 'task-completion'
+  const report: ReportKey = REPORTS.includes(params.get('report') as ReportKey) ? (params.get('report') as ReportKey) : 'task-completion'
+  const withPeriod = PERIOD_REPORTS.includes(report)
+  const by = params.get('by') === 'month' ? 'month' : 'week'
   const preset = (PERIOD_PRESETS.includes(params.get('period') as PeriodPreset) ? params.get('period') : 'this_month') as PeriodPreset
   const today = todayInOffice(fmt.settings.timezone)
   const range = preset === 'custom'
@@ -50,7 +54,7 @@ export function ReportsPage() {
       }
       return p
     }, { replace: true })
-  const filters: ReportFilters = { department, person, ...(report === 'task-completion' ? range : {}) }
+  const filters: ReportFilters = { department, person, ...(withPeriod ? range : {}), ...(report === 'client-interactions' ? { by } : {}) }
   const [exporting, setExporting] = useState<'pdf' | 'xlsx' | null>(null)
   const download = async (file: 'pdf' | 'xlsx') => {
     setExporting(file)
@@ -85,7 +89,7 @@ export function ReportsPage() {
       </Tabs>
       <Card className="mb-4">
         <CardContent className="flex flex-wrap items-end gap-3">
-          {report === 'task-completion' && (
+          {withPeriod && (
             <>
               <FormField id="rp-period" label={t('reports.period')} className="w-44">
                 <SimpleSelect id="rp-period" value={preset} onChange={(v) => set({ period: v === 'this_month' ? undefined : v, ...(v === 'custom' ? range : { from: undefined, to: undefined }) })}
@@ -107,6 +111,12 @@ export function ReportsPage() {
               )}
             </>
           )}
+          {report === 'client-interactions' && (
+            <FormField id="rp-by" label={t('reports.interactions.groupBy')} className="w-36">
+              <SimpleSelect id="rp-by" value={by} onChange={(v) => set({ by: v === 'week' ? undefined : v })}
+                options={[{ value: 'week', label: t('reports.interactions.byWeek') }, { value: 'month', label: t('reports.interactions.byMonth') }]} />
+            </FormField>
+          )}
           {isAdmin && (
             <FormField id="rp-dept" label={t('reports.department')} className="w-48">
               <SimpleSelect id="rp-dept" value={department} onChange={(v) => set({ department: v, person: undefined })}
@@ -119,35 +129,11 @@ export function ReportsPage() {
           </FormField>
         </CardContent>
       </Card>
-      {report === 'task-completion' ? <Completion filters={filters} /> : <Overdue filters={filters} />}
+      {report === 'task-completion' && <Completion filters={filters} />}
+      {report === 'overdue-tasks' && <Overdue filters={filters} />}
+      {report === 'client-interactions' && <Interactions filters={filters} />}
+      {report === 'lead-pipeline' && <Pipeline filters={filters} />}
     </>
-  )
-}
-
-const pct = (v: number | null) => (v === null ? '—' : `${Math.round(v * 100)}%`)
-
-/** A single value from 0 to 100%: one hue, the number beside it in ordinary text colour. */
-function RateBar({ value, label }: { value: number | null; label: string }) {
-  return (
-    <span className="flex min-w-28 items-center gap-2">
-      <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted" role="meter" aria-label={label} aria-valuemin={0} aria-valuemax={100}
-        aria-valuenow={value === null ? undefined : Math.round(value * 100)}>
-        {value !== null && <span className="block h-full rounded-full bg-primary" style={{ width: `${Math.round(value * 100)}%` }} />}
-      </span>
-      <span className="w-10 text-end font-latin tabular-nums">{pct(value)}</span>
-    </span>
-  )
-}
-
-function Tile({ label, value, hint, tone }: { label: string; value: string | number; hint?: string; tone?: 'bad' }) {
-  return (
-    <Card className="gap-1 py-4">
-      <CardContent className="grid gap-0.5 px-4">
-        <span className="text-xs text-muted-foreground">{label}</span>
-        <span className={cn('font-latin text-2xl font-semibold tabular-nums', tone === 'bad' && 'text-destructive')}>{value}</span>
-        {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
-      </CardContent>
-    </Card>
   )
 }
 

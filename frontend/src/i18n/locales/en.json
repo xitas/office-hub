@@ -2374,7 +2374,9 @@
     "subtitle": "How the team is doing, from the data you can see.",
     "names": {
       "task-completion": "Task completion",
-      "overdue-tasks": "Overdue tasks"
+      "overdue-tasks": "Overdue tasks",
+      "client-interactions": "Client interactions",
+      "lead-pipeline": "Lead pipeline"
     },
     "exportPdf": "PDF",
     "exportExcel": "Excel",
@@ -2431,6 +2433,60 @@
     "mostOverdue": "{{shown}} most overdue of {{total}}",
     "noneOverdue": "Nothing overdue.",
     "daysLate_one": "{{count}} day late",
-    "daysLate_other": "{{count}} days late"
+    "daysLate_other": "{{count}} days late",
+    "interactions": {
+      "groupBy": "Group by",
+      "byWeek": "Week",
+      "byMonth": "Month",
+      "week": "Week",
+      "month": "Month",
+      "total": "Interactions",
+      "clients": "Clients reached",
+      "totalColumn": "Total",
+      "average_week": "Average per week",
+      "average_month": "Average per month",
+      "busiest_week": "Busiest week",
+      "busiest_month": "Busiest month",
+      "per_week": "Per week",
+      "per_month": "Per month",
+      "chartLabel": "Interactions per period (also in the table below)",
+      "kinds": {
+        "call": "Calls",
+        "meeting": "Meetings",
+        "email": "Emails",
+        "whatsapp": "WhatsApp",
+        "visit": "Visits"
+      },
+      "note": "Calls, meetings, emails, WhatsApp messages and visit reports logged on contacts and companies you can see, by the people in the report; notes are internal and not counted. Weeks start on the office's first day of the week."
+    },
+    "pipeline": {
+      "created": "New leads",
+      "winRate": "Win rate",
+      "winRateHint": "{{won}} won of {{closed}} closed",
+      "conversion": "Conversion",
+      "conversionHint": "{{won}} won of {{created}} new",
+      "wonInPeriod": "Won in the period",
+      "daysToWin": "on average {{days}} days after being added",
+      "funnel": "How far the new leads got",
+      "stages": {
+        "created": "Added",
+        "contacted": "Reached Contacted",
+        "in_discussion": "Reached In discussion",
+        "won": "Won"
+      },
+      "funnelNote": "{{lost}} lost, {{open}} still open.",
+      "columns": {
+        "created": "New",
+        "contacted": "Contacted",
+        "in_discussion": "In discussion",
+        "won": "Won",
+        "lost": "Lost",
+        "open": "Still open"
+      },
+      "moves": "Status changes in the period",
+      "noMoves": "No status changes in the period.",
+      "unassigned": "Unassigned",
+      "note": "Leads added in the period (office time), counted for the person they're assigned to, and how far they got by now. Win rate: won out of those closed (won or lost). Conversion: won out of all new leads."
+    }
   }
 }

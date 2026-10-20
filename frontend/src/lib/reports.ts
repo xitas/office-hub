@@ -2,8 +2,10 @@ import { useQuery } from '@tanstack/react-query'
 import { api } from './api'
 import { addDays, weekStartOf } from './bookings'
 
-export type ReportKey = 'task-completion' | 'overdue-tasks'
-export const REPORTS: ReportKey[] = ['task-completion', 'overdue-tasks']
+export type ReportKey = 'task-completion' | 'overdue-tasks' | 'client-interactions' | 'lead-pipeline'
+export const REPORTS: ReportKey[] = ['task-completion', 'overdue-tasks', 'client-interactions', 'lead-pipeline']
+/** Reports that cover a period (the others are "as of today"). */
+export const PERIOD_REPORTS: ReportKey[] = ['task-completion', 'client-interactions', 'lead-pipeline']
 
 export type PeriodPreset = 'this_week' | 'last_week' | 'this_month' | 'last_month' | 'this_quarter' | 'last_quarter' | 'this_year' | 'custom'
 export const PERIOD_PRESETS: PeriodPreset[] = ['this_week', 'last_week', 'this_month', 'last_month', 'this_quarter', 'last_quarter', 'this_year', 'custom']
@@ -98,6 +100,8 @@ export interface ReportFilters {
   to?: string
   department?: string
   person?: string
+  /** Client interactions: by office week or month. */
+  by?: string
 }
 
 const clean = (f: ReportFilters) => Object.fromEntries(Object.entries(f).filter(([, v]) => v))
@@ -126,4 +130,66 @@ export function useReportPeople(department?: string) {
   })
 }
 
+/** A 0–1 fraction as a whole percentage, rounded half up (as in the exports); "—" when there's nothing to divide. */
+export const pct = (v: number | null) => (v === null ? '—' : `${Math.round(v * 100)}%`)
+
 export const exportParams = (filters: ReportFilters, file: 'pdf' | 'xlsx') => ({ ...clean(filters), file })
+
+// ================================================================ client reports (slice 2)
+
+export type InteractionKind = 'call' | 'meeting' | 'email' | 'whatsapp' | 'visit'
+
+export interface InteractionBucket {
+  from: string
+  to: string
+  counts: Record<InteractionKind, number>
+  total: number
+}
+
+export interface InteractionsReport {
+  from: string
+  to: string
+  by: 'week' | 'month'
+  kinds: InteractionKind[]
+  buckets: InteractionBucket[]
+  people: { id: number; name: string; department: string | null; counts: Record<InteractionKind, number>; total: number; clients: number }[]
+  totals: { counts: Record<InteractionKind, number>; total: number; clients: number }
+}
+
+export interface FunnelRow {
+  id?: number | null
+  name?: string | null
+  department?: string | null
+  created: number
+  contacted: number
+  in_discussion: number
+  won: number
+  lost: number
+  open: number
+  win_rate: number | null
+  conversion: number | null
+}
+
+export interface PipelineReport {
+  from: string
+  to: string
+  funnel: FunnelRow
+  people: FunnelRow[]
+  moves: { from: string; to: string; count: number }[]
+  won_in_period: number
+  average_days_to_win: number | null
+}
+
+export function useInteractionsReport(filters: ReportFilters & { by?: string }) {
+  return useQuery({
+    queryKey: ['reports', 'client-interactions', clean(filters)],
+    queryFn: async () => (await api.get<InteractionsReport>('/reports/client-interactions/', { params: clean(filters) })).data,
+  })
+}
+
+export function usePipelineReport(filters: ReportFilters) {
+  return useQuery({
+    queryKey: ['reports', 'lead-pipeline', clean(filters)],
+    queryFn: async () => (await api.get<PipelineReport>('/reports/lead-pipeline/', { params: clean(filters) })).data,
+  })
+}

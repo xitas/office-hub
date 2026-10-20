@@ -128,3 +128,78 @@ def overdue_document(data, scope, user) -> Document:
         tables=[people, tasks],
         rtl=_rtl(),
     )
+
+
+# ================================================================ client reports
+
+
+def _kind_label(kind) -> str:
+    from apps.timeline import registry
+
+    entry_type = registry.get_type(kind)
+    return str(entry_type.label) if entry_type else kind
+
+
+def bucket_label(row, by) -> str:
+    """ "October 2026" for a month, "05/10/2026 – 11/10/2026" for a week (clipped to the period)."""
+    from django.utils.dates import MONTHS as MONTH_NAMES
+
+    if by == "month":
+        return f"{MONTH_NAMES[row['from'].month]} {row['from'].year}"
+    return f"{fmt_date(row['from'])} – {fmt_date(row['to'])}"
+
+
+def interactions_document(data, scope, user) -> Document:
+    kinds = data["kinds"]
+    kind_cols = [Column(_kind_label(k), "int") for k in kinds]
+    period = Table(
+        _("By month") if data["by"] == "month" else _("By week"),
+        [Column(_("Month") if data["by"] == "month" else _("Week"), "text", 2.2), *kind_cols, Column(_("Total"), "int")],
+        [[bucket_label(r, data["by"]), *[r["counts"][k] for k in kinds], r["total"]] for r in data["buckets"]]
+        + [[_("Total"), *[data["totals"]["counts"][k] for k in kinds], data["totals"]["total"]]],
+    )
+    people = Table(
+        _("By person"),
+        [Column(_("Person"), "text", 2.2), Column(_("Department"), "text", 1.6), *kind_cols, Column(_("Total"), "int"),
+         Column(_("Clients reached"), "int", 1.2)],
+        [[p["name"], p["department"] or "", *[p["counts"][k] for k in kinds], p["total"], p["clients"]] for p in data["people"]],
+        note=_("Calls, meetings, emails, WhatsApp messages and visit reports logged on contacts and companies; notes are internal and not counted."),
+    )
+    return Document(
+        title=_("Client interactions"),
+        lines=_header(user, scope, _("%(first)s – %(last)s") % {"first": fmt_date(data["from"]), "last": fmt_date(data["to"])}),
+        tables=[period, people],
+        rtl=_rtl(),
+    )
+
+
+def pipeline_document(data, scope, user) -> Document:
+    from apps.contacts.models import Contact
+
+    statuses = dict(Contact.Status.choices)
+
+    def cols(first):
+        return [first, Column(_("New leads"), "int"), Column(_("Reached Contacted"), "int", 1.2), Column(_("Reached In discussion"), "int", 1.3),
+                Column(_("Won"), "int"), Column(_("Lost"), "int"), Column(_("Still open"), "int"), Column(_("Win rate"), "pct"),
+                Column(_("Conversion"), "pct")]
+
+    def cells(r):
+        return [r["created"], r["contacted"], r["in_discussion"], r["won"], r["lost"], r["open"], r["win_rate"], r["conversion"]]
+
+    f = data["funnel"]
+    days = data["average_days_to_win"]
+    return Document(
+        title=_("Lead pipeline"),
+        lines=_header(user, scope, _("Leads added %(first)s – %(last)s") % {"first": fmt_date(data["from"]), "last": fmt_date(data["to"])}),
+        tables=[
+            Table(_("Leads added in the period"), cols(Column("", "text", 1.6)), [[_("All"), *cells(f)]],
+                  note=_("Win rate: won out of those closed (won or lost). Conversion: won out of all leads added.")),
+            Table(_("By person"), cols(Column(_("Person"), "text", 2.2)),
+                  [[p["name"] or _("Unassigned"), *cells(p)] for p in data["people"]]),
+            Table(_("Status changes in the period"), [Column(_("From"), "text", 1.5), Column(_("To"), "text", 1.5), Column(_("Changes"), "int")],
+                  [[str(statuses.get(m["from"], m["from"])), str(statuses.get(m["to"], m["to"])), m["count"]] for m in data["moves"]],
+                  note=_("Won in the period: %(n)s; on average %(days)s days after the lead was added.") % {
+                      "n": data["won_in_period"], "days": "—" if days is None else f"{days:g}"}),
+        ],
+        rtl=_rtl(),
+    )

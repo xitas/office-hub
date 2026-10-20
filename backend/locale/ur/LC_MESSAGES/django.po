@@ -2587,3 +2587,84 @@ msgstr "کاموں کی تکمیل کی رپورٹ ایکسپورٹ کی"
 
 msgid "Exported the overdue tasks report"
 msgstr "تاخیر شدہ کاموں کی رپورٹ ایکسپورٹ کی"
+
+msgid "Group by week or month."
+msgstr "ہفتے یا مہینے کے لحاظ سے گروپ کریں۔"
+
+msgid "By month"
+msgstr "مہینے کے لحاظ سے"
+
+msgid "By week"
+msgstr "ہفتے کے لحاظ سے"
+
+msgid "Month"
+msgstr "مہینہ"
+
+msgid "Week"
+msgstr "ہفتہ"
+
+msgid "Total"
+msgstr "کل"
+
+msgid "Clients reached"
+msgstr "کلائنٹس سے رابطہ"
+
+msgid "Calls, meetings, emails, WhatsApp messages and visit reports logged on contacts and companies; notes are internal and not counted."
+msgstr "رابطوں اور کمپنیوں پر درج کالز، میٹنگز، ای میلز، واٹس ایپ پیغامات اور وزٹ رپورٹس؛ نوٹس اندرونی ہیں اور شمار نہیں ہوتے۔"
+
+msgid "Client interactions"
+msgstr "کلائنٹس سے رابطے"
+
+msgid "%(first)s – %(last)s"
+msgstr "%(first)s – %(last)s"
+
+msgid "New leads"
+msgstr "نئی لیڈز"
+
+msgid "Reached Contacted"
+msgstr "رابطہ ہوا تک پہنچیں"
+
+msgid "Reached In discussion"
+msgstr "بات چیت تک پہنچیں"
+
+msgid "Win rate"
+msgstr "کامیابی کی شرح"
+
+msgid "Conversion"
+msgstr "تبدیلی کی شرح"
+
+msgid "Lead pipeline"
+msgstr "لیڈ پائپ لائن"
+
+msgid "Leads added %(first)s – %(last)s"
+msgstr "%(first)s – %(last)s کے دوران شامل لیڈز"
+
+msgid "Leads added in the period"
+msgstr "مدت میں شامل لیڈز"
+
+msgid "Win rate: won out of those closed (won or lost). Conversion: won out of all leads added."
+msgstr "کامیابی کی شرح: بند ہونے والی (کامیاب یا ناکام) میں سے کامیاب۔ تبدیلی کی شرح: تمام شامل لیڈز میں سے کامیاب۔"
+
+msgid "Unassigned"
+msgstr "کسی کے ذمے نہیں"
+
+msgid "Status changes in the period"
+msgstr "مدت میں اسٹیٹس کی تبدیلیاں"
+
+msgid "From"
+msgstr "سے"
+
+msgid "To"
+msgstr "تک"
+
+msgid "Changes"
+msgstr "تبدیلیاں"
+
+msgid "Won in the period: %(n)s; on average %(days)s days after the lead was added."
+msgstr "مدت میں کامیاب: %(n)s؛ لیڈ شامل ہونے کے اوسطاً %(days)s دن بعد۔"
+
+msgid "Exported the client interactions report"
+msgstr "کلائنٹس سے رابطوں کی رپورٹ ایکسپورٹ کی"
+
+msgid "Exported the lead pipeline report"
+msgstr "لیڈ پائپ لائن کی رپورٹ ایکسپورٹ کی"
