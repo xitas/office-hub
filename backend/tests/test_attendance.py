@@ -161,6 +161,36 @@ def test_reminders_once_and_only_on_working_days(people):
     assert services.send_reminders(at(tue + timedelta(days=1), 11)) == {"in": 0, "out": 0}
 
 
+def test_never_late_on_days_off_or_holidays(client_for, people):
+    """Coming in on a day that isn't a working day (the Organization's working week) or on an office holiday is never
+    late: not in the day statuses, the month and team views, nor their totals; and nobody is reminded on those days."""
+    org = OrganizationSettings.get_solo()
+    org.working_days = [0, 1, 2, 3]  # Monday to Thursday: Friday is a day off
+    org.save()
+    mon = a_weekday(weekday=0)
+    tue, wed, fri, sat = (mon + timedelta(days=n) for n in (1, 2, 4, 5))
+    start, end = day_bounds(wed, wed)
+    Event.objects.create(kind="holiday", title="Holiday", all_day=True, start=start, end=end, organizer=people["admin"])
+    staff = people["staff"]
+    for day in (tue, wed, fri, sat):
+        record(staff, day, at(day, 11), mode="remote" if day == fri else "office")
+    infos = status.compute([staff.pk], mon, sat)
+    assert [(infos[(staff.pk, d)]["status"], infos[(staff.pk, d)]["late"]) for d in (tue, wed, fri, sat)] == [
+        ("present", True), ("present", False), ("remote", False), ("present", False)]
+    manager = client_for(people["manager"])
+    months = sorted({f"{d:%Y-%m}" for d in (tue, sat)})  # the week may run into the next month
+    mine = [d for m in months for d in client_for(staff).get("/api/v1/attendance/month/", {"month": m}).data["days"]]
+    assert {d["date"] for d in mine if d["late"]} == {tue.isoformat()}
+    team = [r for m in months for r in manager.get("/api/v1/attendance/team-month/", {"month": m}).data["rows"] if r["user"] == staff.pk]
+    assert sum(r["totals"]["late"] for r in team) == 1
+    assert manager.get("/api/v1/attendance/team/", {"date": fri.isoformat()}).data["counts"]["late"] == 0
+    # Reminders: none on the day off or the holiday, also for someone who checked in and not out.
+    for day in (wed, fri):
+        assert services.send_reminders(at(day, 11)) == {"in": 0, "out": 0}
+        assert services.send_reminders(at(day, 19)) == {"in": 0, "out": 0}
+    assert not AttendanceReminder.objects.exists()
+
+
 def test_reminders_follow_preferences(people, django_capture_on_commit_callbacks):
     tue = a_weekday()
     NotificationPreference.objects.create(user=people["staff"], type="attendance", in_app=True, email=True)

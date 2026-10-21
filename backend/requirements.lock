@@ -70,6 +70,7 @@ PyJWT==2.15.1
 pyOpenSSL==26.4.0
 PyOTP==2.10.0
 pyparsing==3.3.3
+pypdf==6.21.2
 pytest==9.1.1
 pytest-asyncio==1.4.0
 pytest-django==4.14.0

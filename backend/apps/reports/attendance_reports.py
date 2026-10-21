@@ -4,7 +4,7 @@ and absent, per person, department and overall; leave taken by type, and the yea
 Days follow the attendance page's rules (apps.attendance.status), counted over working days (the office's working
 week, office holidays left out) up to today, from the day each person joined:
 - in the office / field / remote: days checked in, in that mode (any day, also days off); late: office and remote
-  check-ins after the office opened plus the grace minutes;
+  check-ins after the office opened plus the grace minutes, on working days only (as on the attendance page);
 - on leave: working days with approved leave and no check-in (someone on half-day leave who checked in is present);
 - absent: past working days with no check-in and no leave (today isn't absent yet), counted from the day the person
   joined (or first checked in, if earlier);
@@ -81,7 +81,7 @@ def summary(user, scope, first: date, last: date) -> dict:
             office=Count("pk", filter=Q(mode=Attendance.Mode.OFFICE)),
             field=Count("pk", filter=Q(mode=Attendance.Mode.FIELD)),
             remote=Count("pk", filter=Q(mode=Attendance.Mode.REMOTE)),
-            late=Count("pk", filter=Q(late, ~Q(mode=Attendance.Mode.FIELD))),
+            late=Count("pk", filter=Q(late, workday, ~Q(mode=Attendance.Mode.FIELD))),
             attended=Count("pk", filter=workday),
             today=Count("pk", filter=Q(date=today)),
         ).order_by()

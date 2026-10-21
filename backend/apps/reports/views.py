@@ -1,5 +1,8 @@
 """Reports API: managers see their department, admins everyone (or one department). Exports (PDF, Excel) need the
 reports export permission and are written to the audit log, like the CSV exports."""
+import re
+from urllib.parse import quote
+
 from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -31,6 +34,15 @@ def _people(scope) -> list[dict]:
     return [{"id": p.pk, "name": p.full_name, "department": p.department_id} for p in scope.people]
 
 
+def local_name(title: str, stem: str) -> str:
+    """The file's name in the reader's language: the report's title and its dates ("Field visits 2026-10-01 – 2026-10-31").
+    Sent as filename* (RFC 6266), with the plain ASCII stem as the fallback filename."""
+    dates = re.search(r"(\d{4}-\d{2}-\d{2})(?:-(\d{4}-\d{2}-\d{2}))?$", stem)
+    if not dates:
+        return title
+    return f"{title} {dates[1]}" + (f" – {dates[2]}" if dates[2] else "")
+
+
 def _export(request, doc, stem, kind, rows, description):
     fmt = request.query_params.get("file")  # (DRF keeps ?format= for choosing a renderer)
     if fmt not in FORMATS:
@@ -39,7 +51,8 @@ def _export(request, doc, stem, kind, rows, description):
     body = make(doc)
     _log_export(request, kind, rows, description)  # the format and filters are in the logged query parameters
     response = HttpResponse(body, content_type=content_type)
-    response["Content-Disposition"] = f'attachment; filename="{stem}.{fmt}"'
+    local = quote(f"{local_name(doc.title, stem)}.{fmt}")
+    response["Content-Disposition"] = f"attachment; filename=\"{stem}.{fmt}\"; filename*=UTF-8''{local}"
     response["X-Content-Type-Options"] = "nosniff"
     return response
 

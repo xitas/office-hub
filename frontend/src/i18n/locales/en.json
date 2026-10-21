@@ -1746,7 +1746,7 @@
     "date": "Date",
     "allDepartments": "All departments",
     "person": "Person",
-    "lateHint": "A check-in more than {{minutes}} minutes after the office opens counts as late. Field visits are never late.",
+    "lateHint": "A check-in more than {{minutes}} minutes after the office opens counts as late. Field visits, days off and office holidays are never late.",
     "correctHint": "Use the pencil to fix a forgotten check-in or check-out. The person is notified.",
     "correctFor": "Correct attendance for {{name}}",
     "correctTitle": "{{name}}, {{date}}",

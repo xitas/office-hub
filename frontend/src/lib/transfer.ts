@@ -75,7 +75,16 @@ export const IMPORT_LIMITS = { megabytes: 5, rows: 5000 }
 
 export const importPath = (kind: ImportKind, id?: number) => `/${kind}/import${id ? `/${id}` : ''}`
 
+/** The server's file name: the UTF-8 one (filename*, e.g. a report's title in Urdu) when given, else the plain one. */
 function filenameFrom(disposition: string | undefined, fallback: string) {
+  const utf8 = /filename\*=UTF-8''([^;]+)/i.exec(disposition ?? '')
+  if (utf8) {
+    try {
+      return decodeURIComponent(utf8[1])
+    } catch {
+      // a malformed name: fall back to the plain one
+    }
+  }
   const match = /filename="?([^";]+)"?/i.exec(disposition ?? '')
   return match?.[1] ?? fallback
 }

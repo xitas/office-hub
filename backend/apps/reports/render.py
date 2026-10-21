@@ -15,6 +15,7 @@ from pathlib import Path
 
 from django.utils.translation import gettext as _
 from fpdf import FPDF
+from fpdf.enums import PDFResourceType
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
@@ -110,6 +111,28 @@ def _draw_table(pdf: _PDF, columns, rows: list[list[str]], rtl: bool):
             widths_of[key] = pdf.get_string_width(text)
         return widths_of[key]
 
+    shaped_runs: dict = {}  # (text, width, align, style) → (x, y, PDF operators), see drawn()
+
+    def drawn(text: str, width: float, align: str, style: str, x: float, top: float):
+        """A shaped cell. The same text in the same column (headers, statuses, priorities, leave types…) is shaped by
+        HarfBuzz once: later copies replay its PDF operators moved into place (q, cm, Q), with its font set first and
+        both fonts (a run may fall back to the other) listed in the page's resources."""
+        key = (text, width, align, style)
+        run = shaped_runs.get(key)
+        if run:
+            x0, y0, ops = run
+            font = pdf.current_font
+            for f in pdf.fonts.values():
+                pdf._resource_catalog.add(PDFResourceType.FONT, f.i, pdf.page)
+            pdf._out(f"q 1 0 0 1 {(x - x0) * pdf.k:.2f} {-(top - y0) * pdf.k:.2f} cm BT /F{font.i} {pdf.font_size_pt:.2f} Tf ET".encode("latin1")
+                     + b" " + ops + b" Q")
+            return
+        contents = pdf.pages[pdf.page].contents
+        start = len(contents)
+        pdf.set_xy(x, top)
+        pdf.cell(width, line_h, text, align=align)
+        shaped_runs[key] = (x, top, bytes(contents[start:]).strip().replace(b"\n", b" "))
+
     def draw_row(cells, fill, bold, header=False):
         style = "B" if bold else ""
         # Text with no right-to-left letters (numbers, Latin names) needs neither shaping, the bidi algorithm nor the
@@ -144,8 +167,7 @@ def _draw_table(pdf: _PDF, columns, rows: list[list[str]], rtl: bool):
                 for n, line in enumerate(lines):
                     top = y + 0.5 + n * line_h
                     if shaped:
-                        pdf.set_xy(left + PAD, top)
-                        pdf.cell(width - 2 * PAD, line_h, line, align=align)
+                        drawn(line, width - 2 * PAD, align, style, left + PAD, top)
                     elif line:
                         # where cell() would put it: the cell margin inside the edges, the baseline below the middle
                         inner, margin = width - 2 * PAD, pdf.c_margin

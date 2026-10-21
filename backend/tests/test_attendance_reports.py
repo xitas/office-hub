@@ -78,7 +78,8 @@ def test_attendance_and_leave_summary(client_for, people, types, make_user):
     check_in(s, day(1), 9, 30)  # late (after 9:15)
     check_in(s, day(3), 10, mode="remote")  # late
     check_in(s, day(4), 11, mode="field")  # field visits are never late
-    check_in(s, day(5), 10)  # a Saturday: in the office (and late, as on the attendance page), not a working day
+    check_in(s, day(2), 10)  # the holiday: in the office, never late, not a working day
+    check_in(s, day(5), 10)  # a Saturday: the same
     leave(c, types["annual"], day(-4), day(1), 4)  # Thursday before to Tuesday: 2 days in the period
     leave(c, types["casual"], day(3), day(3), Decimal("0.5"), half_day="morning")
     check_in(c, day(3), 13)  # half-day leave and checked in: present (and late)
@@ -92,7 +93,7 @@ def test_attendance_and_leave_summary(client_for, people, types, make_user):
     rows = {p["name"]: p for p in res.data["people"]}
     assert set(rows) == {"Manager", "Staff", "Sara Colleague", "New Person"}
     pick = lambda r: tuple(r[k] for k in ("working_days", "office", "field", "remote", "late", "leave", "absent", "attended"))  # noqa: E731
-    assert pick(rows["Staff"]) == (4, 3, 1, 1, 3, 0, 0, 4) and rows["Staff"]["rate"] == 1
+    assert pick(rows["Staff"]) == (4, 4, 1, 1, 2, 0, 0, 4) and rows["Staff"]["rate"] == 1
     assert pick(rows["Sara Colleague"]) == (4, 1, 0, 0, 1, 2, 1, 1) and rows["Sara Colleague"]["rate"] == 0.5
     assert pick(rows["New Person"])[0::6] == (2, 2) and rows["New Person"]["rate"] == 0
     assert res.data["period_working_days"] == 4 and res.data["holidays"] == 1

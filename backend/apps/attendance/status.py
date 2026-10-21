@@ -3,7 +3,8 @@ holidays. Three queries for any number of people and days (records, leave, holid
 
 Statuses:
 - present / field / remote: checked in (in the office, on a field visit, working from elsewhere); `late`
-  when the check-in came more than the grace minutes after the office opened (office and remote only);
+  when the check-in came more than the grace minutes after the office opened (office and remote only, and only on
+  working days that aren't office holidays: coming in on a day off is never late);
 - leave: approved leave (a half day is marked; someone on half-day leave who checked in is present);
 - off: not a working day, or an office holiday;
 - not_in: today, a working day, no check-in yet;
@@ -52,6 +53,7 @@ def compute(user_ids, first: date, last: date, *, now=None) -> dict[tuple[int, d
     day = first
     while day <= last:
         threshold = late_after(day)
+        workday = day.weekday() in working and day not in holidays
         for uid in user_ids:
             rec, lv = records.get((uid, day)), leave.get((uid, day))
             info = {
@@ -67,7 +69,7 @@ def compute(user_ids, first: date, last: date, *, now=None) -> dict[tuple[int, d
             }
             if rec and rec.check_in:
                 info["status"] = MODE_STATUS.get(rec.mode, PRESENT)
-                info["late"] = rec.mode != Attendance.Mode.FIELD and rec.check_in > threshold
+                info["late"] = workday and rec.mode != Attendance.Mode.FIELD and rec.check_in > threshold
             elif lv:
                 info["status"] = LEAVE
             elif day.weekday() not in working or day in holidays:
