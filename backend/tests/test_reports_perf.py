@@ -165,3 +165,72 @@ def test_client_reports_with_a_year_of_data(client_for):
             size = f", {len(res.content) // 1024} KB" if "export" in url else ""
             print(f"  {who:<13} {name:<26} {took * 1000:7.0f} ms  {len(ctx):2d} queries{size}")
             assert took < 5, f"{name} took {took:.1f}s"
+
+
+def build_field(users):
+    """A year of field work for the same 50 people: about 3 visits a week each (most done, with the person's
+    check-in and usually a report) and about 2 errands a week each in every state."""
+    from apps.errands.models import Errand
+    from apps.visits.models import Visit, VisitCheck, VisitReport
+
+    rnd = random.Random(13)
+    tz, today = office_tz(), office_today()
+    visits, errands = [], []
+    for u in users:
+        for w in range(WEEKS):
+            for k in range(3):
+                day = today - timedelta(days=364) + timedelta(days=w * 7 + rnd.randint(0, 6))
+                start = datetime.combine(day, dtime(rnd.randint(9, 16)), tzinfo=tz)
+                past = day < today
+                status = rnd.choice(["done"] * 7 + ["cancelled", "planned"]) if past else "planned"
+                visits.append(Visit(title=f"V {u.pk}-{w}-{k}", place_name="Site", purpose=rnd.choice(["meeting", "delivery", "site", "collection", "support", "other"]),
+                                    assigned_to=u, status=status, start=start, end=start + timedelta(hours=1), created_by=u))
+            for k in range(2):
+                day = today - timedelta(days=364) + timedelta(days=w * 7 + rnd.randint(0, 6))
+                due = datetime.combine(day, dtime(rnd.randint(9, 17)), tzinfo=tz)
+                past = day < today
+                status = rnd.choice(["done"] * 6 + ["failed", "cancelled", "assigned"]) if past else rnd.choice(["assigned", "open"])
+                errands.append(Errand(title=f"E {u.pk}-{w}-{k}", kind=rnd.choice(["courier", "pickup", "delivery", "bank", "other"]), place_name="Bank",
+                                      assigned_to=None if status == "open" else u, requested_by=u, department_id=u.department_id, status=status,
+                                      due_at=due, finished_at=due + timedelta(hours=rnd.randint(-3, 4)) if status in ("done", "failed") else None))
+    visits = Visit.objects.bulk_create(visits, batch_size=2000)
+    Errand.objects.bulk_create(errands, batch_size=2000)
+    checks = [VisitCheck(visit_id=v.pk, user_id=v.assigned_to_id, checked_in_at=v.start, in_location="declined") for v in visits
+              if v.status == "done" and rnd.random() < 0.85]
+    VisitCheck.objects.bulk_create(checks, batch_size=5000)
+    reports = [VisitReport(visit_id=v.pk, outcome=rnd.choice(["good", "follow_up", "no_result", "not_met"]), written_by_id=v.assigned_to_id)
+               for v in visits if v.status == "done" and rnd.random() < 0.7]
+    VisitReport.objects.bulk_create(reports, batch_size=5000)
+    return len(visits), len(checks), len(reports), len(errands)
+
+
+def test_field_reports_with_a_year_of_data(client_for):
+    admin, manager, _n, _m = build()
+    users = list(User.objects.filter(email__startswith="perf", role__in=["manager", "staff"]).order_by("pk"))
+    n_visits, n_checks, n_reports, n_errands = build_field(users)
+    today = office_today()
+    year = {"from": (today - timedelta(days=364)).isoformat(), "to": today.isoformat()}
+    month = {"from": today.replace(day=1).isoformat(), "to": today.isoformat()}
+    urls = {
+        "field visits, a year": ("/api/v1/reports/field-visits/", year),
+        "field visits, this month": ("/api/v1/reports/field-visits/", month),
+        "errands, a year": ("/api/v1/reports/errands/", year),
+        "field visits PDF": ("/api/v1/reports/field-visits/export/", {**year, "file": "pdf"}),
+        "field visits Excel": ("/api/v1/reports/field-visits/export/", {**year, "file": "xlsx"}),
+        "errands PDF": ("/api/v1/reports/errands/export/", {**year, "file": "pdf"}),
+        "errands Excel": ("/api/v1/reports/errands/export/", {**year, "file": "xlsx"}),
+    }
+    print(f"\n{n_visits} visits, {n_checks} check-ins, {n_reports} reports, {n_errands} errands, {PEOPLE} people ({connection.vendor})")
+    for who, user, lang in (("admin", admin, "en"), ("manager", manager, "en"), ("manager", manager, "ur")):
+        who = f"{who} ({lang})"
+        client = client_for(user)
+        client.get(urls["errands, a year"][0], year)  # warm up
+        for name, (url, params) in urls.items():
+            with CaptureQueriesContext(connection) as ctx:
+                start = time.perf_counter()
+                res = client.get(url, params, HTTP_ACCEPT_LANGUAGE=lang)
+                took = time.perf_counter() - start
+            assert res.status_code == 200, (name, res.status_code)
+            size = f", {len(res.content) // 1024} KB" if "export" in url else ""
+            print(f"  {who:<13} {name:<26} {took * 1000:7.0f} ms  {len(ctx):2d} queries{size}")
+            assert took < 5, f"{name} took {took:.1f}s"

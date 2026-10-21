@@ -2668,3 +2668,75 @@ msgstr "کلائنٹس سے رابطوں کی رپورٹ ایکسپورٹ کی"
 
 msgid "Exported the lead pipeline report"
 msgstr "لیڈ پائپ لائن کی رپورٹ ایکسپورٹ کی"
+
+msgid "Scheduled"
+msgstr "طے شدہ"
+
+msgid "Not closed"
+msgstr "بند نہیں ہوئے"
+
+msgid "Upcoming"
+msgstr "آنے والے"
+
+msgid "With a report"
+msgstr "رپورٹ کے ساتھ"
+
+msgid "Field visits"
+msgstr "فیلڈ وزٹ"
+
+msgid "Visits %(first)s – %(last)s"
+msgstr "%(first)s – %(last)s کے وزٹ"
+
+msgid "Completion rate: done out of the visits whose time has come (done, cancelled or not closed)."
+msgstr "تکمیل کی شرح: جن وزٹس کا وقت آ چکا (مکمل، منسوخ یا بند نہیں ہوئے) ان میں سے مکمل۔"
+
+msgid "By purpose"
+msgstr "مقصد کے لحاظ سے"
+
+msgid "Purpose"
+msgstr "مقصد"
+
+msgid "Report outcomes"
+msgstr "رپورٹس کے نتائج"
+
+msgid "Outcome"
+msgstr "نتیجہ"
+
+msgid "Reports"
+msgstr "رپورٹس"
+
+msgid "Share"
+msgstr "حصہ"
+
+msgid "Asked for"
+msgstr "کہے گئے"
+
+msgid "Success rate"
+msgstr "کامیابی کی شرح"
+
+msgid "Done on time"
+msgstr "وقت پر مکمل"
+
+msgid "Errands"
+msgstr "کام"
+
+msgid "Errands due %(first)s – %(last)s"
+msgstr "%(first)s – %(last)s تک کے کام"
+
+msgid "Success rate: done out of done or not done. Done on time: finished by the time it was due."
+msgstr "کامیابی کی شرح: مکمل یا نہ ہو سکنے والوں میں سے مکمل۔ وقت پر مکمل: مقررہ وقت تک مکمل۔"
+
+msgid "Nobody yet"
+msgstr "ابھی کوئی نہیں"
+
+msgid "By kind"
+msgstr "قسم کے لحاظ سے"
+
+msgid "Kind"
+msgstr "قسم"
+
+msgid "Exported the field visits report"
+msgstr "فیلڈ وزٹس کی رپورٹ ایکسپورٹ کی"
+
+msgid "Exported the errands report"
+msgstr "کاموں کی رپورٹ ایکسپورٹ کی"

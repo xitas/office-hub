@@ -172,3 +172,43 @@ class PipelineExportView(APIView):
         doc = documents.pipeline_document(data, scope, request.user)
         return _export(request, doc, f"lead-pipeline-{first:%Y-%m-%d}-{last:%Y-%m-%d}", "lead pipeline report", data["funnel"]["created"],
                        N_("Exported the lead pipeline report"))
+
+
+def _period_report(name, make, document, stem, kind, rows, description):
+    """A view and an export view for a report over a period."""
+
+    class ReportView(APIView):
+        permission_classes = [module_permission("reports", "view")]
+
+        @extend_schema(parameters=[*PERIOD_PARAMS, *SCOPE_PARAMS], responses={200: dict})
+        def get(self, request):
+            first, last = period_for(request.query_params)
+            return Response(make(request.user, scope_for(request.user, request.query_params), first, last))
+
+    class ExportView(APIView):
+        permission_classes = [module_permission("reports", "export")]
+
+        @extend_schema(parameters=[*PERIOD_PARAMS, *SCOPE_PARAMS, *FORMAT_PARAM], responses={(200, "application/octet-stream"): bytes})
+        def get(self, request):
+            first, last = period_for(request.query_params)
+            scope = scope_for(request.user, request.query_params)
+            data = make(request.user, scope, first, last)
+            return _export(request, document(data, scope, request.user), f"{stem}-{first:%Y-%m-%d}-{last:%Y-%m-%d}", kind, rows(data), description)
+
+    ReportView.__name__ = ReportView.__qualname__ = f"{name}View"
+    ExportView.__name__ = ExportView.__qualname__ = f"{name}ExportView"
+    return ReportView, ExportView
+
+
+def _field():
+    from . import field_reports
+
+    return field_reports
+
+
+FieldVisitsView, FieldVisitsExportView = _period_report(
+    "FieldVisits", lambda *a: _field().visits(*a), documents.field_visits_document, "field-visits", "field visits report",
+    lambda d: d["totals"]["scheduled"], N_("Exported the field visits report"))
+ErrandsView, ErrandsExportView = _period_report(
+    "Errands", lambda *a: _field().errands(*a), documents.errands_document, "errands", "errands report",
+    lambda d: d["totals"]["asked"], N_("Exported the errands report"))

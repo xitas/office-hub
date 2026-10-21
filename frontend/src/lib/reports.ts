@@ -2,10 +2,10 @@ import { useQuery } from '@tanstack/react-query'
 import { api } from './api'
 import { addDays, weekStartOf } from './bookings'
 
-export type ReportKey = 'task-completion' | 'overdue-tasks' | 'client-interactions' | 'lead-pipeline'
-export const REPORTS: ReportKey[] = ['task-completion', 'overdue-tasks', 'client-interactions', 'lead-pipeline']
+export type ReportKey = 'task-completion' | 'overdue-tasks' | 'client-interactions' | 'lead-pipeline' | 'field-visits' | 'errands'
+export const REPORTS: ReportKey[] = ['task-completion', 'overdue-tasks', 'client-interactions', 'lead-pipeline', 'field-visits', 'errands']
 /** Reports that cover a period (the others are "as of today"). */
-export const PERIOD_REPORTS: ReportKey[] = ['task-completion', 'client-interactions', 'lead-pipeline']
+export const PERIOD_REPORTS: ReportKey[] = ['task-completion', 'client-interactions', 'lead-pipeline', 'field-visits', 'errands']
 
 export type PeriodPreset = 'this_week' | 'last_week' | 'this_month' | 'last_month' | 'this_quarter' | 'last_quarter' | 'this_year' | 'custom'
 export const PERIOD_PRESETS: PeriodPreset[] = ['this_week', 'last_week', 'this_month', 'last_month', 'this_quarter', 'last_quarter', 'this_year', 'custom']
@@ -191,5 +191,73 @@ export function usePipelineReport(filters: ReportFilters) {
   return useQuery({
     queryKey: ['reports', 'lead-pipeline', clean(filters)],
     queryFn: async () => (await api.get<PipelineReport>('/reports/lead-pipeline/', { params: clean(filters) })).data,
+  })
+}
+
+// ================================================================ field reports (slice 3)
+
+export type VisitPurposeKey = 'meeting' | 'delivery' | 'site' | 'collection' | 'support' | 'other'
+export type VisitOutcomeKey = 'good' | 'follow_up' | 'no_result' | 'not_met'
+
+export interface VisitRow {
+  id?: number | null
+  name?: string | null
+  purpose?: VisitPurposeKey
+  scheduled: number
+  done: number
+  cancelled: number
+  not_closed: number
+  upcoming: number
+  checked_in: number
+  reported: number
+  /** Done out of those whose time has come (done, cancelled, not closed). */
+  completion: number | null
+  check_in_rate: number | null
+  report_rate: number | null
+}
+
+export interface FieldVisitsReport {
+  from: string
+  to: string
+  people: VisitRow[]
+  purposes: VisitRow[]
+  outcomes: { outcome: VisitOutcomeKey; count: number; share: number | null }[]
+  totals: VisitRow
+}
+
+export interface ErrandRow {
+  id?: number | null
+  name?: string | null
+  kind?: string
+  asked: number
+  done: number
+  failed: number
+  cancelled: number
+  open: number
+  overdue: number
+  on_time: number
+  success: number | null
+  on_time_rate: number | null
+}
+
+export interface ErrandsReport {
+  from: string
+  to: string
+  people: ErrandRow[]
+  kinds: ErrandRow[]
+  totals: ErrandRow
+}
+
+export function useFieldVisitsReport(filters: ReportFilters) {
+  return useQuery({
+    queryKey: ['reports', 'field-visits', clean(filters)],
+    queryFn: async () => (await api.get<FieldVisitsReport>('/reports/field-visits/', { params: clean(filters) })).data,
+  })
+}
+
+export function useErrandsReport(filters: ReportFilters) {
+  return useQuery({
+    queryKey: ['reports', 'errands', clean(filters)],
+    queryFn: async () => (await api.get<ErrandsReport>('/reports/errands/', { params: clean(filters) })).data,
   })
 }

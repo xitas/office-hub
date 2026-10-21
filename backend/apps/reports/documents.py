@@ -203,3 +203,61 @@ def pipeline_document(data, scope, user) -> Document:
         ],
         rtl=_rtl(),
     )
+
+
+# ================================================================ field reports
+
+
+def field_visits_document(data, scope, user) -> Document:
+    from apps.visits.models import Visit, VisitReport
+
+    purposes = dict(Visit.Purpose.choices)
+    outcomes = dict(VisitReport.Outcome.choices)
+
+    def cols(first):
+        return [first, Column(_("Scheduled"), "int"), Column(_("Done"), "int"), Column(_("Cancelled"), "int"), Column(_("Not closed"), "int"),
+                Column(_("Upcoming"), "int"), Column(_("Completion rate"), "pct", 1.2), Column(_("Checked in"), "int"),
+                Column(_("With a report"), "int", 1.1)]
+
+    def cells(r):
+        return [r["scheduled"], r["done"], r["cancelled"], r["not_closed"], r["upcoming"], r["completion"], r["checked_in"], r["reported"]]
+
+    return Document(
+        title=_("Field visits"),
+        lines=_header(user, scope, _("Visits %(first)s – %(last)s") % {"first": fmt_date(data["from"]), "last": fmt_date(data["to"])}),
+        tables=[
+            Table(_("Overall"), cols(Column("", "text", 1.6)), [[_("All"), *cells(data["totals"])]],
+                  note=_("Completion rate: done out of the visits whose time has come (done, cancelled or not closed).")),
+            Table(_("By person"), cols(Column(_("Person"), "text", 2.2)), [[p["name"], *cells(p)] for p in data["people"]]),
+            Table(_("By purpose"), cols(Column(_("Purpose"), "text", 2.2)), [[str(purposes.get(r["purpose"], r["purpose"])), *cells(r)] for r in data["purposes"]]),
+            Table(_("Report outcomes"), [Column(_("Outcome"), "text", 2), Column(_("Reports"), "int"), Column(_("Share"), "pct")],
+                  [[str(outcomes.get(o["outcome"], o["outcome"])), o["count"], o["share"]] for o in data["outcomes"]]),
+        ],
+        rtl=_rtl(),
+    )
+
+
+def errands_document(data, scope, user) -> Document:
+    from apps.errands.models import Errand
+
+    kinds = dict(Errand.Kind.choices)
+
+    def cols(first):
+        return [first, Column(_("Asked for"), "int"), Column(_("Done"), "int"), Column(_("Not done"), "int"), Column(_("Cancelled"), "int"),
+                Column(_("Still open"), "int"), Column(_("Overdue"), "int"), Column(_("Success rate"), "pct", 1.1),
+                Column(_("Done on time"), "pct", 1.1)]
+
+    def cells(r):
+        return [r["asked"], r["done"], r["failed"], r["cancelled"], r["open"], r["overdue"], r["success"], r["on_time_rate"]]
+
+    return Document(
+        title=_("Errands"),
+        lines=_header(user, scope, _("Errands due %(first)s – %(last)s") % {"first": fmt_date(data["from"]), "last": fmt_date(data["to"])}),
+        tables=[
+            Table(_("Overall"), cols(Column("", "text", 1.6)), [[_("All"), *cells(data["totals"])]],
+                  note=_("Success rate: done out of done or not done. Done on time: finished by the time it was due.")),
+            Table(_("By person"), cols(Column(_("Person"), "text", 2.2)), [[p["name"] or _("Nobody yet"), *cells(p)] for p in data["people"]]),
+            Table(_("By kind"), cols(Column(_("Kind"), "text", 2.2)), [[str(kinds.get(r["kind"], r["kind"])), *cells(r)] for r in data["kinds"]]),
+        ],
+        rtl=_rtl(),
+    )

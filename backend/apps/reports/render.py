@@ -14,7 +14,7 @@ import re
 from pathlib import Path
 
 from django.utils.translation import gettext as _
-from fpdf import FPDF, FontFace
+from fpdf import FPDF
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
@@ -49,11 +49,18 @@ class _PDF(FPDF):
         self.add_font("Urdu", "B", str(FONTS / "NotoNastaliqUrdu-Bold.ttf"))
         self.main = "Urdu" if rtl else "Sans"
         self.set_fallback_fonts(["Sans" if rtl else "Urdu"], exact_match=False)
-        # Urdu reports read right to left; English ones follow each paragraph's own direction (names may be in Urdu).
-        self.set_text_shaping(use_shaping_engine=True, direction="rtl" if rtl else None)
+        self.shaping(True)
         self.set_margins(12, 12, 12)
         self.set_auto_page_break(True, margin=14)
         self.alias_nb_pages()
+
+    def shaping(self, on: bool):
+        """HarfBuzz shaping and bidi: Urdu reports read right to left; English ones follow each paragraph's own
+        direction (names may be in Urdu). Off for text with no right-to-left letters (much faster)."""
+        if on:
+            self.set_text_shaping(use_shaping_engine=True, direction="rtl" if self.rtl else None)
+        else:
+            self.set_text_shaping(False)
 
     def footer(self):
         self.set_y(-10)
@@ -65,6 +72,77 @@ class _PDF(FPDF):
     @property
     def line_factor(self) -> float:
         return 2.3 if self.rtl else 1.5  # Nastaliq is tall: more room per line
+
+
+PAD = 1.2  # mm inside each cell
+RTL_CHARS = re.compile("[\u0590-\u08ff\ufb1d-\ufdff\ufe70-\ufeff]")  # Hebrew, Arabic and Urdu letters
+HEADER_FILL, STRIPE_FILL, BORDER = (235, 238, 242), (248, 249, 251), (190, 196, 204)
+
+
+def _draw_table(pdf: _PDF, columns, rows: list[list[str]], rtl: bool):
+    """A plain table: header (repeated on each new page), striped rows, cells wrapped only when they don't fit.
+    Drawn directly rather than with fpdf2's table(), which lays every cell out twice and took most of an export's
+    time (about 0.4 s for 60 rows); most cells are short numbers that fit on one line."""
+    total = sum(c.width for c in columns)
+    widths = [pdf.epw * c.width / total for c in columns]
+    aligns = [("R" if rtl else "L") if c.kind == "text" else "C" for c in columns]
+    line_h = 8 * 0.35 * pdf.line_factor
+    pdf.set_draw_color(*BORDER)
+    pdf.set_line_width(0.2)
+
+    measured: dict = {}  # the same text in the same column and style (statuses, priorities…) is measured once
+
+    def lines_of(text: str, width: float) -> list[str]:
+        key = (text, width, pdf.font_style)
+        if key not in measured:
+            if not text or pdf.get_string_width(text) <= width - 2 * PAD:
+                measured[key] = [text]
+            else:
+                measured[key] = pdf.multi_cell(width - 2 * PAD, line_h, text, dry_run=True, output="LINES") or [text]
+        return measured[key]
+
+    def draw_row(cells, fill, bold, header=False):
+        pdf.set_font(pdf.main, "B" if bold else "", 8)
+        # Text with no right-to-left letters (numbers, Latin names) needs neither shaping nor the bidi algorithm,
+        # which cost most of the time per cell: those cells are measured and drawn with shaping off.
+        plain = [not RTL_CHARS.search(t) for t in cells]
+        wrapped = [None] * len(cells)
+        for shaped in (False, True):
+            pdf.shaping(shaped)
+            for i, (text, width) in enumerate(zip(cells, widths)):
+                if plain[i] != shaped:
+                    wrapped[i] = lines_of(text, width)
+        height = max(len(lines) for lines in wrapped) * line_h + 1
+        if not header and pdf.get_y() + height > pdf.page_break_trigger:
+            pdf.add_page()
+            draw_row([c.label for c in columns], HEADER_FILL, True, header=True)
+            pdf.set_font(pdf.main, "B" if bold else "", 8)
+        y, x = pdf.get_y(), pdf.l_margin
+        lefts = []
+        for width in widths:
+            if fill:
+                pdf.set_fill_color(*fill)
+            pdf.rect(x, y, width, height, style="DF" if fill else "D")
+            lefts.append(x)
+            x += width
+        for shaped in (False, True):
+            pdf.shaping(shaped)
+            for i, (lines, width, align, left) in enumerate(zip(wrapped, widths, aligns, lefts)):
+                if plain[i] == shaped:
+                    continue
+                for n, line in enumerate(lines):
+                    pdf.set_xy(left + PAD, y + 0.5 + n * line_h)
+                    pdf.cell(width - 2 * PAD, line_h, line, align=align)
+        pdf.set_xy(pdf.l_margin, y + height)
+
+    if pdf.get_y() + 3 * line_h > pdf.page_break_trigger:
+        pdf.add_page()
+    draw_row([c.label for c in columns], HEADER_FILL, True, header=True)
+    for i, cells in enumerate(rows):
+        draw_row(cells, STRIPE_FILL if i % 2 else None, False)
+    if not rows:
+        pdf.set_font(pdf.main, "", 8)
+        pdf.cell(pdf.epw, line_h + 1, _("Nothing to show."), border=1, align="C", new_x="LMARGIN", new_y="NEXT")
 
 
 def render_pdf(doc: Document) -> bytes:
@@ -83,24 +161,8 @@ def render_pdf(doc: Document) -> bytes:
         pdf.set_font(pdf.main, "B", 11)
         pdf.multi_cell(0, 11 * 0.35 * pdf.line_factor, table.title, align=side, new_x="LMARGIN", new_y="NEXT")
         columns = list(reversed(table.columns)) if doc.rtl else table.columns
-        aligns = tuple(("RIGHT" if doc.rtl else "LEFT") if c.kind == "text" else "CENTER" for c in columns)
-        pdf.set_font(pdf.main, "", 8)
-        with pdf.table(
-            col_widths=tuple(c.width for c in columns), text_align=aligns, line_height=8 * 0.35 * pdf.line_factor,
-            headings_style=FontFace(emphasis="BOLD", fill_color=(235, 238, 242)), cell_fill_color=(248, 249, 251),
-            cell_fill_mode="ROWS", first_row_as_headings=True, repeat_headings=1,
-        ) as t:
-            head = t.row()
-            for c in columns:
-                head.cell(c.label)
-            for values in table.rows:
-                row = t.row()
-                cells = [_text(v, c.kind) for v, c in zip(values, table.columns)]
-                for text in reversed(cells) if doc.rtl else cells:
-                    row.cell(text)
-            if not table.rows:
-                row = t.row()
-                row.cell(_("Nothing to show."), colspan=len(columns))
+        rows = [[_text(v, c.kind) for v, c in zip(values, table.columns)] for values in table.rows]
+        _draw_table(pdf, columns, [list(reversed(r)) if doc.rtl else r for r in rows], doc.rtl)
         if table.note:
             pdf.set_font(pdf.main, "", 8)
             pdf.multi_cell(0, 8 * 0.35 * pdf.line_factor, table.note, align=side, new_x="LMARGIN", new_y="NEXT")

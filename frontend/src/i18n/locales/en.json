@@ -2376,7 +2376,9 @@
       "task-completion": "Task completion",
       "overdue-tasks": "Overdue tasks",
       "client-interactions": "Client interactions",
-      "lead-pipeline": "Lead pipeline"
+      "lead-pipeline": "Lead pipeline",
+      "field-visits": "Field visits",
+      "errands": "Errands"
     },
     "exportPdf": "PDF",
     "exportExcel": "Excel",
@@ -2487,6 +2489,51 @@
       "noMoves": "No status changes in the period.",
       "unassigned": "Unassigned",
       "note": "Leads added in the period (office time), counted for the person they're assigned to, and how far they got by now. Win rate: won out of those closed (won or lost). Conversion: won out of all new leads."
+    },
+    "field": {
+      "scheduled": "Visits scheduled",
+      "upcomingHint": "{{n}} still to come",
+      "completion": "Completion rate",
+      "completionHint": "{{done}} done of {{due}} whose time has come",
+      "checkInRate": "Checked in",
+      "checkInHint": "{{n}} done visits with a check-in",
+      "notClosed": "Not closed",
+      "reportedHint": "{{n}} visits with a report",
+      "byPurpose": "By purpose",
+      "purpose": "Purpose",
+      "outcomes": "Report outcomes",
+      "noReports": "No visit reports in the period.",
+      "columns": {
+        "scheduled": "Scheduled",
+        "done": "Done",
+        "cancelled": "Cancelled",
+        "not_closed": "Not closed",
+        "upcoming": "Upcoming",
+        "checked_in": "Checked in",
+        "reported": "With a report"
+      },
+      "note": "Approved visits starting in the period (office time), for the person responsible; pending and rejected requests are left out. Completion rate: done out of the visits whose time has come (done, cancelled, or past their end and not closed). Checked in: the person responsible checked in at a done visit."
+    },
+    "errands": {
+      "asked": "Errands",
+      "openHint": "{{n}} still open",
+      "success": "Success rate",
+      "successHint": "{{done}} done, {{failed}} not done",
+      "onTime": "Done on time",
+      "onTimeHint": "{{n}} finished by the due time",
+      "overdue": "Overdue",
+      "byKind": "By kind",
+      "kind": "Kind",
+      "nobodyYet": "Nobody yet",
+      "columns": {
+        "asked": "Asked for",
+        "done": "Done",
+        "failed": "Not done",
+        "cancelled": "Cancelled",
+        "open": "Still open",
+        "overdue": "Overdue"
+      },
+      "note": "Errands due in the period (undated ones by when they were asked for), for their runner; ones still waiting for someone are under \"Nobody yet\". Success rate: done out of done or not done."
     }
   }
 }

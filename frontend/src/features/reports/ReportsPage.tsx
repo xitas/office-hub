@@ -22,6 +22,7 @@ import { downloadFile } from '@/lib/transfer'
 import { cn } from '@/lib/utils'
 import { RateBar, Tile } from './bits'
 import { Interactions, Pipeline } from './ClientReports'
+import { Errands, FieldVisits } from './FieldReports'
 
 /**
  * Reports for managers (their department) and admins (everyone, or one department): task completion for a period
@@ -133,6 +134,8 @@ export function ReportsPage() {
       {report === 'overdue-tasks' && <Overdue filters={filters} />}
       {report === 'client-interactions' && <Interactions filters={filters} />}
       {report === 'lead-pipeline' && <Pipeline filters={filters} />}
+      {report === 'field-visits' && <FieldVisits filters={filters} />}
+      {report === 'errands' && <Errands filters={filters} />}
     </>
   )
 }
