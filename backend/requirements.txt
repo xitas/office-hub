@@ -15,7 +15,7 @@ psycopg[binary]>=3.2
 cryptography>=43.0
 pyotp>=2.9
 qrcode[pil]>=7.4
-Pillow>=10.4
+Pillow>=13.0
 polib>=1.2
 # Report exports: PDF with HarfBuzz text shaping (Urdu Nastaliq, right to left) and Excel
 fpdf2>=2.8

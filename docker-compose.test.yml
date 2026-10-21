@@ -56,8 +56,10 @@ services:
         pytest --create-db -rs -p no:cacheprovider "$$@"
       - tests
 
-  # Dependency audit of backend/requirements.txt. CI and .\scripts\test-ci.ps1 both run this service,
-  # so this is the only place advisory exceptions live. Add one only for an advisory that can't affect
+  # Dependency audit of backend/requirements.lock: the exact versions the tests run with (every package,
+  # direct or not, pinned with ==), read as listed (--no-deps --disable-pip: nothing is resolved, so a newer
+  # release allowed by requirements.txt can't hide an advisory in a pinned one). CI and .\scripts\test-ci.ps1
+  # both run this service, so this is the only place advisory exceptions live. Add one only for an advisory that can't affect
   # this app and has no fixed release, with the reason, the date and a link, and remove it once fixed.
   audit:
     image: python:3.13.16-slim
@@ -79,7 +81,7 @@ services:
       # Twisted when one is published (see PLAN.md). https://github.com/advisories/GHSA-8pqf-f4m5-798g
       - >-
         pip install -q pip-audit -c requirements.lock &&
-        pip-audit -r requirements.txt --ignore-vuln CVE-2026-106454
+        pip-audit -r requirements.lock --no-deps --disable-pip --ignore-vuln CVE-2026-106454
 
 volumes:
   pip-cache:

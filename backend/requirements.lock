@@ -10,7 +10,7 @@ boolean.py==5.0
 CacheControl==0.14.4
 cbor2==6.1.5
 celery==5.6.3
-certifi==2026.7.22
+certifi==2026.10.19
 cffi==2.1.1
 channels==4.3.2
 channels_redis==4.3.0
@@ -53,7 +53,7 @@ msgpack==1.2.3
 openpyxl==3.1.5
 packageurl-python==0.17.6
 packaging==26.3
-pillow==12.3.0
+pillow==13.0.0
 pip-requirements-parser==32.0.1
 pip_api==0.0.35
 pip_audit==2.10.1
