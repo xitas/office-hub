@@ -16,7 +16,8 @@ from apps.core.audit import AuditedViewSetMixin, diff, log_action, snapshot
 from apps.core.models import AuditLog
 from apps.core.office_time import office_tz
 from apps.core.permissions import ModulePermission
-from apps.tasks.files import FileRejected, check_upload, make_thumbnail
+from apps.core.photos import prepare_upload
+from apps.tasks.files import FileRejected
 
 from . import rules, services
 from .models import Booking, Resource
@@ -59,44 +60,43 @@ class ResourceViewSet(AuditedViewSetMixin, viewsets.ModelViewSet):
         return data
 
     def _checked_photo(self):
-        """(upload, info) for a new photo, checked before anything is saved; (None, None) when there is none."""
+        """A new photo, checked and cleaned (upright, no metadata) before anything is saved; None when there is none."""
         upload = self.request.FILES.get("photo")
         if not upload:
-            return None, None
+            return None
         try:
-            info = check_upload(upload)
+            prepared = prepare_upload(upload)
         except FileRejected as exc:
             raise ValidationError({"photo": [str(exc)]})
-        if info.kind != "image":
+        if prepared.info.kind != "image":
             raise ValidationError({"photo": [_("Choose a photo (PNG, JPEG, GIF or WebP).")]})
-        return upload, info
+        return prepared
 
-    def _store_photo(self, resource, upload, info):
+    def _store_photo(self, resource, photo):
         remove = self.request.data.get("remove_photo") in (True, "true", "1")
-        if not upload and not remove:
+        if not photo and not remove:
             return
         for f in (resource.photo, resource.thumbnail):
             if f:
                 f.storage.delete(f.name)
         resource.photo, resource.thumbnail = "", ""
-        if upload:
-            thumb = make_thumbnail(upload)
-            resource.photo.save(f"photo.{info.extension}", upload, save=False)
-            if thumb:
-                resource.thumbnail.save("thumb.webp", thumb, save=False)
+        if photo:
+            resource.photo.save(f"photo.{photo.info.extension}", photo.content, save=False)
+            if photo.thumbnail:
+                resource.thumbnail.save("thumb.webp", photo.thumbnail, save=False)
         resource.save(update_fields=["photo", "thumbnail", "updated_at"])
 
     def perform_create(self, serializer):
-        upload, info = self._checked_photo()
+        photo = self._checked_photo()
         serializer.validated_data.pop("remove_photo", None)
         super().perform_create(serializer)
-        self._store_photo(serializer.instance, upload, info)
+        self._store_photo(serializer.instance, photo)
 
     def perform_update(self, serializer):
-        upload, info = self._checked_photo()
+        photo = self._checked_photo()
         serializer.validated_data.pop("remove_photo", None)
         super().perform_update(serializer)
-        self._store_photo(serializer.instance, upload, info)
+        self._store_photo(serializer.instance, photo)
 
     def perform_destroy(self, instance):
         if instance.bookings.exists():

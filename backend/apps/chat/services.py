@@ -19,7 +19,8 @@ from apps.accounts.models import Department, User
 from apps.core.email import queue_email
 from apps.notifications.models import Notification, NotificationType
 from apps.notifications.services import get_preferences, notify, push
-from apps.tasks.files import FileRejected, check_upload, make_thumbnail
+from apps.core.photos import prepare_upload
+from apps.tasks.files import FileRejected
 
 from . import mentions, presence
 from .models import REACTIONS, Conversation, Membership, Message, MessageAttachment, MessageMention, Reaction
@@ -206,21 +207,20 @@ def save_attachments(message, uploader, files):
     """Check every file first (all or nothing), then store them privately with random names."""
     if len(files) > MAX_FILES_PER_MESSAGE:
         raise ValidationError({"files": [_("Send up to %(n)s files at a time.") % {"n": MAX_FILES_PER_MESSAGE}]})
-    checked = []
+    prepared = []
     for upload in files:
         try:
-            checked.append((upload, check_upload(upload)))
+            prepared.append(prepare_upload(upload))  # images cleaned: upright, no GPS, camera or other metadata
         except FileRejected as exc:
             raise ValidationError({"files": [str(exc)]})
-    for upload, info in checked:
+    for p in prepared:
         attachment = MessageAttachment(
-            message=message, original_name=upload.name[:255], size=upload.size,
-            content_type=info.content_type, kind=info.kind, uploaded_by=uploader,
+            message=message, original_name=p.upload.name[:255], size=p.size,
+            content_type=p.info.content_type, kind=p.info.kind, uploaded_by=uploader,
         )
-        thumb = make_thumbnail(upload) if info.kind == "image" else None
-        attachment.file.save(f"upload.{info.extension}", upload, save=False)
-        if thumb:
-            attachment.thumbnail.save("thumb.webp", thumb, save=False)
+        attachment.file.save(f"upload.{p.info.extension}", p.content, save=False)
+        if p.thumbnail:
+            attachment.thumbnail.save("thumb.webp", p.thumbnail, save=False)
         attachment.save()
 
 

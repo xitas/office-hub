@@ -10,7 +10,8 @@ from apps.core.models import OrganizationSettings
 from apps.core.office_time import office_today
 from apps.notifications.models import NotificationType
 from apps.notifications.services import notify
-from apps.tasks.files import FileRejected, check_upload, make_thumbnail
+from apps.core.photos import prepare_upload
+from apps.tasks.files import FileRejected
 
 from . import rules
 from .models import Expense, ExpenseReceipt
@@ -50,21 +51,20 @@ def save_receipts(expense, uploader, files, keep=0):
     """Check every file first (all or nothing), then store them privately with random names."""
     if keep + len(files) > MAX_RECEIPTS:
         raise ExpenseError({"files": _("A claim can have up to %(n)s receipts.") % {"n": MAX_RECEIPTS}})
-    checked = []
+    prepared = []
     for upload in files:
         try:
-            checked.append((upload, check_upload(upload)))
+            prepared.append(prepare_upload(upload))  # images cleaned: upright, no GPS, camera or other metadata
         except FileRejected as exc:
             raise ExpenseError({"files": str(exc)})
-    for upload, info in checked:
+    for p in prepared:
         receipt = ExpenseReceipt(
-            expense=expense, original_name=upload.name[:255], size=upload.size,
-            content_type=info.content_type, kind=info.kind, uploaded_by=uploader,
+            expense=expense, original_name=p.upload.name[:255], size=p.size,
+            content_type=p.info.content_type, kind=p.info.kind, uploaded_by=uploader,
         )
-        thumb = make_thumbnail(upload) if info.kind == "image" else None
-        receipt.file.save(f"upload.{info.extension}", upload, save=False)
-        if thumb:
-            receipt.thumbnail.save("thumb.webp", thumb, save=False)
+        receipt.file.save(f"upload.{p.info.extension}", p.content, save=False)
+        if p.thumbnail:
+            receipt.thumbnail.save("thumb.webp", p.thumbnail, save=False)
         receipt.save()
 
 

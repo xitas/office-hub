@@ -10,7 +10,7 @@ from dataclasses import dataclass
 
 from django.core.files.base import ContentFile
 from django.utils.translation import gettext as _
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 MAX_BYTES = 10 * 1024 * 1024
 THUMB_SIZE = (320, 320)
@@ -95,7 +95,7 @@ def check_upload(upload) -> Checked:
             raise mismatch
         finally:
             upload.seek(0)
-        if fmt != IMAGE_FORMATS[ext]:
+        if fmt != IMAGE_FORMATS[ext] and not (fmt == "MPO" and IMAGE_FORMATS[ext] == "JPEG"):  # MPO: a phone's JPEG with extra images
             raise mismatch
         return Checked("image", MIME[ext], ext)
     if ext in ("doc", "xls", "ppt"):
@@ -124,11 +124,12 @@ def check_upload(upload) -> Checked:
 
 
 def make_thumbnail(upload) -> ContentFile | None:
-    """A small re-encoded copy (no metadata) for image previews; None if it can't be made."""
+    """A small re-encoded copy (no metadata) for image previews, upright; None if it can't be made."""
     try:
         upload.seek(0)
         with Image.open(upload) as img:
             img.seek(0)  # first frame of an animated GIF
+            img = ImageOps.exif_transpose(img)
             img = img.convert("RGBA" if img.mode in ("RGBA", "LA", "P") else "RGB")
             img.thumbnail(THUMB_SIZE)
             out = io.BytesIO()
