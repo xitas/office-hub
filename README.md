@@ -107,7 +107,7 @@ cd frontend; npx tsc -b; npm run lint; npm run build
 - **Rate limiting:** login limits are stored in Redis, so they apply across all processes. Behind a reverse proxy, set `NUM_PROXIES` so client IPs come from the proxy's `X-Forwarded-For` and not from a header the client can forge.
 - **WebSockets:** connections use a single-use ticket valid for 30 seconds (`POST /api/v1/auth/ws-ticket/`). Access tokens never appear in URLs.
 - **Production** (`config.settings.prod`): the app refuses to start without exact `DJANGO_ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS` and `FIELD_ENCRYPTION_KEYS`. It sets HSTS, a Content-Security-Policy, Referrer-Policy and Permissions-Policy, and turns API docs off by default. Check it with `python manage.py check --deploy --settings=config.settings.prod`.
-- **Frontend host:** the built app has no inline scripts and serves its own fonts (Geist and Noto Nastaliq Urdu, no Google Fonts), so the server that hosts it can send a strict policy, e.g. `Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self' wss:; object-src 'none'; frame-ancestors 'none'; base-uri 'self'`.
+- **Frontend host:** the built app has no inline scripts and serves its own fonts (Geist and Noto Nastaliq Urdu, no Google Fonts), so the server that hosts it can send a strict policy, e.g. `Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://tile.openstreetmap.org; connect-src 'self' wss:; object-src 'none'; frame-ancestors 'none'; base-uri 'self'` (the tile host is for the map's OpenStreetMap tiles).
 
 ## Adding a module
 

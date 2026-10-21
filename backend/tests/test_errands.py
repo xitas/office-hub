@@ -95,7 +95,7 @@ def test_who_gives_out_changes_and_cancels(client_for, people, django_capture_on
     with django_capture_on_commit_callbacks(execute=True):
         pk = staff.post(URL, {**body, "assigned_to": people["colleague"].pk}, format="json").data["id"]
     note = Notification.objects.get(message_key="errand_assigned")
-    assert note.recipient == people["colleague"] and note.title == "آپ کے لیے کام: Deposit cheques"  # in Urdu for Sara
+    assert note.recipient == people["colleague"] and note.title == "آپ کے لیے باہر کا کام: Deposit cheques"  # in Urdu for Sara
     # The runner can't change or cancel it; the manager gives it to someone else (both are told).
     assert client_for(people["colleague"]).patch(f"{URL}{pk}/", {"title": "x"}, format="json").status_code == 403
     assert client_for(people["colleague"]).post(f"{URL}{pk}/cancel/").status_code == 403
@@ -122,7 +122,7 @@ def test_due_soon_reminder_once_with_urdu_time_words(people):
     assert services.send_reminders() == 1
     assert services.send_reminders() == 0
     note = Notification.objects.get(message_key="errand_due")
-    assert note.recipient == people["colleague"] and note.title == f"کام کا وقت قریب: {errand.title}"
+    assert note.recipient == people["colleague"] and note.title == f"باہر کے کام کا وقت قریب: {errand.title}"
     assert any(w in note.body for w in ("صبح", "دوپہر", "شام", "رات"))
 
 

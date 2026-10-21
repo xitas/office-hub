@@ -280,7 +280,11 @@ async function rolePages(browser, role, vpName, vp, data) {
       const s = (name, opts) => shot(page, dir, `${role}-${name}`, { expect: { theme }, ...opts })
       const go = async (url) => {
         await page.goto(`${BASE}${url}`)
-        await page.waitForSelector('main')
+        // One reload if the page didn't come up (a dropped request through the dev proxy); the error stays in the report.
+        await page.waitForSelector('main', { timeout: 15000 }).catch(async () => {
+          await page.reload()
+          await page.waitForSelector('main')
+        })
       }
 
       await go('/')
@@ -548,13 +552,33 @@ async function rolePages(browser, role, vpName, vp, data) {
       }
       await go('/errands')
       await page.waitForSelector('main h1')
-      await dialog(/^(New errand|نیا کام)$/, 'dialog-errand')
+      await dialog(/^(New errand|نیا باہر کا کام)$/, 'dialog-errand')
       if (manages) {
         for (const range of ['', 'week']) {
           await go(`/map${range ? '?range=week' : ''}`)
           await page.waitForSelector('.leaflet-container')
           await s(`map${range ? '-week' : ''}`)
         }
+      }
+
+      // Phase 6: every report (managers: their department; admins: everyone, and one department); staff are turned away.
+      if (manages) {
+        for (const report of ['task-completion', 'overdue-tasks', 'client-interactions', 'lead-pipeline', 'field-visits', 'errands', 'attendance']) {
+          await go(`/reports?report=${report}`)
+          await page.waitForSelector('main h1')
+          await s(`reports-${report}`)
+        }
+        await go('/reports?report=client-interactions&by=month&period=this_year')
+        await page.waitForSelector('main h1')
+        await s('reports-client-interactions-year')
+        if (role === 'admin') {
+          await go(`/reports?report=attendance&department=${data.depts.Sales.id}&period=last_month`)
+          await page.waitForSelector('main h1')
+          await s('reports-attendance-sales')
+        }
+      } else {
+        await go('/reports')
+        await s('reports-denied')
       }
 
       await go('/contacts/import')
