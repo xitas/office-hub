@@ -2,10 +2,10 @@ import { useQuery } from '@tanstack/react-query'
 import { api } from './api'
 import { addDays, weekStartOf } from './bookings'
 
-export type ReportKey = 'task-completion' | 'overdue-tasks' | 'client-interactions' | 'lead-pipeline' | 'field-visits' | 'errands'
-export const REPORTS: ReportKey[] = ['task-completion', 'overdue-tasks', 'client-interactions', 'lead-pipeline', 'field-visits', 'errands']
+export type ReportKey = 'task-completion' | 'overdue-tasks' | 'client-interactions' | 'lead-pipeline' | 'field-visits' | 'errands' | 'attendance'
+export const REPORTS: ReportKey[] = ['task-completion', 'overdue-tasks', 'client-interactions', 'lead-pipeline', 'field-visits', 'errands', 'attendance']
 /** Reports that cover a period (the others are "as of today"). */
-export const PERIOD_REPORTS: ReportKey[] = ['task-completion', 'client-interactions', 'lead-pipeline', 'field-visits', 'errands']
+export const PERIOD_REPORTS: ReportKey[] = ['task-completion', 'client-interactions', 'lead-pipeline', 'field-visits', 'errands', 'attendance']
 
 export type PeriodPreset = 'this_week' | 'last_week' | 'this_month' | 'last_month' | 'this_quarter' | 'last_quarter' | 'this_year' | 'custom'
 export const PERIOD_PRESETS: PeriodPreset[] = ['this_week', 'last_week', 'this_month', 'last_month', 'this_quarter', 'last_quarter', 'this_year', 'custom']
@@ -259,5 +259,63 @@ export function useErrandsReport(filters: ReportFilters) {
   return useQuery({
     queryKey: ['reports', 'errands', clean(filters)],
     queryFn: async () => (await api.get<ErrandsReport>('/reports/errands/', { params: clean(filters) })).data,
+  })
+}
+
+export interface AttendanceRow {
+  id?: number | null
+  name?: string | null
+  department?: string | null
+  people?: number
+  working_days: number
+  office: number
+  field: number
+  remote: number
+  late: number
+  leave: number
+  absent: number
+  attended: number
+  rate: number | null
+}
+
+export interface LeaveTypeTotals {
+  id: number
+  name: string
+  name_ur: string
+  limited: boolean
+  taken: number
+  people: number
+  allowance: number | null
+  remaining: number | null
+}
+
+export interface LeaveRow {
+  id: number
+  name: string
+  taken: Record<string, number>
+  total: number
+  waiting: number
+  remaining: Record<string, number | null>
+}
+
+export interface AttendanceReport {
+  from: string
+  to: string
+  as_of: string
+  year: number
+  period_working_days: number
+  holidays: number
+  people: AttendanceRow[]
+  departments: AttendanceRow[]
+  totals: AttendanceRow
+  leave_types: LeaveTypeTotals[]
+  leave: LeaveRow[]
+  leave_totals: { total: number; waiting: number }
+}
+
+export function useAttendanceReport(filters: ReportFilters) {
+  return useQuery({
+    queryKey: ['reports', 'attendance', clean(filters)],
+    queryFn: async () => (await api.get<AttendanceReport>('/reports/attendance/', { params: clean(filters) })).data,
   })
 }

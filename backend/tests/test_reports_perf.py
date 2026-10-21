@@ -234,3 +234,86 @@ def test_field_reports_with_a_year_of_data(client_for):
             size = f", {len(res.content) // 1024} KB" if "export" in url else ""
             print(f"  {who:<13} {name:<26} {took * 1000:7.0f} ms  {len(ctx):2d} queries{size}")
             assert took < 5, f"{name} took {took:.1f}s"
+
+
+def build_attendance(users, admin):
+    """A year of attendance for the same 50 people: a check-in on most working days (office, some remote and field
+    visits, a few late), about a dozen leave requests each (some half days, some waiting), office holidays and
+    stored balances."""
+    from decimal import Decimal
+
+    from apps.attendance.models import Attendance
+    from apps.events.models import Event
+    from apps.leave.models import LeaveBalance, LeaveRequest, LeaveType
+    from apps.reports.scope import day_bounds
+
+    rnd = random.Random(17)
+    tz, today = office_tz(), office_today()
+    first = today - timedelta(days=364)
+    User.objects.filter(pk__in=[u.pk for u in users]).update(date_joined=datetime.combine(first - timedelta(days=30), dtime(9), tzinfo=tz))
+    types = [LeaveType.objects.create(name=n, days_per_year=d, position=i)
+             for i, (n, d) in enumerate((("Perf annual", Decimal("20")), ("Perf sick", Decimal("10")), ("Perf casual", Decimal("8")), ("Perf unpaid", None)))]
+    holidays = {first + timedelta(days=d) for d in (40, 41, 120, 200, 290)}
+    for h in holidays:
+        start, end = day_bounds(h, h)
+        Event.objects.create(kind="holiday", title="Perf holiday", all_day=True, start=start, end=end, organizer=admin)
+    records, requests, balances = [], [], []
+    for u in users:
+        off: set = set()
+        for _k in range(12):
+            start = first + timedelta(days=rnd.randint(0, 360))
+            if start.weekday() >= 5 or start in off:
+                continue
+            half = rnd.random() < 0.25
+            end = start if half else min(start + timedelta(days=rnd.randint(0, 3)), start.replace(month=12, day=31))
+            days = [start + timedelta(days=i) for i in range((end - start).days + 1)]
+            if off & set(days):
+                continue
+            off |= set(days)
+            requests.append(LeaveRequest(user=u, leave_type=rnd.choice(types), start_date=start, end_date=end, half_day="morning" if half else "",
+                                         days=Decimal("0.5") if half else sum(1 for d in days if d.weekday() < 5),
+                                         status=rnd.choice(["approved"] * 5 + ["pending", "rejected"])))
+        day = first
+        while day <= today:
+            if day.weekday() < 5 and day not in holidays and day not in off and rnd.random() < 0.9:
+                mode = rnd.choice(["office"] * 8 + ["remote", "field"])
+                moment = datetime.combine(day, dtime(8, 30), tzinfo=tz) + timedelta(minutes=rnd.randint(0, 75))
+                records.append(Attendance(user=u, date=day, mode=mode, check_in=moment,
+                                          check_out=moment + timedelta(hours=8) if day < today else None))
+            day += timedelta(days=1)
+        for t in types[:3]:
+            for year in {first.year, today.year}:
+                balances.append(LeaveBalance(user=u, leave_type=t, year=year, allowance=t.days_per_year + rnd.choice([0, 0, 2])))
+    Attendance.objects.bulk_create(records, batch_size=5000)
+    LeaveRequest.objects.bulk_create(requests, batch_size=2000)
+    LeaveBalance.objects.bulk_create(balances, batch_size=2000)
+    return len(records), len(requests)
+
+
+def test_attendance_report_with_a_year_of_data(client_for):
+    admin, manager, _n, _m = build()
+    users = list(User.objects.filter(email__startswith="perf", role__in=["manager", "staff"]).order_by("pk"))
+    n_records, n_requests = build_attendance(users, admin)
+    today = office_today()
+    year = {"from": (today - timedelta(days=364)).isoformat(), "to": today.isoformat()}
+    month = {"from": today.replace(day=1).isoformat(), "to": today.isoformat()}
+    urls = {
+        "attendance, a year": ("/api/v1/reports/attendance/", year),
+        "attendance, this month": ("/api/v1/reports/attendance/", month),
+        "attendance PDF": ("/api/v1/reports/attendance/export/", {**year, "file": "pdf"}),
+        "attendance Excel": ("/api/v1/reports/attendance/export/", {**year, "file": "xlsx"}),
+    }
+    print(f"\n{n_records} check-ins, {n_requests} leave requests, {PEOPLE} people ({connection.vendor})")
+    for who, user, lang in (("admin", admin, "en"), ("manager", manager, "en"), ("admin", admin, "ur"), ("manager", manager, "ur")):
+        who = f"{who} ({lang})"
+        client = client_for(user)
+        client.get(urls["attendance, this month"][0], month)  # warm up
+        for name, (url, params) in urls.items():
+            with CaptureQueriesContext(connection) as ctx:
+                start = time.perf_counter()
+                res = client.get(url, params, HTTP_ACCEPT_LANGUAGE=lang)
+                took = time.perf_counter() - start
+            assert res.status_code == 200, (name, res.status_code)
+            size = f", {len(res.content) // 1024} KB" if "export" in url else ""
+            print(f"  {who:<13} {name:<26} {took * 1000:7.0f} ms  {len(ctx):2d} queries{size}")
+            assert took < 5, f"{name} took {took:.1f}s"

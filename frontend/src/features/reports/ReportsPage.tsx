@@ -20,6 +20,7 @@ import {
 } from '@/lib/reports'
 import { downloadFile } from '@/lib/transfer'
 import { cn } from '@/lib/utils'
+import { Attendance } from './AttendanceReport'
 import { RateBar, Tile } from './bits'
 import { Interactions, Pipeline } from './ClientReports'
 import { Errands, FieldVisits } from './FieldReports'
@@ -136,6 +137,7 @@ export function ReportsPage() {
       {report === 'lead-pipeline' && <Pipeline filters={filters} />}
       {report === 'field-visits' && <FieldVisits filters={filters} />}
       {report === 'errands' && <Errands filters={filters} />}
+      {report === 'attendance' && <Attendance filters={filters} />}
     </>
   )
 }

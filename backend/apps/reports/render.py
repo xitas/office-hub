@@ -28,11 +28,13 @@ FONTS = Path(__file__).resolve().parent / "fonts"
 
 def _text(value, kind) -> str:
     if value is None or value == "":
-        return "—" if kind in ("pct", "date") else ""
+        return "—" if kind in ("pct", "date", "num") else ""
     if kind == "pct":
         return f"{math.floor(value * 100 + 0.5)}%"  # half up, as on screen (Python's round() would give 12.5 → 12)
     if kind == "date":
         return fmt_date(value)
+    if kind == "num":
+        return f"{value:g}"
     return str(value)
 
 
@@ -91,9 +93,10 @@ def _draw_table(pdf: _PDF, columns, rows: list[list[str]], rtl: bool):
     pdf.set_line_width(0.2)
 
     measured: dict = {}  # the same text in the same column and style (statuses, priorities…) is measured once
+    widths_of: dict = {}
 
     def lines_of(text: str, width: float) -> list[str]:
-        key = (text, width, pdf.font_style)
+        key = (text, width, pdf.font_family, pdf.font_style)
         if key not in measured:
             if not text or pdf.get_string_width(text) <= width - 2 * PAD:
                 measured[key] = [text]
@@ -101,14 +104,22 @@ def _draw_table(pdf: _PDF, columns, rows: list[list[str]], rtl: bool):
                 measured[key] = pdf.multi_cell(width - 2 * PAD, line_h, text, dry_run=True, output="LINES") or [text]
         return measured[key]
 
+    def text_width(text: str) -> float:
+        key = (text, pdf.font_style)
+        if key not in widths_of:
+            widths_of[key] = pdf.get_string_width(text)
+        return widths_of[key]
+
     def draw_row(cells, fill, bold, header=False):
-        pdf.set_font(pdf.main, "B" if bold else "", 8)
-        # Text with no right-to-left letters (numbers, Latin names) needs neither shaping nor the bidi algorithm,
-        # which cost most of the time per cell: those cells are measured and drawn with shaping off.
+        style = "B" if bold else ""
+        # Text with no right-to-left letters (numbers, Latin names) needs neither shaping, the bidi algorithm nor the
+        # Urdu font: those cells are set in Noto Sans and written with text(), which skips the per-character layout
+        # of cell() (most of the time per cell). The others are shaped in the report's font.
         plain = [not RTL_CHARS.search(t) for t in cells]
         wrapped = [None] * len(cells)
         for shaped in (False, True):
             pdf.shaping(shaped)
+            pdf.set_font(pdf.main if shaped else "Sans", style, 8)
             for i, (text, width) in enumerate(zip(cells, widths)):
                 if plain[i] != shaped:
                     wrapped[i] = lines_of(text, width)
@@ -116,7 +127,6 @@ def _draw_table(pdf: _PDF, columns, rows: list[list[str]], rtl: bool):
         if not header and pdf.get_y() + height > pdf.page_break_trigger:
             pdf.add_page()
             draw_row([c.label for c in columns], HEADER_FILL, True, header=True)
-            pdf.set_font(pdf.main, "B" if bold else "", 8)
         y, x = pdf.get_y(), pdf.l_margin
         lefts = []
         for width in widths:
@@ -127,12 +137,21 @@ def _draw_table(pdf: _PDF, columns, rows: list[list[str]], rtl: bool):
             x += width
         for shaped in (False, True):
             pdf.shaping(shaped)
+            pdf.set_font(pdf.main if shaped else "Sans", style, 8)
             for i, (lines, width, align, left) in enumerate(zip(wrapped, widths, aligns, lefts)):
                 if plain[i] == shaped:
                     continue
                 for n, line in enumerate(lines):
-                    pdf.set_xy(left + PAD, y + 0.5 + n * line_h)
-                    pdf.cell(width - 2 * PAD, line_h, line, align=align)
+                    top = y + 0.5 + n * line_h
+                    if shaped:
+                        pdf.set_xy(left + PAD, top)
+                        pdf.cell(width - 2 * PAD, line_h, line, align=align)
+                    elif line:
+                        # where cell() would put it: the cell margin inside the edges, the baseline below the middle
+                        inner, margin = width - 2 * PAD, pdf.c_margin
+                        free = inner - text_width(line)
+                        dx = {"L": margin, "R": free - margin, "C": free / 2}[align]
+                        pdf.text(left + PAD + dx, top + 0.5 * line_h + 0.3 * pdf.font_size, line)
         pdf.set_xy(pdf.l_margin, y + height)
 
     if pdf.get_y() + 3 * line_h > pdf.page_break_trigger:
@@ -145,27 +164,45 @@ def _draw_table(pdf: _PDF, columns, rows: list[list[str]], rtl: bool):
         pdf.cell(pdf.epw, line_h + 1, _("Nothing to show."), border=1, align="C", new_x="LMARGIN", new_y="NEXT")
 
 
+def _paragraph(pdf: _PDF, text: str, size: float, style: str = ""):
+    """A paragraph across the page, wrapped by words (each measured once, shaped) and drawn a line at a time.
+    multi_cell() measures shaped text one character at a time while breaking lines: long Urdu notes took 15 ms each."""
+    pdf.set_font(pdf.main, style, size)
+    pdf.shaping(True)
+    width, height = pdf.epw - 2 * pdf.c_margin - 1, size * 0.35 * pdf.line_factor
+    space = pdf.get_string_width(" ")
+    lines, line, used = [], [], 0.0
+    for word in text.split():
+        w = pdf.get_string_width(word)
+        if line and used + space + w > width:
+            lines.append(" ".join(line))
+            line, used = [], 0.0
+        used += (space if line else 0) + w
+        line.append(word)
+    lines.append(" ".join(line))
+    for text_line in lines:
+        pdf.cell(0, height, text_line, align="R" if pdf.rtl else "L", new_x="LMARGIN", new_y="NEXT")
+
+
 def render_pdf(doc: Document) -> bytes:
     pdf = _PDF(doc.rtl)
     pdf.set_title(doc.title)
     pdf.set_creator("Office CRM")
     pdf.add_page()
-    side = "R" if doc.rtl else "L"
-    pdf.set_font(pdf.main, "B", 15)
-    pdf.multi_cell(0, 15 * 0.35 * pdf.line_factor, doc.title, align=side, new_x="LMARGIN", new_y="NEXT")
-    pdf.set_font(pdf.main, "", 9)
+    _paragraph(pdf, doc.title, 15, "B")
     for line in doc.lines:
-        pdf.multi_cell(0, 9 * 0.35 * pdf.line_factor, line, align=side, new_x="LMARGIN", new_y="NEXT")
+        _paragraph(pdf, line, 9)
     for table in doc.tables:
         pdf.ln(3)
-        pdf.set_font(pdf.main, "B", 11)
-        pdf.multi_cell(0, 11 * 0.35 * pdf.line_factor, table.title, align=side, new_x="LMARGIN", new_y="NEXT")
+        # the title stays with its table: a new page unless the title, the header and a row fit
+        if pdf.get_y() + (11 + 3 * 8) * 0.35 * pdf.line_factor + 3 > pdf.page_break_trigger:
+            pdf.add_page()
+        _paragraph(pdf, table.title, 11, "B")
         columns = list(reversed(table.columns)) if doc.rtl else table.columns
         rows = [[_text(v, c.kind) for v, c in zip(values, table.columns)] for values in table.rows]
         _draw_table(pdf, columns, [list(reversed(r)) if doc.rtl else r for r in rows], doc.rtl)
         if table.note:
-            pdf.set_font(pdf.main, "", 8)
-            pdf.multi_cell(0, 8 * 0.35 * pdf.line_factor, table.note, align=side, new_x="LMARGIN", new_y="NEXT")
+            _paragraph(pdf, table.note, 8)
     return bytes(pdf.output())
 
 
@@ -194,9 +231,9 @@ def _put(ws, row, col, value, kind="text", **style):
     cell = ws.cell(row=row, column=col)
     if value is None or value == "":
         cell.value = None
-    elif kind in ("int", "pct", "date"):
+    elif kind in ("int", "num", "pct", "date"):
         cell.value = value
-        cell.number_format = {"int": "0", "pct": "0%", "date": _excel_date_format()}[kind]
+        cell.number_format = {"int": "0", "num": "General", "pct": "0%", "date": _excel_date_format()}[kind]
     else:
         text = str(value)
         cell.value = text

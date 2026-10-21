@@ -19,7 +19,7 @@ MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", 
 @dataclass
 class Column:
     label: str
-    kind: str = "text"  # text | int | pct (a 0–1 fraction or None) | date (a date or None)
+    kind: str = "text"  # text | int | num (days, maybe with a half) | pct (a 0–1 fraction or None) | date (a date or None)
     width: float = 1.0  # relative width in the PDF
 
 
@@ -260,4 +260,50 @@ def errands_document(data, scope, user) -> Document:
             Table(_("By kind"), cols(Column(_("Kind"), "text", 2.2)), [[str(kinds.get(r["kind"], r["kind"])), *cells(r)] for r in data["kinds"]]),
         ],
         rtl=_rtl(),
+    )
+
+
+# ================================================================ attendance and leave
+
+
+def attendance_document(data, scope, user) -> Document:
+    urdu = _rtl()
+
+    def type_name(t):
+        return (t["name_ur"] if urdu and t["name_ur"] else t["name"])
+
+    def cols(first):
+        return [first, Column(_("Working days"), "int", 1.1), Column(_("In the office"), "int", 1.1), Column(_("On a field visit"), "int", 1.2),
+                Column(_("Working remotely"), "int", 1.2), Column(_("Late"), "int"), Column(_("On leave"), "int"), Column(_("Absent"), "int"),
+                Column(_("Attendance rate"), "pct", 1.2)]
+
+    def cells(r):
+        return [r["working_days"], r["office"], r["field"], r["remote"], r["late"], r["leave"], r["absent"], r["rate"]]
+
+    types, limited = data["leave_types"], [t for t in data["leave_types"] if t["limited"]]
+    return Document(
+        title=_("Attendance and leave"),
+        lines=_header(user, scope, _("Days %(first)s – %(last)s (attendance up to %(as_of)s)") % {
+            "first": fmt_date(data["from"]), "last": fmt_date(data["to"]), "as_of": fmt_date(data["as_of"])}),
+        tables=[
+            Table(_("Overall"), cols(Column("", "text", 1.6)), [[_("All"), *cells(data["totals"])]],
+                  note=_("Working days: the office's working days up to today, without office holidays, from the day each person joined. "
+                         "Attendance rate: days checked in out of those and the absent days.")),
+            Table(_("By department"), cols(Column(_("Department"), "text", 2)),
+                  [[d["name"] or _("No department"), *cells(d)] for d in data["departments"]]),
+            Table(_("By person"), cols(Column(_("Person"), "text", 2.2)), [[p["name"], *cells(p)] for p in data["people"]]),
+            Table(_("Leave taken in the period"),
+                  [Column(_("Person"), "text", 2.2), *[Column(type_name(t), "num") for t in types], Column(_("Total"), "num"),
+                   Column(_("Waiting for approval"), "num", 1.2)],
+                  [[r["name"], *[r["taken"][t["id"]] for t in types], r["total"], r["waiting"]] for r in data["leave"]],
+                  note=_("Approved leave on working days in the period, days still to come included; half days count 0.5.")),
+            Table(_("Leave left in %(year)s") % {"year": data["year"]},
+                  [Column(_("Person"), "text", 2.2), *[Column(type_name(t), "num") for t in limited]],
+                  [[r["name"], *[r["remaining"][t["id"]] for t in limited]] for r in data["leave"]],
+                  note=_("Days left of each allowance after approved and waiting requests, as on the leave page.")),
+            Table(_("By leave type"), [Column(_("Leave type"), "text", 2), Column(_("Days taken"), "num"), Column(_("People"), "int"),
+                                       Column(_("Allowance"), "num"), Column(_("Left"), "num")],
+                  [[type_name(t), t["taken"], t["people"], t["allowance"], t["remaining"]] for t in types]),
+        ],
+        rtl=urdu,
     )

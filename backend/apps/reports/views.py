@@ -212,3 +212,14 @@ FieldVisitsView, FieldVisitsExportView = _period_report(
 ErrandsView, ErrandsExportView = _period_report(
     "Errands", lambda *a: _field().errands(*a), documents.errands_document, "errands", "errands report",
     lambda d: d["totals"]["asked"], N_("Exported the errands report"))
+
+
+def _attendance():
+    from . import attendance_reports
+
+    return attendance_reports
+
+
+AttendanceView, AttendanceExportView = _period_report(
+    "Attendance", lambda *a: _attendance().summary(*a), documents.attendance_document, "attendance-leave", "attendance and leave report",
+    lambda d: len(d["people"]), N_("Exported the attendance and leave report"))

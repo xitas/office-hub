@@ -2740,3 +2740,57 @@ msgstr "فیلڈ وزٹس کی رپورٹ ایکسپورٹ کی"
 
 msgid "Exported the errands report"
 msgstr "کاموں کی رپورٹ ایکسپورٹ کی"
+
+msgid "Working days"
+msgstr "کام کے دن"
+
+msgid "On leave"
+msgstr "چھٹی پر"
+
+msgid "Absent"
+msgstr "غیر حاضر"
+
+msgid "Attendance rate"
+msgstr "حاضری کی شرح"
+
+msgid "People"
+msgstr "افراد"
+
+msgid "Allowance"
+msgstr "سال کے دن"
+
+msgid "Left"
+msgstr "باقی"
+
+msgid "Leave type"
+msgstr "چھٹی کی قسم"
+
+msgid "Days taken"
+msgstr "لی گئی چھٹیاں"
+
+msgid "Attendance and leave"
+msgstr "حاضری اور چھٹیاں"
+
+msgid "Days %(first)s – %(last)s (attendance up to %(as_of)s)"
+msgstr "%(first)s – %(last)s کے دن (حاضری %(as_of)s تک)"
+
+msgid "Working days: the office's working days up to today, without office holidays, from the day each person joined. Attendance rate: days checked in out of those and the absent days."
+msgstr "کام کے دن: آج تک دفتر کے کام کے دن، دفتری تعطیلات کے بغیر، ہر فرد کے شامل ہونے کے دن سے۔ حاضری کی شرح: آمد درج والے دن، ان اور غیر حاضر دنوں میں سے۔"
+
+msgid "Leave taken in the period"
+msgstr "مدت میں لی گئی چھٹیاں"
+
+msgid "Approved leave on working days in the period, days still to come included; half days count 0.5."
+msgstr "مدت میں کام کے دنوں پر منظور شدہ چھٹی، آنے والے دنوں سمیت؛ آدھا دن 0.5 شمار ہوتا ہے۔"
+
+msgid "Leave left in %(year)s"
+msgstr "%(year)s میں باقی چھٹیاں"
+
+msgid "Days left of each allowance after approved and waiting requests, as on the leave page."
+msgstr "منظور شدہ اور منتظر درخواستوں کے بعد ہر قسم کے باقی دن، جیسے چھٹیوں کے صفحے پر۔"
+
+msgid "By leave type"
+msgstr "چھٹی کی قسم کے لحاظ سے"
+
+msgid "Exported the attendance and leave report"
+msgstr "حاضری اور چھٹیوں کی رپورٹ ایکسپورٹ کی"

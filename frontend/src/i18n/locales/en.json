@@ -2378,7 +2378,8 @@
       "client-interactions": "Client interactions",
       "lead-pipeline": "Lead pipeline",
       "field-visits": "Field visits",
-      "errands": "Errands"
+      "errands": "Errands",
+      "attendance": "Attendance and leave"
     },
     "exportPdf": "PDF",
     "exportExcel": "Excel",
@@ -2534,6 +2535,33 @@
         "overdue": "Overdue"
       },
       "note": "Errands due in the period (undated ones by when they were asked for), for their runner; ones still waiting for someone are under \"Nobody yet\". Success rate: done out of done or not done."
+    },
+    "attendance": {
+      "rate": "Attendance rate",
+      "rateHint": "{{n}} days checked in of {{due}}",
+      "absent": "Absent days",
+      "workingDaysHint": "{{n}} working days in the period, {{holidays}} office holidays",
+      "late": "Late check-ins",
+      "lateHint": "of {{n}} check-ins",
+      "leaveTaken": "Leave days taken",
+      "waitingHint": "{{n}} days waiting for approval",
+      "all": "All",
+      "total": "Total",
+      "waiting": "Waiting",
+      "leaveTitle": "Leave taken in the period",
+      "leftTitle": "Leave left in {{year}}",
+      "leaveNote": "Approved leave on working days in the period, days still to come included; half days count 0.5. Waiting: requests not yet decided.",
+      "leftNote": "Days left of each person's allowance for the year, after approved and waiting requests, as on the leave page. All: left / allowance.",
+      "columns": {
+        "working_days": "Working days",
+        "office": "In the office",
+        "field": "Field visit",
+        "remote": "Remote",
+        "late": "Late",
+        "leave": "On leave",
+        "absent": "Absent"
+      },
+      "note": "Attendance up to {{date}}, over the office's working days without office holidays, from the day each person joined. In the office, field visit and remote count the days checked in that way (days off too); late as on the attendance page; on leave: working days of approved leave without a check-in; absent: past working days with neither. Attendance rate: days checked in out of those and the absent days."
     }
   }
 }
